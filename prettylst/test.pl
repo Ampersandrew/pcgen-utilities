@@ -6,24 +6,39 @@ use warnings;
 use File::Basename qw(dirname);
 use Cwd  qw(abs_path);
 use lib dirname(abs_path $0) . '/lib';
+use Pretty::Options ('getOption');
 
-BEGIN {
+my $VERSION        = "7.00.00";
+my $VERSION_DATE   = "2018-11-26";
+my ($PROGRAM_NAME) = "PCGen PrettyLST";
+my ($SCRIPTNAME)   = ( $PROGRAM_NAME =~ m{ ( [^/\\]* ) \z }xms );
+my $VERSION_LONG   = "$SCRIPTNAME version: $VERSION -- $VERSION_DATE";
 
-   use Pretty::Options ();
-   no strict 'refs';
-   *getOption = *{'Pretty::Options::getOption'}{CODE};
-
-}
+my $today = localtime;
 
 my $return = Pretty::Options::parseOptions(@ARGV);
 
-print "$return\n";
+print "$return";
 
-my $basepath = getOption( 'basepath' );
+# Test function or display variables or anything else I need.
+if ( getOption('test') ) {
 
-if (defined $basepath) {
-	print "\n$basepath\n";
-} else {
-	print "no opion\n"
+   print "No tests set\n";
+   exit;
 }
 
+# Fix Warning Level
+my $error_message = Pretty::Options::fixWarningLevel();
+
+# Check input path is set
+$error_message .= Pretty::Options::checkInputPath(); 
+
+# Redirect STDERR if needed
+
+if (getOption('outputerror')) {
+   open STDERR, '>', getOption('outputerror');
+   print STDERR "Error log for ", $VERSION_LONG, "\n";
+   print STDERR "At ", $today, " on the data files in the \'", getOption('inputpath')  , "\' directory\n";
+}
+
+print $error_message;

@@ -13,7 +13,7 @@ our (@ISA, @EXPORT_OK);
 @EXPORT_OK = qw(getOption setOption);
 
 # Default command line options
-our (%cl_options, %activate, %conversion_enable);
+our (%clOptions, %activate, %conversion_enable, %numeric_warning_level);
 
 %activate = (
   'ADD:SAB'          => 'ALL:Convert ADD:SA to ADD:SAB',
@@ -105,106 +105,149 @@ our (%cl_options, %activate, %conversion_enable);
    'CLASS:no more HASSPELLFORMULA'      => 0,    # [ 1973497 ] HASSPELLFORMULA is deprecated
 );
 
+%numeric_warning_level = (
+   debug         => 7,
+   d             => 7,
+   7             => 7,
+   info          => 6,
+   informational => 6,
+   i             => 6,
+   6             => 6,
+   notice        => 5,
+   n             => 5,
+   5             => 5,
+   warning       => 4,
+   warn          => 4,
+   w             => 4,
+   4             => 4,
+   error         => 3,
+   err           => 3,
+   e             => 3,
+   3             => 3,
+);
+
 sub parseOptions {
 
    local @ARGV = @_;
 
    # Set up the defaults for each of the options
-   my $basepath       = q{};     # Base path for the @ replacement
+   my $basePath       = q{};     # Base path for the @ replacement
    my $convert        = q{};     # Activate a standard conversion
-   my $exportlist     = 0;       # Export lists of object in CVS format
-   my $file_type      = q{};     # File type to use if no PCC are read
+   my $exportList     = 0;       # Export lists of object in CVS format
+   my $fileType       = q{};     # File type to use if no PCC are read
    my $gamemode       = q{};     # GAMEMODE filter for the PCC files
    my $help           = 0;       # Need help? Display the usage
-   my $html_help      = 0;       # Generate the HTML doc
-   my $input_path     = q{};     # Path for the input directory
+   my $htmlHelp       = 0;       # Generate the HTML doc
+   my $inputPath      = q{};     # Path for the input directory
    my $man            = 0;       # Display the complete doc (man page)
-   my $missing_header = 0;       # Report the tags that have no defined header.
-   my $nojep          = 0;       # Do not use the new parse_jep function
-   my $nowarning      = 0;       # Do not display warning messages in the report
-   my $noxcheck       = 0;       # Disable the x-check validations
-   my $old_source_tag = 0;       # Use | instead of \t for the SOURCExxx line
-   my $output_error   = q{};     # Path and file name of the error log
-   my $output_path    = q{};     # Path for the ouput directory
+   my $missingHeader  = 0;       # Report the tags that have no defined header.
+   my $noJEP          = 0;       # Do not use the new parse_jep function
+   my $noWarning      = 0;       # Do not display warning messages in the report
+   my $noXCheck       = 0;       # Disable the x-check validations
+   my $oldSourceTag   = 0;       # Use | instead of \t for the SOURCExxx line
+   my $outputError    = q{};     # Path and file name of the error log
+   my $outputPath     = q{};     # Path for the ouput directory
    my $report         = 0;       # Generate tag usage report
-   my $system_path    = q{};     # Path to the system (game mode) files
+   my $systemPath     = q{};     # Path to the system (game mode) files
    my $test           = 0;       # Internal; for tests only
-   my $warning_level  = 'info';  # Warning level for error output
-   my $xcheck         = 1;       # Perform cross-check validation
+   my $warningLevel   = 'info';  # Warning level for error output
+   my $xCheck         = 1;       # Perform cross-check validation
 
-   my $error_message = "\n";
+   my $errorMessage = "";
 
    if ( scalar @ARGV ) {
 
       GetOptions(
-         'basepath|b=s'      =>  \$basepath,  
+         'basepath|b=s'      =>  \$basePath,  
          'convert|c=s'       =>  \$convert,
-         'exportlist'        =>  \$exportlist,
-         'filetype|f=s'      =>  \$file_type,
+         'exportlist'        =>  \$exportList,
+         'filetype|f=s'      =>  \$fileType,
          'gamemode|gm=s'     =>  \$gamemode,
          'help|h|?'          =>  \$help,
-         'htmlhelp'          =>  \$html_help,
-         'inputpath|i=s'     =>  \$input_path,
+         'htmlhelp'          =>  \$htmlHelp,
+         'inputpath|i=s'     =>  \$inputPath,
          'man'               =>  \$man,
-         'missingheader|mh'  =>  \$missing_header,
-         'nojep'             =>  \$nojep,
-         'nowarning|nw'      =>  \$nowarning,
-         'noxcheck|nx'       =>  \$noxcheck,
-         'old_source_tag'    =>  \$old_source_tag,
-         'outputerror|e=s'   =>  \$output_error,
-         'outputpath|o=s'    =>  \$output_path,
+         'missingheader|mh'  =>  \$missingHeader,
+         'nojep'             =>  \$noJEP,
+         'nowarning|nw'      =>  \$noWarning,
+         'noxcheck|nx'       =>  \$noXCheck,
+         'oldsourcetag'      =>  \$oldSourceTag,
+         'outputerror|e=s'   =>  \$outputError,
+         'outputpath|o=s'    =>  \$outputPath,
          'report|r'          =>  \$report,
-         'systempath|s=s'    =>  \$system_path,
+         'systempath|s=s'    =>  \$systemPath,
          'test'              =>  \$test,
-         'warninglevel|wl=s' =>  \$warning_level,
-         'xcheck|x'          =>  \$xcheck);
+         'warninglevel|wl=s' =>  \$warningLevel,
+         'xcheck|x'          =>  \$xCheck);
 
-      %cl_options = (
-         'basepath'        =>  $basepath,  
+      %clOptions = (
+         'basepath'        =>  $basePath,  
          'convert'         =>  $convert,
-         'exportlist'      =>  $exportlist,
-         'filetype'        =>  $file_type,
+         'exportlist'      =>  $exportList,
+         'filetype'        =>  $fileType,
          'gamemode'        =>  $gamemode,
          'help'            =>  $help,
-         'htmlhelp'        =>  $html_help,
-         'inputpath'       =>  $input_path,
+         'htmlhelp'        =>  $htmlHelp,
+         'inputpath'       =>  $inputPath,
          'man'             =>  $man,
-         'missingheader'   =>  $missing_header,
-         'nojep'           =>  $nojep,
-         'nowarning'       =>  $nowarning,
-         'noxcheck'        =>  $noxcheck,
-         'old_source_tag'  =>  $old_source_tag,
-         'outputerror'     =>  $output_error,
-         'outputpath'      =>  $output_path,
+         'missingheader'   =>  $missingHeader,
+         'nojep'           =>  $noJEP,
+         'nowarning'       =>  $noWarning,
+         'noxcheck'        =>  $noXCheck,
+         'oldsourcetag'    =>  $oldSourceTag,
+         'outputerror'     =>  $outputError,
+         'outputpath'      =>  $outputPath,
          'report'          =>  $report,
-         'systempath'      =>  $system_path,
+         'systempath'      =>  $systemPath,
          'test'            =>  $test,
-         'warninglevel'    =>  $warning_level,
-         'xcheck'          =>  $xcheck);
+         'warninglevel'    =>  $warningLevel,
+         'xcheck'          =>  $xCheck);
 
       # Has a conversion been requested
-      turnOns ($cl_options{convert}) if $cl_options{convert};
+      turnOnConversions ($clOptions{convert}) if $clOptions{convert};
 
       processOptions();
 
       # Print message for unknown options
       if ( scalar @ARGV ) {
-         $error_message = "\nUnknown option:";
+         $errorMessage = "Unknown option:";
 
          while (@ARGV) {
-            $error_message .= q{ };
-            $error_message .= shift;
+            $errorMessage .= q{ };
+            $errorMessage .= shift @ARGV;
          }
-         $error_message .= "\n";
-         $cl_options{help} = 1;
+         $errorMessage .= "\n";
+         setOption('help', 1);
 
-         return $error_message;
+         return $errorMessage;
       }
 
    } else {
-      $cl_options{help} = 0;
+      # make sure the defaults are set if there were no command line options
+      %clOptions = (
+         'basepath'        =>  $basePath,  
+         'convert'         =>  $convert,
+         'exportlist'      =>  $exportList,
+         'filetype'        =>  $fileType,
+         'gamemode'        =>  $gamemode,
+         'help'            =>  0,
+         'htmlhelp'        =>  $htmlHelp,
+         'inputpath'       =>  $inputPath,
+         'man'             =>  $man,
+         'missingheader'   =>  $missingHeader,
+         'nojep'           =>  $noJEP,
+         'nowarning'       =>  $noWarning,
+         'noxcheck'        =>  $noXCheck,
+         'oldsourcetag'    =>  $oldSourceTag,
+         'outputerror'     =>  $outputError,
+         'outputpath'      =>  $outputPath,
+         'report'          =>  $report,
+         'systempath'      =>  $systemPath,
+         'test'            =>  $test,
+         'warninglevel'    =>  $warningLevel,
+         'xcheck'          =>  $xCheck);
    }
-   return "";
+   return $errorMessage;
 }
 
 =head2 getOption
@@ -218,7 +261,7 @@ sub parseOptions {
 sub getOption {
    my $opt = shift;
 
-   return $cl_options{$opt};
+   return $clOptions{$opt};
 };
 
 =head2 setOption
@@ -233,9 +276,9 @@ sub getOption {
 sub setOption {
    my ($opt, $value) = @_;
 
-   my $current = $cl_options{$opt};
+   my $current = $clOptions{$opt};
 
-   $cl_options{$opt} = $value;
+   $clOptions{$opt} = $value;
 
    return $current;
 };
@@ -246,13 +289,13 @@ sub isConversionActive {
    return $conversion_enable{$opt};
 };
 
-=head2 turnOns
+=head2 turnOnConversions
 
    Turn on any conversions that have been requested via command line options
 
 =cut
 
-sub turnOns {
+sub turnOnConversions {
    my ($convert) = @_;
 
    my $entry   = $activate{ $convert };
@@ -267,17 +310,17 @@ sub turnOns {
    }
 }
 
-sub process_options {
+sub processOptions {
 
    # No-warning option
    # level 6 is info, level 5 is notice
-   if ( getOption('nowarning') && getOption('warning_level') >= 6 ) {
-      putOption('warning_level', 5);
+   if ( getOption('nowarning') && getOption('warninglevel') >= 6 ) {
+      setOption('warninglevel', 5);
    }
 
-   # old_source_tag option
-   if ( getOption('old_source_tag') ) {
-      # We disable the conversion if the -old_source_tag option is used
+   # oldsourcetag option
+   if ( getOption('oldsourcetag') ) {
+      # We disable the conversion if the -oldsourcetag option is used
       $conversion_enable{'ALL:New SOURCExxx tag format'} = 0;
    }
 
@@ -291,20 +334,68 @@ sub process_options {
 
       # The xcheck option is now on by default. Using noxcheck is the only way to
       # disable it
-      $cl_options{xcheck} = 0;
+      setOption('xcheck', 0);
    }
 
    # basepath option
    # If no basepath was given, use input_dir
    if ( getOption('basepath') eq q{} ) {
-      $cl_options{basepath} = $cl_options{'input_path'};
+      setOption('basepath', getOption('inputpath'));
    }
 
-   $cl_options{basepath} =~ tr{\\}{/};
+   fixPath(getOption('basepath'));
 };
 
+sub fixPath {
+   my ($name) = @_;
 
+   if (defined $clOptions{name} ) {
+      $clOptions{name} =~ tr{\\}{/};
+   }
+}
 
+sub fixWarningLevel {
+
+   my $currentLevel = getOption('warninglevel');
+   my $returnString = qq{\n};
+
+   if ( exists $numeric_warning_level{ $currentLevel } ) {
+      # We convert the warning level from  a string to a numerical value
+      setOption('warninglevel', $numeric_warning_level{ $currentLevel });
+   } else {
+      setOption('help', 1);
+      $returnString .= <<"STRING_END";
+Invalid warning level: ${currentLevel}
+Valid options are: error, warning, notice, info and debug\n
+STRING_END
+   }
+
+   return $returnString;
+}
+
+=head2 checkInputPath
+
+   Check to see if the input path is needed and if so, make sure it is set.
+   If it is not fill out the error string and set the option that will make
+   sure it is printed.
+
+=cut
+
+sub checkInputPath {
+
+   my $return = qq{};
+
+   # If there is no input pat or file type and we're not just doing help
+   if ( !getOption('inputpath') && 
+        !getOption('filetype') && 
+        !( getOption('man') || getOption('htmlhelp') ) )
+   {
+      $return = "inputpath parameter is missing\n";
+      setOption('help', 1);
+   }
+
+   return $return;
+}
 
 
 1;

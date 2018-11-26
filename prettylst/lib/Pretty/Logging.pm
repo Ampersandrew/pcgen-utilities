@@ -2,12 +2,10 @@ package Pretty::Logger;
 
 use Mouse;
 
-has 'file_name_previous' => (
+has 'fileNamePrevious' => (
    is      => 'rw',
    isa     => 'Str',
    default => q{},
-   reader  => 'get_previous',
-   writer  => 'set_previous',
 );
 
 has 'header' => (
@@ -17,23 +15,23 @@ has 'header' => (
    writer  => \&set_header,
 );
 
-has 'is_first_error' => (
+has 'isFirstError' => (
    is      => 'rw',
    isa     => 'Bool',
    default => 1,
 );
 
-has 'is_start_of_log' => (
+has 'isStartOfLog' => (
    is      => 'rw',
    isa     => 'Bool',
    default => 1,
 );
 
-has 'warning_level' => (
+has 'warningLevel' => (
    is       => 'rw',
    isa      => 'Str',
    required => 1,
-   trigger  => \&_set_prefix,
+   trigger  => \&setPrefix,
 );
 
 has 'prefix' => (
@@ -45,7 +43,7 @@ has 'prefix' => (
 # Private method. Called when the warning level is changed, this
 # operation sets the prefix for the new warning level.
 
-sub _set_prefix {
+sub setPrefix {
 
    my ($self, $level, $old_level) = @_;
 
@@ -95,14 +93,14 @@ sub set_header
 
    # Add a line feed before the header to separate it from the previous
    # content, unless we are at the very start of the log.
-   my $header = $self->is_start_of_log() ? $h : "\n${h}";
+   my $header = $self->isStartOfLog() ? $h : "\n${h}";
 
    $self->header($header);
-   $self->is_first_error(1);
+   $self->isFirstError(1);
 
    # We blank the previous file name to make sure that the file name will be
    # printed with the first message after the header.
-   $self->set_previous('');
+   $self->fileNamePrevious('');
 }
 
 =head2 debug
@@ -238,13 +236,13 @@ sub _log
    my ( $warning_level, $message, $file_name, $line_number ) = ( @_, undef );
 
    # Verify if warning level should be displayed
-   return if ( $self->{warning_level} < $warning_level );
+   return if ( $self->warningLevel() < $warning_level );
 
    # Print the header if needed
-   if ($self->is_first_error()) {
+   if ($self->isFirstError()) {
       warn $self->header();
-      $self->is_first_error(0);
-      $self->is_start_of_log(0);
+      $self->isFirstError(0);
+      $self->isStartOfLog(0);
    }
 
    # Windows and UNIX do not use the same charater in
@@ -252,7 +250,7 @@ sub _log
    # we need to replace the / by a \.
    $file_name =~ tr{/}{\\} if $^O eq "MSWin32";
 
-   my $output = $self->prefix($warning_level);
+   my $output = $self->prefix();
 
    # Construct the output, add the line number if we have one.
    # so, make sure there is a new-line at the end of the output.
@@ -263,13 +261,13 @@ sub _log
 
    # We display the file only if it is not the same are the last
    # time _log was called
-   warn "$file_name\n" if $file_name ne $self->get_previous();
+   warn "$file_name\n" if $file_name ne $self->fileNamePrevious();
 
    warn $output; 
 
    # Set the file name of the file this message originated from
    # so that we only write each file name once.
-   $self->get_previous($file_name);
+   $self->fileNamePrevious($file_name);
 }
 
 __PACKAGE__->meta->make_immutable;

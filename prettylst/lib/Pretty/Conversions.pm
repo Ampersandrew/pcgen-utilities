@@ -15,10 +15,22 @@ use lib dirname(dirname abs_path $0);
 use Pretty::Options (qw(getOption setOption));
 use Pretty::Logging;
 
-our $logging;
+our $logging = Pretty::Logging->new(warningLevel => getOption('warninglevel'));
 
 # File handles for the Export Lists
 my %filehandle_for;
+
+my %headings = (
+   'Category CrossRef'  => "Category cross-reference problems found\n",
+   'Created'            => "List of files that were created in the directory\n",
+   'CrossRef'           => "Cross-reference problems found\n",
+   'Type CrossRef'      => "Type cross-reference problems found\n",
+   'LST'                => "Messages generated while parsing the .LST files\n",
+   'Missing'            => "List of files used in a .PCC that do not exist\n",
+   'PCC'                => "Messages generated while parsing the .PCC files\n",
+   'System'             => "Messages generated while parsing the system files\n",
+   'Unreferenced'       => "List of files that are not referenced by any .PCC files\n",
+);
 
 # Valid filetype are the only ones that will be parsed
 # Some filetype are valid but not parsed yet (no function name)
@@ -96,164 +108,71 @@ my %writefiletype = (
 );
 
 
-
-# Constants for ewarn and the warning_level parameter
-
-use constant DEBUG   => 7; # INFO message + debug message for the programmer
-use constant INFO    => 6; # Everything including deprecations message (default)
-use constant NOTICE  => 5; # No deprecations
-use constant WARNING => 4; # PCGEN will prabably not work properly
-use constant ERROR   => 3; # PCGEN will not work properly or the script is foobar
-
-my %numeric_warning_level_for = (
-   debug         => 7,
-   d             => 7,
-   7             => 7,
-   info          => 6,
-   informational => 6,
-   i             => 6,
-   6             => 6,
-   notice        => 5,
-   n             => 5,
-   5             => 5,
-   warning       => 4,
-   warn          => 4,
-   w             => 4,
-   4             => 4,
-   error         => 3,
-   err           => 3,
-   e             => 3,
-   3             => 3,
-);
-
-my $error_message = "\n";
-
-#####################################
-# Test function or display variables
-# or anything else I need.
-
-if ( getOption('test') ) {
-
-        print "No tests set\n";
-        exit;
-}
-
-#####################################
-# Warning Level
-
-my $level = getOption('warning_level');
-
-if ( exists $numeric_warning_level_for{ $level } ) {
-   # We convert the warning level from  a string to a numerical value
-   setOption('warning_level', $numeric_warning_level_for{ $level });
-} else {
-   $error_message .= "\nInvalid warning level: ${level}\nValid options are: error, warning, notice, info and debug\n";
-   setOption('help', 1);
-}
-
-$logging = Pretty::Logging->new(warning_level=>getOption('warning_level'));
-
-#####################################
-# Path options
-
-if ( !getOption('input_path') && 
-     !getOption('file_type') && 
-     !( getOption('man') || getOption('html_help') ) )
-{
-   $error_message .= "\n-inputpath parameter is missing\n";
-   setOption('help', 1);
-}
-
 #####################################
 # Redirect STDERR if needed
 
-if (getOption('output_error')) {
-   open STDERR, '>', getOption('output_error');
+if (getOption('outputerror')) {
+   open STDERR, '>', getOption('outputerror');
    print STDERR "Error log for ", $VERSION_LONG, "\n";
    print STDERR "At ", $today, " on the data files in the \'", $cl_options{ input_path } , "\' directory\n";
 }
 
 # List of default for values defined in system files
-my @valid_system_alignments  = qw( LG  LN  LE  NG  TN  NE  CG  CN  CE  NONE  Deity );
+my @valid_system_alignments = qw(LG LN LE NG TN NE CG CN CE NONE Deity);
 
-my @valid_system_check_names = qw( Fortitude Reflex Will );
+my @valid_system_check_names = qw(Fortitude Reflex Will);
 
+my @valid_system_game_modes  = ( 
+   # Main PCGen Release
+   qw(35e 3e Deadlands Darwins_World_2 FantasyCraft Gaslight Killshot LoE Modern
+   Pathfinder Sidewinder Spycraft Xcrawl OSRIC),
+   
+   # Third Party/Homebrew Support
+   qw(DnD CMP_D20_Fantasy_v30e CMP_D20_Fantasy_v35e CMP_D20_Fantasy_v35e_Kalamar
+   CMP_D20_Modern CMP_DnD_Blackmoor CMP_DnD_Dragonlance CMP_DnD_Eberron
+   CMP_DnD_Forgotten_Realms_v30e CMP_DnD_Forgotten_Realms_v35e
+   CMP_DnD_Oriental_Adventures_v30e CMP_DnD_Oriental_Adventures_v35e CMP_HARP
+   SovereignStoneD20) );
 
-my @valid_system_game_modes  = do { no warnings 'qw'; qw(
-
-# Main PCGen Release
-        35e
-        3e
-        Deadlands
-        Darwins_World_2
-        FantasyCraft
-        Gaslight
-        Killshot
-        LoE
-        Modern
-        Pathfinder
-        Sidewinder
-        Spycraft
-        Xcrawl
-        OSRIC
-
-# Third Party/Homebrew Support
-        DnD
-        CMP_D20_Fantasy_v30e
-        CMP_D20_Fantasy_v35e
-        CMP_D20_Fantasy_v35e_Kalamar
-        CMP_D20_Modern
-        CMP_DnD_Blackmoor
-        CMP_DnD_Dragonlance
-        CMP_DnD_Eberron
-        CMP_DnD_Forgotten_Realms_v30e
-        CMP_DnD_Forgotten_Realms_v35e
-        CMP_DnD_Oriental_Adventures_v30e
-        CMP_DnD_Oriental_Adventures_v35e
-        CMP_HARP
-        SovereignStoneD20
-
-); };
-
+# This meeds replaced, we should be getting this information from the STATS file.
 my @valid_system_stats          = qw(
-        STR DEX CON INT WIS CHA NOB FAM PFM
-
-        DVR WEA AGI QUI SDI REA INS PRE
+   STR DEX CON INT WIS CHA NOB FAM PFM
+   
+   DVR WEA AGI QUI SDI REA INS PRE
 );
 
 my @valid_system_var_names      = qw(
-        ACTIONDICE                              ACTIONDIEBONUS          ACTIONDIETYPE
-        Action                          ActionLVL                       BUDGETPOINTS
-        CURRENTVEHICLEMODS              ClassDefense            DamageThreshold
-        EDUCATION                               EDUCATIONMISC           FAVORCHECK
-        FIGHTINGDEFENSIVELYAC           FightingDefensivelyAC   FightingDefensivelyACBonus
-        GADGETPOINTS                    INITCOMP                        INSPIRATION
-        INSPIRATIONMISC                 LOADSCORE                       MAXLEVELSTAT
-        MAXVEHICLEMODS                  MISSIONBUDGET           MUSCLE
-        MXDXEN                          NATIVELANGUAGES         NORMALMOUNT
-        OFFHANDLIGHTBONUS                       PSIONLEVEL                      Reputation
-        TWOHANDDAMAGEDIVISOR            TotalDefenseAC          TotalDefenseACBonus
-        UseAlternateDamage              VEHICLECRUISINGMPH      VEHICLEDEFENSE
-        VEHICLEHANDLING                 VEHICLEHARDNESS         VEHICLESPEED
-        VEHICLETOPMPH                   VEHICLEWOUNDPOINTS      Wealth
-        CR                                      CL                              ECL
-        SynergyBonus                    NoTypeProficiencies     NormalMount
-        CHOICE                          BAB                             NormalFollower
+   ACTIONDICE                    ACTIONDIEBONUS          ACTIONDIETYPE
+   Action                        ActionLVL               BUDGETPOINTS
+   CURRENTVEHICLEMODS            ClassDefense            DamageThreshold
+   EDUCATION                     EDUCATIONMISC           FAVORCHECK
+   FIGHTINGDEFENSIVELYAC         FightingDefensivelyAC   FightingDefensivelyACBonus
+   GADGETPOINTS                  INITCOMP                INSPIRATION
+   INSPIRATIONMISC               LOADSCORE               MAXLEVELSTAT
+   MAXVEHICLEMODS                MISSIONBUDGET           MUSCLE
+   MXDXEN                        NATIVELANGUAGES         NORMALMOUNT
+   OFFHANDLIGHTBONUS             PSIONLEVEL              Reputation
+   TWOHANDDAMAGEDIVISOR          TotalDefenseAC          TotalDefenseACBonus
+   UseAlternateDamage            VEHICLECRUISINGMPH      VEHICLEDEFENSE
+   VEHICLEHANDLING               VEHICLEHARDNESS         VEHICLESPEED
+   VEHICLETOPMPH                 VEHICLEWOUNDPOINTS      Wealth
+   CR                            CL                      ECL
+   SynergyBonus                  NoTypeProficiencies     NormalMount
+   CHOICE                        BAB                     NormalFollower
 
-        Action                          ActionLVL                       ArmorQui
-        ClassDefense                    DamageThreshold         DenseMuscle
-        FIGHTINGDEFENSIVELYACBONUS      Giantism                        INITCOMP
-        LOADSCORE                               MAXLEVELSTAT            MUSCLE
-        MXDXEN                          Mount                           OFFHANDLIGHTBONUS
-        TOTALDEFENSEACBONUS             TWOHANDDAMAGEDIVISOR
+   Action                        ActionLVL               ArmorQui
+   ClassDefense                  DamageThreshold         DenseMuscle
+   FIGHTINGDEFENSIVELYACBONUS    Giantism                INITCOMP
+   LOADSCORE                     MAXLEVELSTAT            MUSCLE
+   MXDXEN                        Mount                   OFFHANDLIGHTBONUS
+   TOTALDEFENSEACBONUS           TWOHANDDAMAGEDIVISOR
 
-        ACCHECK                         ARMORACCHECK            BASESPELLSTAT
-        CASTERLEVEL                             INITIATIVEMISC          INITIATIVEMOD
-        MOVEBASE                                SHIELDACCHECK           SIZE
-        SKILLRANK                               SKILLTOTAL                      SPELLFAILURE
-        SR                                      TL                              LIST
-        MASTERVAR       APPLIEDAS
-
+   ACCHECK                       ARMORACCHECK            BASESPELLSTAT
+   CASTERLEVEL                   INITIATIVEMISC          INITIATIVEMOD
+   MOVEBASE                      SHIELDACCHECK           SIZE
+   SKILLRANK                     SKILLTOTAL              SPELLFAILURE
+   SR                            TL                      LIST
+   MASTERVAR                     APPLIEDAS
 );
 
 #####################################
@@ -262,8 +181,8 @@ my @valid_system_var_names      = qw(
 # If present, call the function to
 # generate the "game mode" variables.
 
-if ( getOption('system_path') ne q{} ) {
-        parse_system_files(getOption('system_path'));
+if ( getOption('systempath') ne q{} ) {
+   parse_system_files(getOption('systempath'));
 }
 
 # Valid check name
@@ -385,7 +304,7 @@ if (getOption('man')) {
 #####################################
 # Generate the HTML man page and display it
 
-if ( getOption('html_help') ) {
+if ( getOption('htmlhelp') ) {
         if( !-e "$PROGRAM_NAME.css" ) {
                 generate_css("$PROGRAM_NAME.css");
         }
@@ -705,7 +624,7 @@ my %SOURCE_file_type_def = (
 );
 
 # Some ppl may still want to use the old ways (for PCGen v5.9.5 and older)
-if( getOption('old_source_tag') ) {
+if( getOption('oldsourcetag') ) {
         $SOURCE_file_type_def{Sep} = q{|};  # use | instead of [tab] to split
 }
 
@@ -4408,11 +4327,11 @@ my @modified_files;     # Will hold the name of the modified files
 #####################################
 # Verify if the inputpath was given
 
-if (getOption('input_path')) {
+if (getOption('inputpath')) {
 
         # Verify if the outputpath exist
-        if ( getOption('output_path') && !-d getOption('output_path') ) {
-                $error_message = "\nThe directory " . getOption('output_path') . " does not exist.";
+        if ( getOption('outputpath') && !-d getOption('outputpath') ) {
+                $error_message = "\nThe directory " . getOption('outputpath') . " does not exist.";
 
                 Pod::Usage::pod2usage(
                 {
@@ -4593,13 +4512,9 @@ if (getOption('input_path')) {
                         $filelist_notpcc{$File::Find::name} = lc $_;
                 }
         }
-        File::Find::find( \&mywanted, getOption('input_path') );
+        File::Find::find( \&mywanted, getOption('inputpath') );
 
-        $logging->set_ewarn_header(
-        "================================================================\n"
-        . "Messages generated while parsing the .PCC files\n"
-        . "----------------------------------------------------------------\n"
-        );
+        $logging->set_header(constructLoggingHeader('PCC'));
 
         # Second we parse every .PCC and look for filetypes
         for my $pcc_file_name ( sort @filelist ) {
@@ -4864,12 +4779,12 @@ if (getOption('input_path')) {
                 }
 
                 # Do we copy the .PCC???
-                if ( getOption('output_path') && ( $must_write ) && $writefiletype{"PCC"} ) {
+                if ( getOption('outputpath') && ( $must_write ) && $writefiletype{"PCC"} ) {
                         my $new_pcc_file = $pcc_file_name;
                         $new_pcc_file =~ s/$cl_options{input_path}/$cl_options{output_path}/i;
 
                         # Create the subdirectory if needed
-                        create_dir( File::Basename::dirname($new_pcc_file), getOption('output_path') );
+                        create_dir( File::Basename::dirname($new_pcc_file), getOption('outputpath') );
 
                         open my $new_pcc_fh, '>', $new_pcc_file;
 
@@ -4888,16 +4803,16 @@ if (getOption('input_path')) {
         if ( !keys %files_to_parse ) {
                 $logging->error(
                         qq{Could not find any .lst file to parse.},
-                        getOption('input_path')
+                        getOption('inputpath')
                 );
                 $logging->error(
                         qq{Is your -inputpath parameter valid? ($cl_options{input_path})},
-                        getOption('input_path')
+                        getOption('inputpath')
                 );
                 if ( getOption('gamemode') ) {
                 $logging->error(
                         qq{Is your -gamemode parameter valid? ($cl_options{gamemode})},
-                        getOption('input_path')
+                        getOption('inputpath')
                 );
                 exit;
                 }
@@ -4905,11 +4820,8 @@ if (getOption('input_path')) {
 
         # Missing .lst files must be printed
         if ( keys %filelist_missing ) {
-                $logging->set_ewarn_header(
-                   "================================================================\n"
-                   . "List of files used in a .PCC that do not exist\n"
-                   . "----------------------------------------------------------------\n"
-                );
+                $logging->set_header(constructLoggingHeader('Missing'));
+
                 for my $lstfile ( sort keys %filelist_missing ) {
                         $logging->notice(
                                 "Can't find the file: $lstfile",
@@ -4920,12 +4832,9 @@ if (getOption('input_path')) {
         }
 
         # If the gamemode filter is active, we do not report files not refered to.
-        if ( keys %filelist_notpcc && !getOption('gamemode') ) {
-                $logging->set_ewarn_header(
-                   "================================================================\n"
-                   . "List of files that are not referenced by any .PCC files\n"
-                   . "----------------------------------------------------------------\n"
-                );
+        if ( keys %filelistnotpcc && !getOption('gamemode') ) {
+                $logging->set_header(constructLoggingHeader('Unreferenced'));
+
                 for my $file ( sort keys %filelist_notpcc ) {
                         $file =~ s/$cl_options{basepath}//i;
                         $file =~ tr{/}{\\} if $^O eq "MSWin32";
@@ -4934,14 +4843,10 @@ if (getOption('input_path')) {
         }
 }
 else {
-        $files_to_parse{'STDIN'} = getOption('file_type');
+   $files_to_parse{'STDIN'} = getOption('filetype');
 }
 
-$logging->set_ewarn_header(
-   "================================================================\n"
-   . "Messages generated while parsing the .LST files\n"
-   . "----------------------------------------------------------------\n"
-);
+$logging->set_header(constructLoggingHeader('LST'));
 
 my @files_to_parse_sorted = ();
 my %temp_files_to_parse   = %files_to_parse;
@@ -5124,12 +5029,12 @@ for my $file (@files_to_parse_sorted) {
 
                 my $write_fh;
 
-                if (getOption('output_path')) {
+                if (getOption('outputpath')) {
                         my $newfile = $file;
                         $newfile =~ s/$cl_options{input_path}/$cl_options{output_path}/i;
 
                         # Create the subdirectory if needed
-                        create_dir( File::Basename::dirname($newfile), getOption('output_path') );
+                        create_dir( File::Basename::dirname($newfile), getOption('outputpath') );
 
                         open $write_fh, '>', $newfile;
 
@@ -5148,10 +5053,10 @@ for my $file (@files_to_parse_sorted) {
                 LINE:
                 for my $line ( @{$newlines_ref} ) {
                         #$line =~ s/\s+$//;
-                        print {$write_fh} "$line\n" if getOption('output_path');
+                        print {$write_fh} "$line\n" if getOption('outputpath');
                 }
 
-                close $write_fh if getOption('output_path');
+                close $write_fh if getOption('outputpath');
         }
         else {
                 warn "Didn't process filetype \"$files_to_parse{$file}\".\n";
@@ -5171,15 +5076,12 @@ if ( $conversion_enable{'BIOSET:generate the new files'} ) {
 
 ###########################################
 # Print a report with the modified files
-if ( getOption('output_path') && scalar(@modified_files) ) {
-        $cl_options{output_path} =~ tr{/}{\\} if $^O eq "MSWin32";
+if ( getOption('outputpath') && scalar(@modified_files) ) {
+   $cl_options{output_path} =~ tr{/}{\\} if $^O eq "MSWin32";
 
-        $logging->set_ewarn_header(
-           "================================================================\n"
-           . "List of files that were created in the directory\n"
-           . "$cl_options{output_path}\n"
-           . "----------------------------------------------------------------\n"
-        );
+   my $path = getOption('output_path');
+
+   $logging->set_header(constructLoggingHeader('Created'), $path);
 
         for my $file (@modified_files) {
                 $file =~ s{ $cl_options{input_path} }{}xmsi;
@@ -5388,11 +5290,7 @@ if ( getOption('xcheck') ) {
         }
 
         # Print the report sorted by file name and line number.
-        $logging->set_ewarn_header(
-           "================================================================\n"
-           . "Cross-reference problems found\n"
-           . "----------------------------------------------------------------\n"
-        );
+        $logging->set_header(constructLoggingHeader('CrossRef'));
 
         # This will add a message for every message in to_report - which should be every message
         # that was added to to_report.
@@ -5426,11 +5324,7 @@ if ( getOption('xcheck') ) {
         }
 
         # Print the type report sorted by file name and line number.
-        $logging->set_ewarn_header(
-           "================================================================\n"
-           . "Type cross-reference problems found\n"
-           . "----------------------------------------------------------------\n"
-        );
+        $logging->set_header(constructLoggingHeader('Type CrossRef'));
 
         for my $file ( sort keys %to_report ) {
                 for my $line_ref ( sort { $a->[0] <=> $b->[0] } @{ $to_report{$file} } ) {
@@ -5458,11 +5352,7 @@ if ( getOption('xcheck') ) {
         }
 
         # Print the category report sorted by file name and line number.
-        $logging->set_ewarn_header(
-           "================================================================\n"
-           . "Category cross-reference problems found\n"
-           . "----------------------------------------------------------------\n"
-        );
+        $logging->set_header(constructLoggingHeader('Category CrossRef'));
 
         for my $file ( sort keys %to_report ) {
                 for my $line_ref ( sort { $a->[0] <=> $b->[0] } @{ $to_report{$file} } ) {
@@ -5477,7 +5367,7 @@ if ( getOption('xcheck') ) {
 
         #################################
         # Print the tag that do not have defined headers if requested
-        if ( getOption('missing_header') ) {
+        if ( getOption('missingheader') ) {
                 my $firsttime = 1;
                 for my $linetype ( sort keys %missing_headers ) {
                 if ($firsttime) {
@@ -5513,7 +5403,7 @@ if ( $conversion_enable{'Export lists'} ) {
 #########################################
 # Close the redirected STDERR if needed
 
-if (getOption('output_error')) {
+if (getOption('outputerror')) {
         close STDERR;
         print STDOUT "\cG";                     # An audible indication that PL has finished.
 }
@@ -5582,11 +5472,9 @@ sub normalize_file($) {
 # This function uses the information of master_file_type to
 # identify the curent line type and parse it.
 #
-# Parameters: $file_type        = The type of the file has defined by
-#                                               the .PCC file
-#                       $lines_ref      = Reference to an array containing all
-#                                               the lines of the file
-#                       $file_for_error = File name to use with log
+# Parameters: $file_type      = The type of the file has defined by the .PCC file
+#             $lines_ref      = Reference to an array containing all the lines of the file
+#             $file_for_error = File name to use with log
 
 sub FILETYPE_parse {
         my $file_type   = shift;
@@ -5971,7 +5859,7 @@ sub FILETYPE_parse {
         # Phase II - Reformating the lines
 
         # No reformating needed?
-        return $lines_ref unless getOption('output_path') && $writefiletype{$file_type};
+        return $lines_ref unless getOption('outputpath') && $writefiletype{$file_type};
 
         # Now on to all the non header lines.
         CORE_LINE:
@@ -12740,7 +12628,7 @@ BEGIN {
                         $line_info->[1] = \%line_tokens;
                 }
                 elsif ( $file_for_error =~ / \A $cl_options{input_path} /xmsi ) {
-                        # We give this notice only if the curent file is under getOption('input_path').
+                        # We give this notice only if the curent file is under getOption('inputpath').
                         # If -basepath is used, there could be files loaded outside of the -inputpath
                         # without their PCC.
                         $logging->notice( "No PCC source information found", $file_for_error, $line_for_error );
@@ -13871,7 +13759,7 @@ sub get_header {
                 || $tagheader{default}{$tag_name}
                 || $tag_name;
 
-        if ( getOption('missing_header') && $tag_name eq $header ) {
+        if ( getOption('missingheader') && $tag_name eq $header ) {
                 $missing_headers{$line_type}{$header}++;
         }
 
@@ -13981,210 +13869,205 @@ sub embedded_coma_split {
 # parse_system_files
 # ------------------
 #
-# Parameter: $system_file_path  Path where the game mode folders
-#                                               can be found.
+# Parameter: $system_file_path  Path where the game mode folders can be found.
 
 {
-        # Needed for the Find function
-        my @system_files;
+   # Needed for the Find function
+   my @system_files;
 
-        sub parse_system_files {
-                my ($system_file_path) = @_;
-                my $original_system_file_path = $system_file_path;
+   sub parse_system_files {
+      my ($system_file_path) = @_;
+      my $original_system_file_path = $system_file_path;
 
-                my @verified_allowed_modes      = ();
-                my @verified_stats              = ();
-                my @verified_alignments = ();
-                my @verified_var_names  = ();
-                my @verified_check_names        = ();
+      my @verified_allowed_modes      = ();
+      my @verified_stats              = ();
+      my @verified_alignments = ();
+      my @verified_var_names  = ();
+      my @verified_check_names        = ();
 
-                # Set the header for the error messages
-                $logging->set_ewarn_header( 
-                   "================================================================\n"
-                   . "Messages generated while parsing the system files\n"
-                   . "----------------------------------------------------------------\n"
-                );
+      # Set the header for the error messages
+      $logging->set_header(constructLoggingHeader('System'));
 
-                # Get the Unix direcroty separator even in a Windows environment
-                $system_file_path =~ tr{\\}{/};
+      # Get the Unix direcroty separator even in a Windows environment
+      $system_file_path =~ tr{\\}{/};
 
-                # Verify if the gameModes directory is present
-                if ( !-d "$system_file_path/gameModes" ) {
-                die qq{No gameModes directory found in "$original_system_file_path"};
-                }
+      # Verify if the gameModes directory is present
+      if ( !-d "$system_file_path/gameModes" ) {
+         die qq{No gameModes directory found in "$original_system_file_path"};
+      }
 
-                # We will now find all of the miscinfo.lst and statsandchecks.lst files
-                @system_files = ();
+      # We will now find all of the miscinfo.lst and statsandchecks.lst files
+      @system_files = ();
 
-                File::Find::find( \&want_system_info, $system_file_path );
+      File::Find::find( \&want_system_info, $system_file_path );
 
-                # Did we find anything (hopefuly yes)
-                if ( scalar @system_files == 0 ) {
-                $logging->error(
-                        qq{No miscinfo.lst or statsandchecks.lst file were found in the system directory},
-                        getOption('system_path')
-                );
-                }
+      # Did we find anything (hopefuly yes)
+      if ( scalar @system_files == 0 ) {
+         $logging->error(
+            qq{No miscinfo.lst or statsandchecks.lst file were found in the system directory},
+            getOption('systempath')
+         );
+      }
 
-                # We only keep the files that correspond to the selected
-                # game mode
-                if (getOption('gamemode')) {
-                @system_files
-                        = grep { m{ \A $system_file_path
-                                        [/] gameModes
-                                        [/] (?: $cl_options{gamemode} ) [/]
-                                        }xmsi;
-                        }
-                        @system_files;
-                }
+      # We only keep the files that correspond to the selected
+      # game mode
+      if (getOption('gamemode')) {
+         @system_files
+         = grep { m{ \A $system_file_path
+            [/] gameModes
+            [/] (?: $cl_options{gamemode} ) [/]
+         }xmsi;
+         }
+         @system_files;
+      }
 
-                # Anything left?
-                if ( scalar @system_files == 0 ) {
-                $logging->error(
-                        qq{No miscinfo.lst or statsandchecks.lst file were found in the gameModes/$cl_options{gamemode}/ directory},
-                        getOption('system_path')
-                );
-                }
+      # Anything left?
+      if ( scalar @system_files == 0 ) {
+         $logging->error(
+            qq{No miscinfo.lst or statsandchecks.lst file were found in the gameModes/$cl_options{gamemode}/ directory},
+            getOption('systempath')
+         );
+      }
 
-                # Now we search for the interesting part in the miscinfo.lst files
-                for my $system_file (@system_files) {
-                open my $system_file_fh, '<', $system_file;
+      # Now we search for the interesting part in the miscinfo.lst files
+      for my $system_file (@system_files) {
+         open my $system_file_fh, '<', $system_file;
 
-                LINE:
-                while ( my $line = <$system_file_fh> ) {
-                        chomp $line;
+         LINE:
+         while ( my $line = <$system_file_fh> ) {
+            chomp $line;
 
-                        # Skip comment lines
-                        next LINE if $line =~ / \A [#] /xms;
+            # Skip comment lines
+            next LINE if $line =~ / \A [#] /xms;
 
-                        # ex. ALLOWEDMODES:35e|DnD
-                        if ( my ($modes) = ( $line =~ / ALLOWEDMODES: ( [^\t]* )/xms ) ) {
-                                push @verified_allowed_modes, split /[|]/, $modes;
-                                next LINE;
-                        }
-                        # ex. STATNAME:Strength ABB:STR DEFINE:MAXLEVELSTAT=STR|STRSCORE-10
-                        elsif ( $line =~ / \A STATNAME: /xms ) {
-                                LINE_TAG:
-                                for my $line_tag (split /\t+/, $line) {
-                                        # STATNAME lines have more then one interesting tags
-                                        if ( my ($stat) = ( $line_tag =~ / \A ABB: ( .* ) /xms ) ) {
-                                                push @verified_stats, $stat;
-                                        }
-                                        elsif ( my ($define_expression) = ( $line_tag =~ / \A DEFINE: ( .* ) /xms ) ) {
-                                                if ( my ($var_name) = ( $define_expression =~ / \A ( [\t=|]* ) /xms ) ) {
-                                                        push @verified_var_names, $var_name;
-                                                }
-                                                else {
-                                                        $logging->error(
-                                                                qq{Cannot find the variable name in "$define_expression"},
-                                                                $system_file,
-                                                                $INPUT_LINE_NUMBER
-                                                        );
-                                                }
-                                        }
-                                }
-                        }
-                        # ex. ALIGNMENTNAME:Lawful Good ABB:LG
-                        elsif ( my ($alignment) = ( $line =~ / \A ALIGNMENTNAME: .* ABB: ( [^\t]* ) /xms ) ) {
-                                push @verified_alignments, $alignment;
-                        }
-                        # ex. CHECKNAME:Fortitude   BONUS:CHECKS|Fortitude|CON
-                        elsif ( my ($check_name) = ( $line =~ / \A CHECKNAME: .* BONUS:CHECKS [|] ( [^\t|]* ) /xms ) ) {
-                                # The check name used by PCGen is actually the one defined with the first BONUS:CHECKS.
-                                # CHECKNAME:Sagesse     BONUS:CHECKS|Will|WIS would display Sagesse but use Will internaly.
-                                push @verified_check_names, $check_name;
-                        }
-                }
-
-                close $system_file_fh;
-                }
-
-                # We keep only the first instance of every list items and replace
-                # the default values with the result.
-                # The order of elements must be preserved
-                my %seen = ();
-                @valid_system_alignments = grep { !$seen{$_}++ } @verified_alignments;
-
-                %seen = ();
-                @valid_system_game_modes = grep { !$seen{$_}++ } @verified_allowed_modes;
-
-                %seen = ();
-                @valid_system_stats = grep { !$seen{$_}++ } @verified_stats;
-
-                %seen = ();
-                @valid_system_var_names = grep { !$seen{$_}++ } @verified_var_names;
-
-                %seen = ();
-                @valid_system_check_names = grep { !$seen{$_}++ } @verified_check_names;
-
-                # Now we bitch if we are not happy
-                if ( scalar @verified_stats == 0 ) {
+            # ex. ALLOWEDMODES:35e|DnD
+            if ( my ($modes) = ( $line =~ / ALLOWEDMODES: ( [^\t]* )/xms ) ) {
+               push @verified_allowed_modes, split /[|]/, $modes;
+               next LINE;
+            }
+            # ex. STATNAME:Strength ABB:STR DEFINE:MAXLEVELSTAT=STR|STRSCORE-10
+            elsif ( $line =~ / \A STATNAME: /xms ) {
+               LINE_TAG:
+               for my $line_tag (split /\t+/, $line) {
+                  # STATNAME lines have more then one interesting tags
+                  if ( my ($stat) = ( $line_tag =~ / \A ABB: ( .* ) /xms ) ) {
+                     push @verified_stats, $stat;
+                  }
+                  elsif ( my ($define_expression) = ( $line_tag =~ / \A DEFINE: ( .* ) /xms ) ) {
+                     if ( my ($var_name) = ( $define_expression =~ / \A ( [\t=|]* ) /xms ) ) {
+                        push @verified_var_names, $var_name;
+                     }
+                     else {
                         $logging->error(
-                                q{Could not find any STATNAME: tag in the system files},
-                                $original_system_file_path
+                           qq{Cannot find the variable name in "$define_expression"},
+                           $system_file,
+                           $INPUT_LINE_NUMBER
                         );
-                }
+                     }
+                  }
+               }
+            }
+            # ex. ALIGNMENTNAME:Lawful Good ABB:LG
+            elsif ( my ($alignment) = ( $line =~ / \A ALIGNMENTNAME: .* ABB: ( [^\t]* ) /xms ) ) {
+               push @verified_alignments, $alignment;
+            }
+            # ex. CHECKNAME:Fortitude   BONUS:CHECKS|Fortitude|CON
+            elsif ( my ($check_name) = ( $line =~ / \A CHECKNAME: .* BONUS:CHECKS [|] ( [^\t|]* ) /xms ) ) {
+               # The check name used by PCGen is actually the one defined with the first BONUS:CHECKS.
+               # CHECKNAME:Sagesse     BONUS:CHECKS|Will|WIS would display Sagesse but use Will internaly.
+               push @verified_check_names, $check_name;
+            }
+         }
 
-                if ( scalar @valid_system_game_modes == 0 ) {
-                        $logging->error(
-                                q{Could not find any ALLOWEDMODES: tag in the system files},
-                                $original_system_file_path
-                        );
-                }
+         close $system_file_fh;
+      }
 
-                if ( scalar @valid_system_check_names == 0 ) {
-                        $logging->error(
-                                q{Could not find any valid CHECKNAME: tag in the system files},
-                                $original_system_file_path
-                        );
-                }
+      # We keep only the first instance of every list items and replace
+      # the default values with the result.
+      # The order of elements must be preserved
+      my %seen = ();
+      @valid_system_alignments = grep { !$seen{$_}++ } @verified_alignments;
 
-                # If the -exportlist option was used, we generate a system.csv file
-                if ( getOption('exportlist') ) {
+      %seen = ();
+      @valid_system_game_modes = grep { !$seen{$_}++ } @verified_allowed_modes;
 
-                open my $csv_file, '>', 'system.csv';
+      %seen = ();
+      @valid_system_stats = grep { !$seen{$_}++ } @verified_stats;
 
-                print {$csv_file} qq{"System Directory","$original_system_file_path"\n};
+      %seen = ();
+      @valid_system_var_names = grep { !$seen{$_}++ } @verified_var_names;
 
-                if ( getOption('gamemode') ) {
-                        print {$csv_file} qq{"Game Mode Selected","$cl_options{gamemode}"\n};
-                }
-                print {$csv_file} qq{\n};
+      %seen = ();
+      @valid_system_check_names = grep { !$seen{$_}++ } @verified_check_names;
 
-                print {$csv_file} qq{"Alignments"\n};
-                for my $alignment (@valid_system_alignments) {
-                        print {$csv_file} qq{"$alignment"\n};
-                }
-                print {$csv_file} qq{\n};
+      # Now we bitch if we are not happy
+      if ( scalar @verified_stats == 0 ) {
+         $logging->error(
+            q{Could not find any STATNAME: tag in the system files},
+            $original_system_file_path
+         );
+      }
 
-                print {$csv_file} qq{"Allowed Modes"\n};
-                for my $mode (sort @valid_system_game_modes) {
-                        print {$csv_file} qq{"$mode"\n};
-                }
-                print {$csv_file} qq{\n};
+      if ( scalar @valid_system_game_modes == 0 ) {
+         $logging->error(
+            q{Could not find any ALLOWEDMODES: tag in the system files},
+            $original_system_file_path
+         );
+      }
 
-                print {$csv_file} qq{"Stats Abbreviations"\n};
-                for my $stat (@valid_system_stats) {
-                        print {$csv_file} qq{"$stat"\n};
-                }
-                print {$csv_file} qq{\n};
+      if ( scalar @valid_system_check_names == 0 ) {
+         $logging->error(
+            q{Could not find any valid CHECKNAME: tag in the system files},
+            $original_system_file_path
+         );
+      }
 
-                print {$csv_file} qq{"Variable Names"\n};
-                for my $var_name (sort @valid_system_var_names) {
-                        print {$csv_file} qq{"$var_name"\n};
-                }
-                print {$csv_file} qq{\n};
+      # If the -exportlist option was used, we generate a system.csv file
+      if ( getOption('exportlist') ) {
 
-                close $csv_file;
-                }
+         open my $csv_file, '>', 'system.csv';
 
-                return;
-        }
+         print {$csv_file} qq{"System Directory","$original_system_file_path"\n};
 
-        sub want_system_info {
-                push @system_files, $File::Find::name
-                if lc $_ eq 'miscinfo.lst' || lc $_ eq 'statsandchecks.lst';
-        };
+         if ( getOption('gamemode') ) {
+            print {$csv_file} qq{"Game Mode Selected","$cl_options{gamemode}"\n};
+         }
+         print {$csv_file} qq{\n};
+
+         print {$csv_file} qq{"Alignments"\n};
+         for my $alignment (@valid_system_alignments) {
+            print {$csv_file} qq{"$alignment"\n};
+         }
+         print {$csv_file} qq{\n};
+
+         print {$csv_file} qq{"Allowed Modes"\n};
+         for my $mode (sort @valid_system_game_modes) {
+            print {$csv_file} qq{"$mode"\n};
+         }
+         print {$csv_file} qq{\n};
+
+         print {$csv_file} qq{"Stats Abbreviations"\n};
+         for my $stat (@valid_system_stats) {
+            print {$csv_file} qq{"$stat"\n};
+         }
+         print {$csv_file} qq{\n};
+
+         print {$csv_file} qq{"Variable Names"\n};
+         for my $var_name (sort @valid_system_var_names) {
+            print {$csv_file} qq{"$var_name"\n};
+         }
+         print {$csv_file} qq{\n};
+
+         close $csv_file;
+      }
+
+      return;
+   }
+
+   sub want_system_info {
+      push @system_files, $File::Find::name
+      if lc $_ eq 'miscinfo.lst' || lc $_ eq 'statsandchecks.lst';
+   };
 }
 
 
@@ -14631,4 +14514,26 @@ TEXTAREA {
 END_CSS
 
         close $css_fh;
+}
+
+=head2 constructLoggingHeader
+
+   This operation constructs a headeing for the logging program.
+
+=cut
+
+sub constructLoggingHeader {
+   my ($headerRef, $path) = @_;
+
+   my $header = "================================================================\n";
+
+   if (exists $headings{$headerRef}) {
+      $header .= $headings{$headerRef};
+   }
+
+   if (defined $path) {
+      $header .= $path . "\n";
+   }
+
+   $header   .= "----------------------------------------------------------------\n";
 }
