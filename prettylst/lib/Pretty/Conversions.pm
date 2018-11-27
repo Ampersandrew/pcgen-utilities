@@ -1,4 +1,4 @@
-package Conversions;
+package Pretty::Conversions;
 
 use 5.010_001;         # Perl 5.10.1 or better is now mandantory
 use strict;
@@ -107,16 +107,6 @@ my %writefiletype = (
    'ALIGNMENT'       => 1,
 );
 
-
-#####################################
-# Redirect STDERR if needed
-
-if (getOption('outputerror')) {
-   open STDERR, '>', getOption('outputerror');
-   print STDERR "Error log for ", $VERSION_LONG, "\n";
-   print STDERR "At ", $today, " on the data files in the \'", $cl_options{ input_path } , "\' directory\n";
-}
-
 # List of default for values defined in system files
 my @valid_system_alignments = qw(LG LN LE NG TN NE CG CN CE NONE Deity);
 
@@ -175,152 +165,94 @@ my @valid_system_var_names      = qw(
    MASTERVAR                     APPLIEDAS
 );
 
-#####################################
-# -systempath option
-#
-# If present, call the function to
-# generate the "game mode" variables.
-
-if ( getOption('systempath') ne q{} ) {
-   parse_system_files(getOption('systempath'));
-}
-
 # Valid check name
 my %valid_check_name = map { $_ => 1} @valid_system_check_names, '%LIST', '%CHOICE';
 
 # Valid game type (for the .PCC files)
 my %valid_game_modes = map { $_ => 1 } (
-        @valid_system_game_modes,
+   @valid_system_game_modes,
 
-        # CMP game modes
-        'CMP_OGL_Arcana_Unearthed',
-        'CMP_DnD_Blackmoor',
-        'CMP_DnD_Dragonlance',
-        'CMP_DnD_Eberron',
-        'CMP_DnD_Forgotten_Realms_v30e',
-        'CMP_DnD_Forgotten_Realms_v35e',
-        'CMP_HARP',
-        'CMP_D20_Modern',
-        'CMP_DnD_Oriental_Adventures_v30e',
-        'CMP_DnD_Oriental_Adventures_v35e',
-        'CMP_D20_Fantasy_v30e',
-        'CMP_D20_Fantasy_v35e',
-        'CMP_D20_Fantasy_v35e_Kalamar',
-        'DnD_v3.5e_VPWP',
-        'CMP_D20_Fantasy_v35e_VPWP',
-        '4e',
-        '5e',
-        'DnDNext',
-        'AE',
-        'Arcana_Evolved',
-        'Dragon_Age',
-        'MC_WoD',
-        'MutantsAndMasterminds3e',
-        'Starwars_SE',
-        'SWSE',
-        'Starwars_Edge',
-        'T20',
-        'Traveller20',
-
+   # CMP game modes
+   'CMP_OGL_Arcana_Unearthed',
+   'CMP_DnD_Blackmoor',
+   'CMP_DnD_Dragonlance',
+   'CMP_DnD_Eberron',
+   'CMP_DnD_Forgotten_Realms_v30e',
+   'CMP_DnD_Forgotten_Realms_v35e',
+   'CMP_HARP',
+   'CMP_D20_Modern',
+   'CMP_DnD_Oriental_Adventures_v30e',
+   'CMP_DnD_Oriental_Adventures_v35e',
+   'CMP_D20_Fantasy_v30e',
+   'CMP_D20_Fantasy_v35e',
+   'CMP_D20_Fantasy_v35e_Kalamar',
+   'DnD_v3.5e_VPWP',
+   'CMP_D20_Fantasy_v35e_VPWP',
+   '4e',
+   '5e',
+   'DnDNext',
+   'AE',
+   'Arcana_Evolved',
+   'Dragon_Age',
+   'MC_WoD',
+   'MutantsAndMasterminds3e',
+   'Starwars_SE',
+   'SWSE',
+   'Starwars_Edge',
+   'T20',
+   'Traveller20',
 );
 
 # Limited choice tags
 my %tag_fix_value = (
-        ACHECK                  => { YES => 1, NO => 1, WEIGHT => 1, PROFICIENT => 1, DOUBLE => 1 },
-        ALIGN                           => { map { $_ => 1 } @valid_system_alignments },
-        APPLY                           => { INSTANT => 1, PERMANENT => 1 },
-        BONUSSPELLSTAT          => { map { $_ => 1 } ( @valid_system_stats, 'NONE' ) },
-        DESCISIP                        => { YES => 1, NO => 1 },
-        EXCLUSIVE                       => { YES => 1, NO => 1 },
-        FORMATCAT                       => { FRONT => 1, MIDDLE => 1, PARENS => 1 },            # [ 1594671 ] New tag: equipmod FORMATCAT
-        FREE                            => { YES => 1, NO => 1 },
-        KEYSTAT                 => { map { $_ => 1 } @valid_system_stats },
-        HASSUBCLASS                     => { YES => 1, NO => 1 },
-        ALLOWBASECLASS          => { YES => 1, NO => 1 },
-        HASSUBSTITUTIONLEVEL    => { YES => 1, NO => 1 },
-        ISD20                           => { YES => 1, NO => 1 },
-        ISLICENSED                      => { YES => 1, NO => 1 },
-        ISOGL                           => { YES => 1, NO => 1 },
-        ISMATURE                        => { YES => 1, NO => 1 },
-        MEMORIZE                        => { YES => 1, NO => 1 },
-        MULT                            => { YES => 1, NO => 1 },
-        MODS                            => { YES => 1, NO => 1, REQUIRED => 1 },
-        MODTOSKILLS                     => { YES => 1, NO => 1 },
-        NAMEISPI                        => { YES => 1, NO => 1 },
-        RACIAL                  => { YES => 1, NO => 1 },
-        REMOVABLE                       => { YES => 1, NO => 1 },
-        RESIZE                  => { YES => 1, NO => 1 },       # [ 1956719 ] Add RESIZE tag to Equipment file
-        PREALIGN                        => { map { $_ => 1 } @valid_system_alignments },
-        PRESPELLBOOK            => { YES => 1, NO => 1 },
-        SHOWINMENU                      => { YES => 1, NO => 1 },       # [ 1718370 ] SHOWINMENU tag missing for PCC files
-        STACK                           => { YES => 1, NO => 1 },
-        SPELLBOOK                       => { YES => 1, NO => 1 },
-        SPELLSTAT                       => { map { $_ => 1 } ( @valid_system_stats, 'SPELL', 'NONE', 'OTHER' ) },
-        TIMEUNIT                        => { map { $_ => 1 } qw( Year Month Week Day Hour Minute Round Encounter Charges ) }
-        USEUNTRAINED            => { YES => 1, NO => 1 },
-        USEMASTERSKILL          => { YES => 1, NO => 1 },
-        #[ 1593907 ] False warning: Invalid value "CSHEET" for tag "VISIBLE"
-        VISIBLE                 => { map { $_ => 1 } qw( YES NO EXPORT DISPLAY QUALIFY CSHEET GUI ALWAYS ) },
+   ACHECK               => { YES => 1, NO => 1, WEIGHT => 1, PROFICIENT => 1, DOUBLE => 1 },
+   ALIGN                => { map { $_ => 1 } @valid_system_alignments },
+   APPLY                => { INSTANT => 1, PERMANENT => 1 },
+   BONUSSPELLSTAT       => { map { $_ => 1 } ( @valid_system_stats, 'NONE' ) },
+   DESCISIP             => { YES => 1, NO => 1 },
+   EXCLUSIVE            => { YES => 1, NO => 1 },
+   FORMATCAT            => { FRONT => 1, MIDDLE => 1, PARENS => 1 },       # [ 1594671 ] New tag: equipmod FORMATCAT
+   FREE                 => { YES => 1, NO => 1 },
+   KEYSTAT              => { map { $_ => 1 } @valid_system_stats },
+   HASSUBCLASS          => { YES => 1, NO => 1 },
+   ALLOWBASECLASS       => { YES => 1, NO => 1 },
+   HASSUBSTITUTIONLEVEL => { YES => 1, NO => 1 },
+   ISD20                => { YES => 1, NO => 1 },
+   ISLICENSED           => { YES => 1, NO => 1 },
+   ISOGL                => { YES => 1, NO => 1 },
+   ISMATURE             => { YES => 1, NO => 1 },
+   MEMORIZE             => { YES => 1, NO => 1 },
+   MULT                 => { YES => 1, NO => 1 },
+   MODS                 => { YES => 1, NO => 1, REQUIRED => 1 },
+   MODTOSKILLS          => { YES => 1, NO => 1 },
+   NAMEISPI             => { YES => 1, NO => 1 },
+   RACIAL               => { YES => 1, NO => 1 },
+   REMOVABLE            => { YES => 1, NO => 1 },
+   RESIZE               => { YES => 1, NO => 1 },                          # [ 1956719 ] Add RESIZE tag to Equipment file
+   PREALIGN             => { map { $_ => 1 } @valid_system_alignments }, 
+   PRESPELLBOOK         => { YES => 1, NO => 1 },
+   SHOWINMENU           => { YES => 1, NO => 1 },                          # [ 1718370 ] SHOWINMENU tag missing for PCC files
+   STACK                => { YES => 1, NO => 1 },
+   SPELLBOOK            => { YES => 1, NO => 1 },
+   SPELLSTAT            => { map { $_ => 1 } ( @valid_system_stats, 'SPELL', 'NONE', 'OTHER' ) },
+   TIMEUNIT             => { map { $_ => 1 } qw( Year Month Week Day Hour Minute Round Encounter Charges ) },
+   USEUNTRAINED         => { YES => 1, NO => 1 },
+   USEMASTERSKILL       => { YES => 1, NO => 1 },
+   #[ 1593907 ] False warning: Invalid value "CSHEET" for tag "VISIBLE"
+   VISIBLE              => { map { $_ => 1 } qw( YES NO EXPORT DISPLAY QUALIFY CSHEET GUI ALWAYS ) },
 );
 
 # This hash is used to convert 1 character choices to proper fix values.
 my %tag_proper_value_for = (
-        'Y'             =>  'YES',
-        'N'             =>  'NO',
-        'W'             =>  'WEIGHT',
-        'Q'             =>  'QUALIFY',
-        'P'             =>  'PROFICIENT',
-        'R'             =>  'REQUIRED',
-        'true'  =>  'YES',
-        'false' =>  'NO',
+   'Y'     =>  'YES',
+   'N'     =>  'NO',
+   'W'     =>  'WEIGHT',
+   'Q'     =>  'QUALIFY',
+   'P'     =>  'PROFICIENT',
+   'R'     =>  'REQUIRED',
+   'true'  =>  'YES',
+   'false' =>  'NO',
 );
-
-#####################################
-# Diplay usage information
-
-if ( getOption('help') or $Getopt::Long::error ) {
-        Pod::Usage::pod2usage(
-                {   -msg        => $error_message,
-                -exitval => 1,
-                -output  => \*STDERR
-                }
-        );
-        exit;
-}
-
-#####################################
-# Display the man page
-
-if (getOption('man')) {
-        Pod::Usage::pod2usage(
-                {   -msg        => $error_message,
-                -verbose => 2,
-                -output  => \*STDERR
-                }
-        );
-   exit;
-}
-
-#####################################
-# Generate the HTML man page and display it
-
-if ( getOption('htmlhelp') ) {
-        if( !-e "$PROGRAM_NAME.css" ) {
-                generate_css("$PROGRAM_NAME.css");
-        }
-
-        Pod::Html::pod2html(
-                "--infile=$PROGRAM_NAME",
-                "--outfile=$PROGRAM_NAME.html",
-                "--css=$PROGRAM_NAME.css",
-                "--title=$PROGRAM_NAME -- Reformat the PCGEN .lst files",
-                '--header',
-        );
-
-        `start /max $PROGRAM_NAME.html`;
-
-        exit;
-}
 
 my %source_tags                 = ()    if $conversion_enable{'SOURCE line replacement'};
 my $source_curent_file          = q{}   if $conversion_enable{'SOURCE line replacement'};
@@ -4331,7 +4263,7 @@ if (getOption('inputpath')) {
 
         # Verify if the outputpath exist
         if ( getOption('outputpath') && !-d getOption('outputpath') ) {
-                $error_message = "\nThe directory " . getOption('outputpath') . " does not exist.";
+                my $error_message = "\nThe directory " . getOption('outputpath') . " does not exist.";
 
                 Pod::Usage::pod2usage(
                 {
@@ -13876,7 +13808,7 @@ sub embedded_coma_split {
    my @system_files;
 
    sub parse_system_files {
-      my ($system_file_path) = @_;
+      my $system_file_path = getOption('systempath');
       my $original_system_file_path = $system_file_path;
 
       my @verified_allowed_modes      = ();
