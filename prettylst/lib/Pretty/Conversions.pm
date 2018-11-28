@@ -1613,101 +1613,83 @@ my @modified_files;     # Will hold the name of the modified files
 
 if (getOption('inputpath')) {
 
-   #################################################
-   # We populate %valid_tags for all file types.
-
-   for my $line_type ( keys %master_order ) {
-      for my $tag ( @{ $master_order{$line_type} } ) {
-         if ( $tag =~ / ( .* ) [:][*] \z /xms ) {
-            # Tag that end by :* in @master_order are allowed
-            # to be present more then once on the same line
-            $tag = $1;
-            $master_mult{$line_type}{$tag} = 1;
-         }
-
-         if ( exists $valid_tags{$line_type}{$tag} ) {
-            die "Tag $tag found more then once for $line_type";
-         }
-         else {
-            $valid_tags{$line_type}{$tag} = 1;
-         }
-      }
-   }
+   # Construct the data structure that tells us whcih tags are valid for a line.
+   Pretty::Reformat::constructValidTags();
 
    ##########################################################
    # Files that needs to be open for special conversions
 
    if ( $conversion_enable{'Export lists'} ) {
-	   # The files should be opened in alpha order since they will
-	   # be closed in reverse alpha order.
+      # The files should be opened in alpha order since they will
+      # be closed in reverse alpha order.
 
-	   # Will hold the list of all classes found in CLASS filetypes
-	   open $filehandle_for{CLASS}, '>', 'class.csv';
-	   print { $filehandle_for{CLASS} } qq{"Class Name","Line","Filename"\n};
+      # Will hold the list of all classes found in CLASS filetypes
+      open $filehandle_for{CLASS}, '>', 'class.csv';
+      print { $filehandle_for{CLASS} } qq{"Class Name","Line","Filename"\n};
 
-	   # Will hold the list of all deities found in DEITY filetypes
-	   open $filehandle_for{DEITY}, '>', 'deity.csv';
-	   print { $filehandle_for{DEITY} } qq{"Deity Name","Line","Filename"\n};
+      # Will hold the list of all deities found in DEITY filetypes
+      open $filehandle_for{DEITY}, '>', 'deity.csv';
+      print { $filehandle_for{DEITY} } qq{"Deity Name","Line","Filename"\n};
 
-	   # Will hold the list of all domains found in DOMAIN filetypes
-	   open $filehandle_for{DOMAIN}, '>', 'domain.csv';
-	   print { $filehandle_for{DOMAIN} } qq{"Domain Name","Line","Filename"\n};
+      # Will hold the list of all domains found in DOMAIN filetypes
+      open $filehandle_for{DOMAIN}, '>', 'domain.csv';
+      print { $filehandle_for{DOMAIN} } qq{"Domain Name","Line","Filename"\n};
 
-	   # Will hold the list of all equipements found in EQUIPMENT filetypes
-	   open $filehandle_for{EQUIPMENT}, '>', 'equipment.csv';
-	   print { $filehandle_for{EQUIPMENT} } qq{"Equipment Name","Output Name","Line","Filename"\n};
+      # Will hold the list of all equipements found in EQUIPMENT filetypes
+      open $filehandle_for{EQUIPMENT}, '>', 'equipment.csv';
+      print { $filehandle_for{EQUIPMENT} } qq{"Equipment Name","Output Name","Line","Filename"\n};
 
-	   # Will hold the list of all equipmod entries found in EQUIPMOD filetypes
-	   open $filehandle_for{EQUIPMOD}, '>', 'equipmod.csv';
-	   print { $filehandle_for{EQUIPMOD} } qq{"Equipmod Name","Key","Type","Line","Filename"\n};
+      # Will hold the list of all equipmod entries found in EQUIPMOD filetypes
+      open $filehandle_for{EQUIPMOD}, '>', 'equipmod.csv';
+      print { $filehandle_for{EQUIPMOD} } qq{"Equipmod Name","Key","Type","Line","Filename"\n};
 
-	   # Will hold the list of all feats found in FEAT filetypes
-	   open $filehandle_for{FEAT}, '>', 'feat.csv';
-	   print { $filehandle_for{FEAT} } qq{"Feat Name","Line","Filename"\n};
+      # Will hold the list of all feats found in FEAT filetypes
+      open $filehandle_for{FEAT}, '>', 'feat.csv';
+      print { $filehandle_for{FEAT} } qq{"Feat Name","Line","Filename"\n};
 
-	   # Will hold the list of all kits found in KIT filetypes
-	   open $filehandle_for{KIT}, '>', 'kit.csv';
-	   print { $filehandle_for{KIT} } qq{"Kit Startpack Name","Line","Filename"\n};
+      # Will hold the list of all kits found in KIT filetypes
+      open $filehandle_for{KIT}, '>', 'kit.csv';
+      print { $filehandle_for{KIT} } qq{"Kit Startpack Name","Line","Filename"\n};
 
-	   # Will hold the list of all kit Tables found in KIT filetypes
-	   open $filehandle_for{TABLE}, '>', 'kit-table.csv';
-	   print { $filehandle_for{TABLE} } qq{"Table Name","Line","Filename"\n};
+      # Will hold the list of all kit Tables found in KIT filetypes
+      open $filehandle_for{TABLE}, '>', 'kit-table.csv';
+      print { $filehandle_for{TABLE} } qq{"Table Name","Line","Filename"\n};
 
-	   # Will hold the list of all language found in LANGUAGE linetypes
-	   open $filehandle_for{LANGUAGE}, '>', 'language.csv';
-	   print { $filehandle_for{LANGUAGE} } qq{"Language Name","Line","Filename"\n};
+      # Will hold the list of all language found in LANGUAGE linetypes
+      open $filehandle_for{LANGUAGE}, '>', 'language.csv';
+      print { $filehandle_for{LANGUAGE} } qq{"Language Name","Line","Filename"\n};
 
-	   # Will hold the list of all PCC files found
-	   open $filehandle_for{PCC}, '>', 'pcc.csv';
-	   print { $filehandle_for{PCC} } qq{"SOURCELONG","SOURCESHORT","GAMEMODE","Full Path"\n};
+      # Will hold the list of all PCC files found
+      open $filehandle_for{PCC}, '>', 'pcc.csv';
+      print { $filehandle_for{PCC} } qq{"SOURCELONG","SOURCESHORT","GAMEMODE","Full Path"\n};
 
-	   # Will hold the list of all races and race types found in RACE filetypes
-	   open $filehandle_for{RACE}, '>', 'race.csv';
-	   print { $filehandle_for{RACE} } qq{"Race Name","Race Type","Race Subtype","Line","Filename"\n};
+      # Will hold the list of all races and race types found in RACE filetypes
+      open $filehandle_for{RACE}, '>', 'race.csv';
+      print { $filehandle_for{RACE} } qq{"Race Name","Race Type","Race Subtype","Line","Filename"\n};
 
-	   # Will hold the list of all skills found in SKILL filetypes
-	   open $filehandle_for{SKILL}, '>', 'skill.csv';
-	   print { $filehandle_for{SKILL} } qq{"Skill Name","Line","Filename"\n};
+      # Will hold the list of all skills found in SKILL filetypes
+      open $filehandle_for{SKILL}, '>', 'skill.csv';
+      print { $filehandle_for{SKILL} } qq{"Skill Name","Line","Filename"\n};
 
-	   # Will hold the list of all spells found in SPELL filetypes
-	   open $filehandle_for{SPELL}, '>', 'spell.csv';
-	   print { $filehandle_for{SPELL} } qq{"Spell Name","Source Page","Line","Filename"\n};
+      # Will hold the list of all spells found in SPELL filetypes
+      open $filehandle_for{SPELL}, '>', 'spell.csv';
+      print { $filehandle_for{SPELL} } qq{"Spell Name","Source Page","Line","Filename"\n};
 
-	   # Will hold the list of all templates found in TEMPLATE filetypes
-	   open $filehandle_for{TEMPLATE}, '>', 'template.csv';
-	   print { $filehandle_for{TEMPLATE} } qq{"Tempate Name","Line","Filename"\n};
+      # Will hold the list of all templates found in TEMPLATE filetypes
+      open $filehandle_for{TEMPLATE}, '>', 'template.csv';
+      print { $filehandle_for{TEMPLATE} } qq{"Tempate Name","Line","Filename"\n};
 
-	   # Will hold the list of all variables found in DEFINE tags
-	   if ( getOption('xcheck') ) {
-		   open $filehandle_for{VARIABLE}, '>', 'variable.csv';
-		   print { $filehandle_for{VARIABLE} } qq{"Var Name","Line","Filename"\n};
-	   }
+      # Will hold the list of all variables found in DEFINE tags
+      if ( getOption('xcheck') ) {
+         open $filehandle_for{VARIABLE}, '>', 'variable.csv';
+         print { $filehandle_for{VARIABLE} } qq{"Var Name","Line","Filename"\n};
+      }
 
-	   # We need to list the tags that use Willpower
-	   if ( $conversion_enable{'ALL:Find Willpower'} ) {
-		   open $filehandle_for{Willpower}, '>', 'willpower.csv';
-		   print { $filehandle_for{Willpower} } qq{"Tag","Line","Filename"\n};
-	   }
+      # We need to list the tags that use Willpower
+      if ( $conversion_enable{'ALL:Find Willpower'} ) {
+         open $filehandle_for{Willpower}, '>', 'willpower.csv';
+         print { $filehandle_for{Willpower} } qq{"Tag","Line","Filename"\n};
+      }
    }
 
         ##########################################################
@@ -8816,1216 +8798,6 @@ sub validate_line {
 }
 
 ###############################################################
-# additionnal_line_parsing
-# ------------------------
-#
-# This function does additional parsing on each line once
-# they have been seperated in tags.
-#
-# Most commun use is for addition, conversion or removal of tags.
-#
-# Paramter: $line_ref           Ref to a hash containing the tags of the line
-#               $filetype               Type for the current file
-#               $file_for_error   Name of the current file
-#               $line_for_error   Number of the current line
-#               $line_info              (Optional) structure generated by FILETYPE_parse
-#
-
-BEGIN {
-
-        my $class_name = "";
-
-        sub additionnal_line_parsing {
-                my ( $line_ref, $filetype, $file_for_error, $line_for_error, $line_info ) = @_;
-
-        ##################################################################
-        # [ 1596310 ] xcheck: TYPE:Spellbook for equip w/ NUMPAGES and PAGEUSAGE
-        # Gawaine42 (Richard)
-        # Check to see if the TYPE contains Spellbook, if so, warn if
-        # NUMUSES or PAGEUSAGE aren't there.
-        # Then check to see if NUMPAGES or PAGEUSAGE are there, and if they
-        # are there, but the TYPE doesn't contain Spellbook, warn.
-
-        if ($filetype eq 'EQUIPMENT') {
-                if (exists $line_ref->{'TYPE'} && $line_ref->{'TYPE'}[0] =~ /Spellbook/) {
-                        if (exists $line_ref->{'NUMPAGES'}
-                                && exists $line_ref->{'PAGEUSAGE'}) {
-                                #Nothing to see here, move along.
-                        }
-                        else {
-                                $logging->info(
-                                qq{You have a Spellbook defined without providing NUMPAGES or PAGEUSAGE. If you want a spellbook of finite capacity, consider adding these tags.},
-                                $file_for_error,
-                                $line_for_error
-                                );
-                        }
-                }
-                else {
-
-                        if (exists $line_ref->{'NUMPAGES'} ) {
-                                $logging->warning(
-                                qq{Invalid use of NUMPAGES tag in a non-spellbook. Remove this tag, or correct the TYPE.},
-                                $file_for_error,
-                                $line_for_error
-                                );
-                        }
-
-                        if  (exists $line_ref->{'PAGEUSAGE'}) {
-                                $logging->warning(
-                                qq{Invalid use of PAGEUSAGE tag in a non-spellbook. Remove this tag, or correct the TYPE.},
-                                $file_for_error,
-                                $line_for_error
-                                );
-                        }
-                }
-                `
-                #################################################################
-                #  Do the same for Type Container with and without CONTAINS
-
-                if (exists $line_ref->{'TYPE'} && $line_ref->{'TYPE'}[0] =~ /Container/) {
-                        if (exists $line_ref->{'CONTAINS'}) {
-#                               $line_ref =~ s/'CONTAINS:-1'/'CONTAINS:UNLIM'/g;   # [ 1777282 ] CONTAINS Unlimited Weight is UNLIM, not -1
-                        }
-                        else {
-                                $logging->warning(
-                                qq{Any object with TYPE:Container must also have a CONTAINS tag to be activated.},
-                                $file_for_error,
-                                $line_for_error
-                                );
-                        }
-                }
-                elsif (exists $line_ref->{'CONTAINS'}) {
-                        $logging->warning(
-                        qq{Any object with CONTAINS must also be TYPE:Container for the CONTAINS tag to be activated.},
-                        $file_for_error,
-                        $line_for_error
-                        );
-                }
-        }
-
-        ##################################################################
-        # [ 1864711 ] Convert ADD:SA to ADD:SAB
-        #
-        # In most files, take ADD:SA and replace with ADD:SAB
-
-        if (   $conversion_enable{'ALL:Convert ADD:SA to ADD:SAB'}
-                && exists $line_ref->{'ADD:SA'}) {
-                $logging->warning(
-                        qq{Change ADD:SA for ADD:SAB in "$line_ref->{'ADD:SA'}[0]"},
-                        $file_for_error,
-                        $line_for_error
-                );
-                my $satag;
-                $satag = $line_ref->{'ADD:SA'}[0];
-                $satag =~ s/ADD:SA/ADD:SAB/;
-                $line_ref->{'ADD:SAB'}[0] = $satag;
-                delete $line_ref->{'ADD:SA'};
-        }
-
-
-
-        ##################################################################
-        # [ 1514765 ] Conversion to remove old defaultmonster tags
-        # Gawaine42 (Richard Bowers)
-        # Bonuses associated with a PREDEFAULTMONSTER:Y need to be removed
-        # This should remove the whole tag.
-        if ($conversion_enable{'RACE:Fix PREDEFAULTMONSTER bonuses'}
-                        && $filetype eq "RACE"
-        ) {
-        for my $key ( keys %$line_ref ) {
-                my $ary = $line_ref->{$key};
-                my $iCount = 0;
-                foreach (@$ary) {
-                my $ttag = $$ary[$iCount];
-                if ($ttag =~ /PREDEFAULTMONSTER:Y/) {
-                        $$ary[$iCount] = "";
-                        $logging->warning(
-                                qq{Removing "$ttag".},
-                                $file_for_error,
-                                $line_for_error
-                                );
-                }
-                $iCount++;
-                }
-        }
-        }
-
-
-
-        ##################################################################
-        # [ 1615457 ] Replace ALTCRITICAL with ALTCRITMULT'
-        #
-        # In EQUIPMENT files, take ALTCRITICAL and replace with ALTCRITMULT'
-
-        if (   $conversion_enable{'EQUIP: ALTCRITICAL to ALTCRITMULT'}
-                && $filetype eq "EQUIPMENT"
-                && exists $line_ref->{'ALTCRITICAL'}
-        ) {
-        # Throw warning if both ALTCRITICAL and ALTCRITMULT are on the same line,
-        #   then remove ALTCRITICAL.
-        if ( exists $line_ref->{ALTCRITMULT} ) {
-                $logging->warning(
-                        qq{Removing ALTCRITICAL, ALTCRITMULT already present on same line.},
-                        $file_for_error,
-                        $line_for_error
-                );
-                delete $line_ref->{'ALTCRITICAL'};
-        } else {
-                $logging->warning(
-                        qq{Change ALTCRITICAL for ALTCRITMULT in "$line_ref->{'ALTCRITICAL'}[0]"},
-                        $file_for_error,
-                        $line_for_error
-                );
-                my $ttag;
-                $ttag = $line_ref->{'ALTCRITICAL'}[0];
-                $ttag =~ s/ALTCRITICAL/ALTCRITMULT/;
-                $line_ref->{'ALTCRITMULT'}[0] = $ttag;
-                delete $line_ref->{'ALTCRITICAL'};
-                }
-        }
-
-
-        ##################################################################
-        # [ 1514765 ] Conversion to remove old defaultmonster tags
-        #
-        # In RACE files, remove all MFEAT and HITDICE tags, but only if
-        # there is a MONSTERCLASS present.
-
-        # We remove MFEAT or warn of missing MONSTERCLASS tag.
-        if (   $conversion_enable{'RACE:Remove MFEAT and HITDICE'}
-                && $filetype eq "RACE"
-                && exists $line_ref->{'MFEAT'}
-                ) { if ( exists $line_ref->{'MONSTERCLASS'}
-                        ) { for my $tag ( @{ $line_ref->{'MFEAT'} } ) {
-                                $logging->warning(
-                                qq{Removing "$tag".},
-                                $file_for_error,
-                                $line_for_error
-                                );
-                        }
-                        delete $line_ref->{'MFEAT'};
-                        }
-                else {warning(
-                        qq{MONSTERCLASS missing on same line as MFEAT, need to look at by hand.},
-                                $file_for_error,
-                                $line_for_error
-                                );
-                        }
-        }
-
-        # We remove HITDICE or warn of missing MONSTERCLASS tag.
-        if (   $conversion_enable{'RACE:Remove MFEAT and HITDICE'}
-                && $filetype eq "RACE"
-                && exists $line_ref->{'HITDICE'}
-                ) { if ( exists $line_ref->{'MONSTERCLASS'}
-                        ) { for my $tag ( @{ $line_ref->{'HITDICE'} } ) {
-                                $logging->warning(
-                                qq{Removing "$tag".},
-                                $file_for_error,
-                                $line_for_error
-                                );
-                        }
-                        delete $line_ref->{'HITDICE'};
-                        }
-                else {warning(
-                        qq{MONSTERCLASS missing on same line as HITDICE, need to look at by hand.},
-                                $file_for_error,
-                                $line_for_error
-                                );
-                        }
-                }
-
-        #######################################################
-        ## [ 1689538 ] Conversion: Deprecation of FOLLOWERALIGN
-        ## Gawaine42
-        ## Note: Makes simplifying assumption that FOLLOWERALIGN
-        ## will occur only once in a given line, although DOMAINS may
-        ## occur multiple times.
-        if (($conversion_enable{'DEITY:Followeralign conversion'})
-                && $filetype eq "DEITY"
-                && (exists $line_ref->{'FOLLOWERALIGN'}))
-        {
-                my $followeralign = $line_ref->{'FOLLOWERALIGN'}[0];
-                $followeralign =~ s/^FOLLOWERALIGN://;
-                my $newprealign = "";
-                my $aligncount = 0;
-
-                for my $align (split //, $followeralign) {
-                        # Is it a number?
-                        my $number;
-                        if ( (($number) = ($align =~ / \A (\d+) \z /xms))
-                        && $number >= 0
-                        && $number < scalar @valid_system_alignments)
-                {
-                                my $newalign = $valid_system_alignments[$number];
-                        if ($aligncount > 0) {
-                        $newprealign .= ',';
-                        }
-                        $aligncount++;
-                        $newprealign .= "$newalign";
-                        }
-                else {
-                                $logging->notice(
-                                qq{Invalid value "$align" for tag "$line_ref->{'FOLLOWERALIGN'}[0]"},
-                                $file_for_error,
-                                $line_for_error
-                                );
-
-                }
-                }
-                my $dom_count=0;
-
-                if (exists $line_ref->{'DOMAINS'}) {
-                for my $line ($line_ref->{'DOMAINS'})
-                {
-                        $line_ref->{'DOMAINS'}[$dom_count] .= "|PREALIGN:$newprealign";
-                        $dom_count++;
-                }
-                $logging->notice(
-                                qq{Adding PREALIGN to domain information and removing "$line_ref->{'FOLLOWERALIGN'}[0]"},
-                                $file_for_error,
-                                $line_for_error
-                                );
-
-                delete $line_ref->{'FOLLOWERALIGN'};
-                }
-        }
-
-                ##################################################################
-                # [ 1353255 ] TYPE to RACETYPE conversion
-                #
-                # Checking race files for TYPE and if no RACETYPE,
-                # convert TYPE to RACETYPE.
-                # if Race file has no TYPE or RACETYPE, report as 'Info'
-
-                # Do this check no matter what - valid any time
-                if ( $filetype eq "RACE"
-                && not ( exists $line_ref->{'RACETYPE'} )
-                && not ( exists $line_ref->{'TYPE'}  )
-                ) {
-                # .MOD / .FORGET / .COPY don't need RACETYPE or TYPE'
-                my $race_name = $line_ref->{'000RaceName'}[0];
-                if ($race_name =~ /\.(FORGET|MOD|COPY=.+)$/) {
-                } else { $logging->warning(
-                        qq{Race entry missing both TYPE and RACETYPE.},
-                        $file_for_error,
-                        $line_for_error
-                        );
-                }
-                };
-
-                if (   $conversion_enable{'RACE:TYPE to RACETYPE'}
-                && ( $filetype eq "RACE"
-                        || $filetype eq "TEMPLATE" )
-                && not (exists $line_ref->{'RACETYPE'})
-                && exists $line_ref->{'TYPE'}
-                ) { $logging->warning(
-                        qq{Changing TYPE for RACETYPE in "$line_ref->{'TYPE'}[0]".},
-                        $file_for_error,
-                        $line_for_error
-                        );
-                        $line_ref->{'RACETYPE'} = [ "RACE" . $line_ref->{'TYPE'}[0] ];
-                        delete $line_ref->{'TYPE'};
-                };
-
-#                       $line_ref->{'MONCSKILL'} = [ "MON" . $line_ref->{'CSKILL'}[0] ];
-#                       delete $line_ref->{'CSKILL'};
-
-
-                ##################################################################
-                # [ 1444527 ] New SOURCE tag format
-                #
-                # The SOURCELONG tags found on any linetype but the SOURCE line type must
-                # be converted to use tab if | are found.
-
-                if (   $conversion_enable{'ALL:New SOURCExxx tag format'}
-                && exists $line_ref->{'SOURCELONG'} ) {
-                my @new_tags;
-
-                for my $tag ( @{ $line_ref->{'SOURCELONG'} } ) {
-                        if( $tag =~ / [|] /xms ) {
-                                push @new_tags, split '\|', $tag;
-                                $logging->warning(
-                                qq{Spliting "$tag"},
-                                $file_for_error,
-                                $line_for_error
-                                );
-                        }
-                }
-
-                if( @new_tags ) {
-                        delete $line_ref->{'SOURCELONG'};
-
-                        for my $new_tag (@new_tags) {
-                                my ($tag_name) = ( $new_tag =~ / ( [^:]* ) [:] /xms );
-                                push @{ $line_ref->{$tag_name} }, $new_tag;
-                        }
-                }
-                }
-
-                ##################################################################
-                # [ 1070084 ] Convert SPELL to SPELLS
-                #
-                # Convert the old SPELL tags to the new SPELLS format.
-                #
-                # Old SPELL:<spellname>|<nb per day>|<spellbook>|...|PRExxx|PRExxx|...
-                # New SPELLS:<spellbook>|TIMES=<nb per day>|<spellname>|<spellname>|PRExxx...
-
-                if ( $conversion_enable{'ALL:Convert SPELL to SPELLS'}
-                && exists $line_ref->{'SPELL'} )
-                {
-                my %spellbooks;
-
-                # We parse all the existing SPELL tags
-                for my $tag ( @{ $line_ref->{'SPELL'} } ) {
-                        my ( $tag_name, $tag_value ) = ( $tag =~ /^([^:]*):(.*)/ );
-                        my @elements = split '\|', $tag_value;
-                        my @pretags;
-
-                        while ( $elements[ +@elements - 1 ] =~ /^!?PRE\w*:/ ) {
-
-                                # We keep the PRE tags separated
-                                unshift @pretags, pop @elements;
-                        }
-
-                        # We classify each triple <spellname>|<nb per day>|<spellbook>
-                        while (@elements) {
-                                if ( +@elements < 3 ) {
-                                $logging->warning(
-                                        qq(Wrong number of elements for "$tag_name:$tag_value"),
-                                        $file_for_error,
-                                        $line_for_error
-                                );
-                                }
-
-                                my $spellname = shift @elements;
-                                my $times       = +@elements ? shift @elements : 99999;
-                                my $pretags   = join '|', @pretags;
-                                $pretags = "NONE" unless $pretags;
-                                my $spellbook = +@elements ? shift @elements : "MISSING SPELLBOOK";
-
-                                push @{ $spellbooks{$spellbook}{$times}{$pretags} }, $spellname;
-                        }
-
-                        $logging->warning(
-                                qq{Removing "$tag_name:$tag_value"},
-                                $file_for_error,
-                                $line_for_error
-                        );
-                }
-
-                # We delete the SPELL tags
-                delete $line_ref->{'SPELL'};
-
-                # We add the new SPELLS tags
-                for my $spellbook ( sort keys %spellbooks ) {
-                        for my $times ( sort keys %{ $spellbooks{$spellbook} } ) {
-                                for my $pretags ( sort keys %{ $spellbooks{$spellbook}{$times} } ) {
-                                my $spells = "SPELLS:$spellbook|TIMES=$times";
-
-                                for my $spellname ( sort @{ $spellbooks{$spellbook}{$times}{$pretags} } ) {
-                                        $spells .= "|$spellname";
-                                }
-
-                                $spells .= "|$pretags" unless $pretags eq "NONE";
-
-                                $logging->warning( qq{Adding   "$spells"}, $file_for_error, $line_for_error );
-
-                                push @{ $line_ref->{'SPELLS'} }, $spells;
-                                }
-                        }
-                }
-                }
-
-                ##################################################################
-                # We get rid of all the PREALIGN tags.
-                #
-                # This is needed by my good CMP friends.
-
-                if ( $conversion_enable{'ALL:CMP remove PREALIGN'} ) {
-                if ( exists $line_ref->{'PREALIGN'} ) {
-                        my $number = +@{ $line_ref->{'PREALIGN'} };
-                        delete $line_ref->{'PREALIGN'};
-                        $logging->warning(
-                                qq{Removing $number PREALIGN tags},
-                                $file_for_error,
-                                $line_for_error
-                        );
-                }
-
-                if ( exists $line_ref->{'!PREALIGN'} ) {
-                        my $number = +@{ $line_ref->{'!PREALIGN'} };
-                        delete $line_ref->{'!PREALIGN'};
-                        $logging->warning(
-                                qq{Removing $number !PREALIGN tags},
-                                $file_for_error,
-                                $line_for_error
-                        );
-                }
-                }
-
-                ##################################################################
-                # Need to fix the STR bonus when the monster have only one
-                # Natural Attack (STR bonus is then 1.5 * STR).
-                # We add it if there is only one Melee attack and the
-                # bonus is not already present.
-
-                if ( $conversion_enable{'ALL:CMP NatAttack fix'}
-                && exists $line_ref->{'NATURALATTACKS'} )
-                {
-
-                # First we verify if if there is only one melee attack.
-                if ( @{ $line_ref->{'NATURALATTACKS'} } == 1 ) {
-                        my @NatAttacks = split '\|', $line_ref->{'NATURALATTACKS'}[0];
-                        if ( @NatAttacks == 1 ) {
-                                my ( $NatAttackName, $Types, $NbAttacks, $Damage ) = split ',', $NatAttacks[0];
-                                if ( $NbAttacks eq '*1' && $Damage ) {
-
-                                # Now, at last, we know there is only one Natural Attack
-                                # Is it a Melee attack?
-                                my @Types       = split '\.', $Types;
-                                my $IsMelee  = 0;
-                                my $IsRanged = 0;
-                                for my $type (@Types) {
-                                        $IsMelee  = 1 if uc($type) eq 'MELEE';
-                                        $IsRanged = 1 if uc($type) eq 'RANGED';
-                                }
-
-                                if ( $IsMelee && !$IsRanged ) {
-
-                                        # We have a winner!!!
-                                        ($NatAttackName) = ( $NatAttackName =~ /:(.*)/ );
-
-                                        # Well, maybe the BONUS:WEAPONPROF is already there.
-                                        if ( exists $line_ref->{'BONUS:WEAPONPROF'} ) {
-                                                my $AlreadyThere = 0;
-                                                FIND_BONUS:
-                                                for my $bonus ( @{ $line_ref->{'BONUS:WEAPONPROF'} } ) {
-                                                if ( $bonus eq "BONUS:WEAPONPROF=$NatAttackName|DAMAGE|STR/2" )
-                                                {
-                                                        $AlreadyThere = 1;
-                                                        last FIND_BONUS;
-                                                }
-                                                }
-
-                                                unless ($AlreadyThere) {
-                                                push @{ $line_ref->{'BONUS:WEAPONPROF'} },
-                                                        "BONUS:WEAPONPROF=$NatAttackName|DAMAGE|STR/2";
-                                                $logging->warning(
-                                                        qq{Added "$line_ref->{'BONUS:WEAPONPROF'}[0]"}
-                                                                . qq{ to go with "$line_ref->{'NATURALATTACKS'}[0]"},
-                                                        $file_for_error,
-                                                        $line_for_error
-                                                );
-                                                }
-                                        }
-                                        else {
-                                                $line_ref->{'BONUS:WEAPONPROF'}
-                                                = ["BONUS:WEAPONPROF=$NatAttackName|DAMAGE|STR/2"];
-                                                $logging->warning(
-                                                qq{Added "$line_ref->{'BONUS:WEAPONPROF'}[0]"}
-                                                        . qq{to go with "$line_ref->{'NATURALATTACKS'}[0]"},
-                                                $file_for_error,
-                                                $line_for_error
-                                                );
-                                        }
-                                }
-                                elsif ( $IsMelee && $IsRanged ) {
-                                        $logging->warning(
-                                                qq{This natural attack is both Melee and Ranged}
-                                                . qq{"$line_ref->{'NATURALATTACKS'}[0]"},
-                                                $file_for_error,
-                                                $line_for_error
-                                        );
-                                }
-                                }
-                        }
-                }
-                }
-
-                ##################################################################
-                # [ 865826 ] Remove the deprecated MOVE tag in EQUIPMENT files
-                # No conversion needed. We just have to remove the MOVE tags that
-                # are doing nothing anyway.
-
-                if (   $conversion_enable{'EQUIP:no more MOVE'}
-                && $filetype eq "EQUIPMENT"
-                && exists $line_ref->{'MOVE'} )
-                {
-                $logging->warning( qq{Removed MOVE tags}, $file_for_error, $line_for_error );
-                delete $line_ref->{'MOVE'};
-                }
-
-                if (   $conversion_enable{'CLASS:no more HASSPELLFORMULA'}
-                && $filetype eq "CLASS"
-                && exists $line_ref->{'HASSPELLFORMULA'} )
-                {
-                $logging->warning( qq{Removed deprecated HASSPELLFORMULA tags}, $file_for_error, $line_for_error );
-                delete $line_ref->{'HASSPELLFORMULA'};
-                }
-
-
-                ##################################################################
-                # Every RACE that has a Climb or a Swim MOVE must have a
-                # BONUS:SKILL|Climb|8|TYPE=Racial. If there is a
-                # BONUS:SKILLRANK|Swim|8|PREDEFAULTMONSTER:Y present, it must be
-                # removed or lowered by 8.
-
-                if (   $conversion_enable{'RACE:BONUS SKILL Climb and Swim'}
-                && $filetype eq "RACE"
-                && exists $line_ref->{'MOVE'} )
-                {
-                my $swim  = $line_ref->{'MOVE'}[0] =~ /swim/i;
-                my $climb = $line_ref->{'MOVE'}[0] =~ /climb/i;
-
-                if ( $swim || $climb ) {
-                        my $need_swim  = 1;
-                        my $need_climb = 1;
-
-                        # Is there already a BONUS:SKILL|Swim of at least 8 rank?
-                        if ( exists $line_ref->{'BONUS:SKILL'} ) {
-                                for my $skill ( @{ $line_ref->{'BONUS:SKILL'} } ) {
-                                if ( $skill =~ /^BONUS:SKILL\|([^|]*)\|(\d+)\|TYPE=Racial/i ) {
-                                        my $skill_list = $1;
-                                        my $skill_rank = $2;
-
-                                        $need_swim  = 0 if $skill_list =~ /swim/i;
-                                        $need_climb = 0 if $skill_list =~ /climb/i;
-
-                                        if ( $need_swim && $skill_rank == 8 ) {
-                                                $skill_list
-                                                = join( ',', sort( split ( ',', $skill_list ), 'Swim' ) );
-                                                $skill = "BONUS:SKILL|$skill_list|8|TYPE=Racial";
-                                                $logging->warning(
-                                                qq{Added Swim to "$skill"},
-                                                $file_for_error,
-                                                $line_for_error
-                                                );
-                                        }
-
-                                        if ( $need_climb && $skill_rank == 8 ) {
-                                                $skill_list
-                                                = join( ',', sort( split ( ',', $skill_list ), 'Climb' ) );
-                                                $skill = "BONUS:SKILL|$skill_list|8|TYPE=Racial";
-                                                $logging->warning(
-                                                qq{Added Climb to "$skill"},
-                                                $file_for_error,
-                                                $line_for_error
-                                                );
-                                        }
-
-                                        if ( ( $need_climb || $need_swim ) && $skill_rank != 8 ) {
-                                                $logging->info(
-                                                qq{You\'ll have to deal with this one yourself "$skill"},
-                                                $file_for_error,
-                                                $line_for_error
-                                                );
-                                        }
-                                }
-                                }
-                        }
-                        else {
-                                $need_swim  = $swim;
-                                $need_climb = $climb;
-                        }
-
-                        # Is there a BONUS:SKILLRANK to remove?
-                        if ( exists $line_ref->{'BONUS:SKILLRANK'} ) {
-                                for ( my $index = 0; $index < @{ $line_ref->{'BONUS:SKILLRANK'} }; $index++ ) {
-                                my $skillrank = $line_ref->{'BONUS:SKILLRANK'}[$index];
-
-                                if ( $skillrank =~ /^BONUS:SKILLRANK\|(.*)\|(\d+)\|PREDEFAULTMONSTER:Y/ ) {
-                                        my $skill_list = $1;
-                                        my $skill_rank = $2;
-
-                                        if ( $climb && $skill_list =~ /climb/i ) {
-                                                if ( $skill_list eq "Climb" ) {
-                                                $skill_rank -= 8;
-                                                if ($skill_rank) {
-                                                        $skillrank
-                                                                = "BONUS:SKILLRANK|Climb|$skill_rank|PREDEFAULTMONSTER:Y";
-                                                        $logging->warning(
-                                                                qq{Lowering skill rank in "$skillrank"},
-                                                                $file_for_error,
-                                                                $line_for_error
-                                                        );
-                                                }
-                                                else {
-                                                        $logging->warning(
-                                                                qq{Removing "$skillrank"},
-                                                                $file_for_error,
-                                                                $line_for_error
-                                                        );
-                                                        delete $line_ref->{'BONUS:SKILLRANK'}[$index];
-                                                        $index--;
-                                                }
-                                                }
-                                                else {
-                                                $logging->info(
-                                                        qq{You\'ll have to deal with this one yourself "$skillrank"},
-                                                        $file_for_error,
-                                                        $line_for_error
-                                                );;
-                                                }
-                                        }
-
-                                        if ( $swim && $skill_list =~ /swim/i ) {
-                                                if ( $skill_list eq "Swim" ) {
-                                                $skill_rank -= 8;
-                                                if ($skill_rank) {
-                                                        $skillrank
-                                                                = "BONUS:SKILLRANK|Swim|$skill_rank|PREDEFAULTMONSTER:Y";
-                                                        $logging->warning(
-                                                                qq{Lowering skill rank in "$skillrank"},
-                                                                $file_for_error,
-                                                                $line_for_error
-                                                        );
-                                                }
-                                                else {
-                                                        $logging->warning(
-                                                                qq{Removing "$skillrank"},
-                                                                $file_for_error,
-                                                                $line_for_error
-                                                        );
-                                                        delete $line_ref->{'BONUS:SKILLRANK'}[$index];
-                                                        $index--;
-                                                }
-                                                }
-                                                else {
-                                                $logging->info(
-                                                        qq{You\'ll have to deal with this one yourself "$skillrank"},
-                                                        $file_for_error,
-                                                        $line_for_error
-                                                );
-                                                }
-                                        }
-                                }
-                                }
-
-                                # If there are no more BONUS:SKILLRANK, we remove the tag entry
-                                delete $line_ref->{'BONUS:SKILLRANK'}
-                                unless @{ $line_ref->{'BONUS:SKILLRANK'} };
-                        }
-                }
-                }
-
-                ##################################################################
-                # [ 845853 ] SIZE is no longer valid in the weaponprof files
-                #
-                # The SIZE tag must be removed from all WEAPONPROF files since it
-                # cause loading problems with the latest versio of PCGEN.
-
-                if (   $conversion_enable{'WEAPONPROF:No more SIZE'}
-                && $filetype eq "WEAPONPROF"
-                && exists $line_ref->{'SIZE'} )
-                {
-                $logging->warning(
-                        qq{Removing the SIZE tag in line "$line_ref->{$master_order{'WEAPONPROF'}[0]}[0]"},
-                        $file_for_error,
-                        $line_for_error
-                );
-                delete $line_ref->{'SIZE'};
-                }
-
-                ##################################################################
-                # [ 832164 ] Adding NoProfReq to AUTO:WEAPONPROF for most races
-                #
-                # NoProfReq must be added to AUTO:WEAPONPROF if the race has
-                # at least one hand and if NoProfReq is not already there.
-
-                if (   $conversion_enable{'RACE:NoProfReq'}
-                && $filetype eq "RACE" )
-                {
-                my $needNoProfReq = 1;
-
-                # Is NoProfReq already present?
-                if ( exists $line_ref->{'AUTO:WEAPONPROF'} ) {
-                        $needNoProfReq = 0 if $line_ref->{'AUTO:WEAPONPROF'}[0] =~ /NoProfReq/;
-                }
-
-                my $nbHands = 2;        # Default when no HANDS tag is present
-
-                # How many hands?
-                if ( exists $line_ref->{'HANDS'} ) {
-                        if ( $line_ref->{'HANDS'}[0] =~ /HANDS:(\d+)/ ) {
-                                $nbHands = $1;
-                        }
-                        else {
-                                $logging->info(
-                                        qq(Invalid value in tag "$line_ref->{'HANDS'}[0]"),
-                                        $file_for_error,
-                                        $line_for_error
-                                );
-                                $needNoProfReq = 0;
-                        }
-                }
-
-                if ( $needNoProfReq && $nbHands ) {
-                        if ( exists $line_ref->{'AUTO:WEAPONPROF'} ) {
-                                $logging->warning(
-                                qq{Adding "TYPE=NoProfReq" to tag "$line_ref->{'AUTO:WEAPONPROF'}[0]"},
-                                $file_for_error,
-                                $line_for_error
-                                );
-                                $line_ref->{'AUTO:WEAPONPROF'}[0] .= "|TYPE=NoProfReq";
-                        }
-                        else {
-                                $line_ref->{'AUTO:WEAPONPROF'} = ["AUTO:WEAPONPROF|TYPE=NoProfReq"];
-                                $logging->warning(
-                                qq{Creating new tag "AUTO:WEAPONPROF|TYPE=NoProfReq"},
-                                $file_for_error,
-                                $line_for_error
-                                );
-                        }
-                }
-                }
-
-                ##################################################################
-                # [ 831569 ] RACE:CSKILL to MONCSKILL
-                #
-                # In the RACE files, all the CSKILL must be replaced with MONCSKILL
-                # but only if MONSTERCLASS is present and there is not already a
-                # MONCSKILL present.
-
-                if (   $conversion_enable{'RACE:CSKILL to MONCSKILL'}
-                && $filetype eq "RACE"
-                && exists $line_ref->{'CSKILL'}
-                && exists $line_ref->{'MONSTERCLASS'}
-                && !exists $line_ref->{'MONCSKILL'} )
-                {
-                $logging->warning(
-                        qq{Change CSKILL for MONSKILL in "$line_ref->{'CSKILL'}[0]"},
-                        $file_for_error,
-                        $line_for_error
-                );
-
-                $line_ref->{'MONCSKILL'} = [ "MON" . $line_ref->{'CSKILL'}[0] ];
-                delete $line_ref->{'CSKILL'};
-                }
-
-                ##################################################################
-                # [ 728038 ] BONUS:VISION must replace VISION:.ADD
-                #
-                # VISION:.ADD must be converted to BONUS:VISION
-                # Some exemple of VISION:.ADD tags:
-                #   VISION:.ADD,Darkvision (60')
-                #   VISION:1,Darkvision (60')
-                #   VISION:.ADD,See Invisibility (120'),See Etheral (120'),Darkvision (120')
-
-                if (   $conversion_enable{'ALL: , to | in VISION'}
-                && exists $line_ref->{'VISION'}
-                && $line_ref->{'VISION'}[0] =~ /(\.ADD,|1,)(.*)/i )
-                {
-                $logging->warning(
-                        qq{Removing "$line_ref->{'VISION'}[0]"},
-                        $file_for_error,
-                        $line_for_error
-                );
-
-                my $newvision = "VISION:";
-                my $coma;
-
-                for my $vision_bonus ( split ',', $2 ) {
-                        if ( $vision_bonus =~ /(\w+)\s*\((\d+)\'\)/ ) {
-                                my ( $type, $bonus ) = ( $1, $2 );
-                                push @{ $line_ref->{'BONUS:VISION'} }, "BONUS:VISION|$type|$bonus";
-                                $logging->warning(
-                                qq{Adding "BONUS:VISION|$type|$bonus"},
-                                $file_for_error,
-                                $line_for_error
-                                );
-                                $newvision .= "$coma$type (0')";
-                                $coma = ',';
-                        }
-                        else {
-                                $logging->error(
-                                qq(Do not know how to convert "VISION:.ADD,$vision_bonus"),
-                                $file_for_error,
-                                $line_for_error
-                                );
-                        }
-                }
-
-                $logging->warning( qq{Adding "$newvision"}, $file_for_error, $line_for_error );
-
-                $line_ref->{'VISION'} = [$newvision];
-                }
-
-                ##################################################################
-                #
-                #
-                # For items with TYPE:Boot, Glove, Bracer, we must check for plural
-                # form and add a SLOTS:2 tag is the item is plural.
-
-                if (   $conversion_enable{'EQUIPMENT: SLOTS:2 for plurals'}
-                && $filetype            eq 'EQUIPMENT'
-                && $line_info->[0] eq 'EQUIPMENT'
-                && !exists $line_ref->{'SLOTS'} )
-                {
-                my $equipment_name = $line_ref->{ $master_order{'EQUIPMENT'}[0] }[0];
-
-                if ( exists $line_ref->{'TYPE'} ) {
-                        my $type = $line_ref->{'TYPE'}[0];
-                        if ( $type =~ /(Boot|Glove|Bracer)/ ) {
-                                if (   $1 eq 'Boot' && $equipment_name =~ /boots|sandals/i
-                                || $1 eq 'Glove'  && $equipment_name =~ /gloves|gauntlets|straps/i
-                                || $1 eq 'Bracer' && $equipment_name =~ /bracers|bracelets/i )
-                                {
-                                $line_ref->{'SLOTS'} = ['SLOTS:2'];
-                                $logging->warning(
-                                        qq{"SLOTS:2" added to "$equipment_name"},
-                                        $file_for_error,
-                                        $line_for_error
-                                );
-                                }
-                                else {
-                                $logging->error(qq{"$equipment_name" is a $1}, $file_for_error, $line_for_error );
-                                }
-                        }
-                }
-                else {
-                        $logging->warning(
-                                qq{$equipment_name has no TYPE.},
-                                $file_for_error,
-                                $line_for_error
-                        ) unless $equipment_name =~ /.MOD$/i;
-                }
-                }
-
-                ##################################################################
-                # #[ 677962 ] The DMG wands have no charge.
-                #
-                # Any Wand that do not have a EQMOD tag most have one added.
-                #
-                # The syntax for the new tag is
-                # EQMOD:SE_50TRIGGER|SPELLNAME[$spell_name]SPELLLEVEL[$spell_level]CASTERLEVEL[$caster_level]CHARGES[50]
-                #
-                # The $spell_level will also be extracted from the CLASSES tag.
-                # The $caster_level will be $spell_level * 2 -1
-
-                if ( $conversion_enable{'EQUIPMENT: generate EQMOD'} ) {
-                if (   $filetype eq 'SPELL'
-                        && $line_info->[0] eq 'SPELL'
-                        && ( exists $line_ref->{'CLASSES'} ) )
-                {
-                        my $spell_name  = $line_ref->{'000SpellName'}[0];
-                        my $spell_level = -1;
-
-                        CLASS:
-                        for ( split '\|', $line_ref->{'CLASSES'}[0] ) {
-                                if ( index( $_, 'Wizard' ) != -1 || index( $_, 'Cleric' ) != -1 ) {
-                                $spell_level = (/=(\d+)$/)[0];
-                                last CLASS;
-                                }
-                        }
-
-                        $Spells_For_EQMOD{$spell_name} = $spell_level
-                                if $spell_level > -1;
-
-                }
-                elsif ($filetype eq 'EQUIPMENT'
-                        && $line_info->[0] eq 'EQUIPMENT'
-                        && ( !exists $line_ref->{'EQMOD'} ) )
-                {
-                        my $equip_name = $line_ref->{'000EquipmentName'}[0];
-                        my $spell_name;
-
-                        if ( $equip_name =~ m{^Wand \((.*)/(\d\d?)(st|rd|th) level caster\)} ) {
-                                $spell_name = $1;
-                                my $caster_level = $2;
-
-                                if ( exists $Spells_For_EQMOD{$spell_name} ) {
-                                my $spell_level = $Spells_For_EQMOD{$spell_name};
-                                my $eqmod_tag   = "EQMOD:SE_50TRIGGER|SPELLNAME[$spell_name]"
-                                        . "SPELLLEVEL[$spell_level]"
-                                        . "CASTERLEVEL[$caster_level]CHARGES[50]";
-                                $line_ref->{'EQMOD'}    = [$eqmod_tag];
-                                $line_ref->{'BASEITEM'} = ['BASEITEM:Wand']
-                                        unless exists $line_ref->{'BASEITEM'};
-                                delete $line_ref->{'COST'} if exists $line_ref->{'COST'};
-                                $logging->warning(
-                                        qq{$equip_name: removing "COST" and adding "$eqmod_tag"},
-                                        $file_for_error,
-                                        $line_for_error
-                                );
-                                }
-                                else {
-                                $logging->warning(
-                                        qq($equip_name: not enough information to add charges),
-                                        $file_for_error,
-                                        $line_for_error
-                                );
-                                }
-                        }
-                        elsif ( $equip_name =~ /^Wand \((.*)\)/ ) {
-                                $spell_name = $1;
-                                if ( exists $Spells_For_EQMOD{$spell_name} ) {
-                                my $spell_level  = $Spells_For_EQMOD{$spell_name};
-                                my $caster_level = $spell_level * 2 - 1;
-                                my $eqmod_tag   = "EQMOD:SE_50TRIGGER|SPELLNAME[$spell_name]"
-                                        . "SPELLLEVEL[$spell_level]"
-                                        . "CASTERLEVEL[$caster_level]CHARGES[50]";
-                                $line_ref->{'EQMOD'} = [$eqmod_tag];
-                                delete $line_ref->{'COST'} if exists $line_ref->{'COST'};
-                                $logging->warning(
-                                        qq{$equip_name: removing "COST" and adding "$eqmod_tag"},
-                                        $file_for_error,
-                                        $line_for_error
-                                );
-                                }
-                                else {
-                                $logging->warning(
-                                        qq{$equip_name: not enough information to add charges},
-                                        $file_for_error,
-                                        $line_for_error
-                                );
-                                }
-                        }
-                        elsif ( $equip_name =~ /^Wand/ ) {
-                                $logging->warning(
-                                qq{$equip_name: not enough information to add charges},
-                                $file_for_error,
-                                $line_for_error
-                                );
-                        }
-                }
-                }
-
-                ##################################################################
-                # [ 663491 ] RACE: Convert AGE, HEIGHT and WEIGHT tags
-                #
-                # For each HEIGHT, WEIGHT or AGE tags found in a RACE file,
-                # we must call record_bioset_tags to record the AGE, HEIGHT and
-                # WEIGHT tags.
-
-                if (   $conversion_enable{'BIOSET:generate the new files'}
-                && $filetype            eq 'RACE'
-                && $line_info->[0] eq 'RACE'
-                && (   exists $line_ref->{'AGE'}
-                        || exists $line_ref->{'HEIGHT'}
-                        || exists $line_ref->{'WEIGHT'} )
-                ) {
-                my ( $dir, $race, $age, $height, $weight );
-
-                $dir  = File::Basename::dirname($file_for_error);
-                $race = $line_ref->{ $master_order{'RACE'}[0] }[0];
-                if ( $line_ref->{'AGE'} ) {
-                        $age = $line_ref->{'AGE'}[0];
-                        $logging->warning( qq{Removing "$line_ref->{'AGE'}[0]"}, $file_for_error, $line_for_error );
-                        delete $line_ref->{'AGE'};
-                }
-                if ( $line_ref->{'HEIGHT'} ) {
-                        $height = $line_ref->{'HEIGHT'}[0];
-                        $logging->warning( qq{Removing "$line_ref->{'HEIGHT'}[0]"}, $file_for_error, $line_for_error );
-                        delete $line_ref->{'HEIGHT'};
-                }
-                if ( $line_ref->{'WEIGHT'} ) {
-                        $weight = $line_ref->{'WEIGHT'}[0];
-                        $logging->warning( qq{Removing "$line_ref->{'WEIGHT'}[0]"}, $file_for_error, $line_for_error );
-                        delete $line_ref->{'WEIGHT'};
-                }
-
-                record_bioset_tags( $dir, $race, $age, $height, $weight, $file_for_error,
-                        $line_for_error );
-                }
-
-                ##################################################################
-                # [ 653596 ] Add a TYPE tag for all SPELLs
-                # .
-
-                if (   $conversion_enable{'SPELL:Add TYPE tags'}
-                && exists $line_ref->{'SPELLTYPE'}
-                && $filetype            eq 'CLASS'
-                && $line_info->[0] eq 'CLASS'
-                ) {
-
-                # We must keep a list of all the SPELLTYPE for each class.
-                # It is assumed that SPELLTYPE cannot be found more than once
-                # for the same class. It is also assumed that SPELLTYPE has only
-                # one value. SPELLTYPE:Any is ignored.
-
-                my $class_name = $line_ref->{ $master_order{'CLASS'}[0] }[0];
-                SPELLTYPE_TAG:
-                for my $spelltype_tag ( values %{ $line_ref->{'SPELLTYPE'} } ) {
-                        my $spelltype = "";
-                        ($spelltype) = ($spelltype_tag =~ /SPELLTYPE:(.*)/);
-                        next SPELLTYPE_TAG if $spelltype eq "" or uc($spelltype) eq "ANY";
-                        $class_spelltypes{$class_name}{$spelltype}++;
-                }
-                }
-
-                if (   $conversion_enable{'SPELL:Add TYPE tags'}
-                && $filetype                    eq 'SPELL'
-                && $line_info->{Linetype} eq 'SPELL' )
-                {
-
-                # For each SPELL we build the TYPE tag or we add to the
-                # existing one.
-                # The .MOD SPELL are ignored.
-
-                }
-
-                # SOURCE line replacement
-                # =======================
-                # Replace the SOURCELONG:xxx|SOURCESHORT:xxx|SOURCEWEB:xxx
-                # with the values found in the .PCC of the same directory.
-                #
-                # Only the first SOURCE line found is replaced.
-
-                if (   $conversion_enable{'SOURCE line replacement'}
-                && defined $line_info
-                && $line_info->[0] eq 'SOURCE'
-                && $source_curent_file ne $file_for_error )
-                {
-
-                # Only the first SOURCE tag is replace.
-                if ( exists $source_tags{ File::Basename::dirname($file_for_error) } ) {
-
-                        # We replace the line with a concatanation of SOURCE tags found in
-                        # the directory .PCC
-                        my %line_tokens;
-                        while ( my ( $tag, $value )
-                                = each %{ $source_tags{ File::Basename::dirname($file_for_error) } } )
-                        {
-                                $line_tokens{$tag} = [$value];
-                                $source_curent_file = $file_for_error;
-                        }
-
-                        $line_info->[1] = \%line_tokens;
-                }
-                elsif ( $file_for_error =~ / \A $cl_options{input_path} /xmsi ) {
-                        # We give this notice only if the curent file is under getOption('inputpath').
-                        # If -basepath is used, there could be files loaded outside of the -inputpath
-                        # without their PCC.
-                        $logging->notice( "No PCC source information found", $file_for_error, $line_for_error );
-                }
-                }
-
-                # Extract lists
-                # ====================
-                # Export each file name and log them with the filename and the
-                # line number
-
-                if ( $conversion_enable{'Export lists'} ) {
-                my $filename = $file_for_error;
-                $filename =~ tr{/}{\\};
-
-                if ( $filetype eq 'SPELL' ) {
-
-                        # Get the spell name
-                        my $spellname  = $line_ref->{'000SpellName'}[0];
-                        my $sourcepage = "";
-                        $sourcepage = $line_ref->{'SOURCEPAGE'}[0] if exists $line_ref->{'SOURCEPAGE'};
-
-                        # Write to file
-                        print { $filehandle_for{SPELL} }
-                                qq{"$spellname","$sourcepage","$line_for_error","$filename"\n};
-                }
-                if ( $filetype eq 'CLASS' ) {
-                        my $class = ( $line_ref->{'000ClassName'}[0] =~ /^CLASS:(.*)/ )[0];
-                        print { $filehandle_for{CLASS} } qq{"$class","$line_for_error","$filename"\n} if $class_name ne $class;
-                        $class_name = $class;
-                }
-
-                if ( $filetype eq 'DEITY' ) {
-                        print { $filehandle_for{DEITY} }
-                                qq{"$line_ref->{'000DeityName'}[0]","$line_for_error","$filename"\n};
-                }
-
-                if ( $filetype eq 'DOMAIN' ) {
-                        print { $filehandle_for{DOMAIN} }
-                                qq{"$line_ref->{'000DomainName'}[0]","$line_for_error","$filename"\n};
-                }
-
-                if ( $filetype eq 'EQUIPMENT' ) {
-                        my $equipname  = $line_ref->{ $master_order{$filetype}[0] }[0];
-                        my $outputname = "";
-                        $outputname = substr( $line_ref->{'OUTPUTNAME'}[0], 11 )
-                                if exists $line_ref->{'OUTPUTNAME'};
-                        my $replacementname = $equipname;
-                        if ( $outputname && $equipname =~ /\((.*)\)/ ) {
-                                $replacementname = $1;
-                        }
-                        $outputname =~ s/\[NAME\]/$replacementname/;
-                        print { $filehandle_for{EQUIPMENT} }
-                                qq{"$equipname","$outputname","$line_for_error","$filename"\n};
-                }
-
-                if ( $filetype eq 'EQUIPMOD' ) {
-                        my $equipmodname = $line_ref->{ $master_order{$filetype}[0] }[0];
-                        my ( $key, $type ) = ( "", "" );
-                        $key  = substr( $line_ref->{'KEY'}[0],  4 ) if exists $line_ref->{'KEY'};
-                        $type = substr( $line_ref->{'TYPE'}[0], 5 ) if exists $line_ref->{'TYPE'};
-                        print { $filehandle_for{EQUIPMOD} }
-                                qq{"$equipmodname","$key","$type","$line_for_error","$filename"\n};
-                }
-
-                if ( $filetype eq 'FEAT' ) {
-                        my $featname = $line_ref->{ $master_order{$filetype}[0] }[0];
-                        print { $filehandle_for{FEAT} } qq{"$featname","$line_for_error","$filename"\n};
-                }
-
-                if ( $filetype eq 'KIT STARTPACK' ) {
-                        my ($kitname)
-                                = ( $line_ref->{ $master_order{$filetype}[0] }[0] =~ /\A STARTPACK: (.*) \z/xms );
-                        print { $filehandle_for{KIT} } qq{"$kitname","$line_for_error","$filename"\n};
-                }
-
-                if ( $filetype eq 'KIT TABLE' ) {
-                        my ($tablename)
-                                = ( $line_ref->{ $master_order{$filetype}[0] }[0] =~ /\A TABLE: (.*) \z/xms );
-                        print { $filehandle_for{TABLE} } qq{"$tablename","$line_for_error","$filename"\n};
-                }
-
-                if ( $filetype eq 'LANGUAGE' ) {
-                        my $languagename = $line_ref->{ $master_order{$filetype}[0] }[0];
-                        print { $filehandle_for{LANGUAGE} } qq{"$languagename","$line_for_error","$filename"\n};
-                }
-
-                if ( $filetype eq 'RACE' ) {
-                        my $racename            = $line_ref->{ $master_order{$filetype}[0] }[0];
-
-                        my $race_type = q{};
-                        $race_type = $line_ref->{'RACETYPE'}[0] if exists $line_ref->{'RACETYPE'};
-                        $race_type =~ s{ \A RACETYPE: }{}xms;
-
-                        my $race_sub_type = q{};
-                        $race_sub_type = $line_ref->{'RACESUBTYPE'}[0] if exists $line_ref->{'RACESUBTYPE'};
-                        $race_sub_type =~ s{ \A RACESUBTYPE: }{}xms;
-
-                        print { $filehandle_for{RACE} }
-                                qq{"$racename","$race_type","$race_sub_type","$line_for_error","$filename"\n};
-                }
-
-                if ( $filetype eq 'SKILL' ) {
-                        my $skillname = $line_ref->{ $master_order{$filetype}[0] }[0];
-                        print { $filehandle_for{SKILL} } qq{"$skillname","$line_for_error","$filename"\n};
-                }
-
-                if ( $filetype eq 'TEMPLATE' ) {
-                        my $template_name = $line_ref->{ $master_order{$filetype}[0] }[0];
-                        print { $filehandle_for{TEMPLATE} } qq{"$template_name","$line_for_error","$filename"\n};
-                }
-                }
-
-                ############################################################
-                ######################## Conversion ########################
-                # We manipulate the tags for the line here
-
-                if ( $conversion_enable{'Generate BONUS and PRExxx report'} ) {
-                for my $tag_type ( sort keys %$line_ref ) {
-                        if ( $tag_type =~ /^BONUS|^!?PRE/ ) {
-                                $bonus_prexxx_tag_report{$filetype}{$_} = 1 for ( @{ $line_ref->{$tag_type} } );
-                        }
-                }
-                }
-
-                1;
-        }
-
-}       # End of BEGIN
-
-###############################################################
 # additionnal_file_parsing
 # ------------------------
 #
@@ -11804,6 +10576,12 @@ sub constructLoggingHeader {
    $header   .= "----------------------------------------------------------------\n";
 }
 
+=head2 convertEntities
+
+   This subroutine converts all special characters in a string to an ascii equivalent
+
+=cut
+
 sub convertEntities {
    my ($line) = @_;
 
@@ -11828,3 +10606,120 @@ sub convertEntities {
    return $line;
 }
 
+=head2 modifyMasterOrderForConversions
+
+   This subroutine alters the list of valid tags as necessary for various
+   conversions.
+
+   If a tag is to be converted, it must be accepted by the system as valid,
+   after it has been converted, the master list of tags no longer needs to contain
+   it unless it is being converted.
+
+   If the tag is not being converted (i.e. the relevant conversion is not 
+   active), then it will be rejected as erronous by the system.
+
+=cut
+
+sub modifyMasterOrderForConversions {
+   my ($master_order) = @_;
+
+#################################################################
+######################## Conversion #############################
+# Tags that must be seen as valid to allow conversion.
+
+   if (Pretty::Options::isConversionActive('ALL:Convert ADD:SA to ADD:SAB')) {
+      push @{ $master_order->{'CLASS'} },         'ADD:SA';
+      push @{ $master_order->{'CLASS Level'} },   'ADD:SA';
+      push @{ $master_order->{'COMPANIONMOD'} },  'ADD:SA';
+      push @{ $master_order->{'DEITY'} },         'ADD:SA';
+      push @{ $master_order->{'DOMAIN'} },        'ADD:SA';
+      push @{ $master_order->{'EQUIPMENT'} },     'ADD:SA';
+      push @{ $master_order->{'EQUIPMOD'} },      'ADD:SA';
+      push @{ $master_order->{'FEAT'} },          'ADD:SA';
+      push @{ $master_order->{'RACE'} },          'ADD:SA';
+      push @{ $master_order->{'SKILL'} },         'ADD:SA';
+      push @{ $master_order->{'SUBCLASSLEVEL'} }, 'ADD:SA';
+      push @{ $master_order->{'TEMPLATE'} },      'ADD:SA';
+      push @{ $master_order->{'WEAPONPROF'} },    'ADD:SA';
+   }
+   if (Pretty::Options::isConversionActive('EQUIP: ALTCRITICAL to ALTCRITMULT')) {
+      push @{ $master_order->{'EQUIPMENT'} }, 'ALTCRITICAL';
+   }
+
+   if (Pretty::Options::isConversionActive('BIOSET:generate the new files')) {
+      push @{ $master_order->{'RACE'} }, 'AGE', 'HEIGHT', 'WEIGHT';
+   }
+
+   if (Pretty::Options::isConversionActive('EQUIPMENT: remove ATTACKS')) {
+      push @{ $master_order->{'EQUIPMENT'} }, 'ATTACKS';
+   }
+
+   if (Pretty::Options::isConversionActive('PCC:GAME to GAMEMODE')) {
+      push @{ $master_order->{'PCC'} }, 'GAME';
+   }
+
+   if (Pretty::Options::isConversionActive('ALL:BONUS:MOVE conversion')) {
+      push @{ $master_order->{'CLASS'} },         'BONUS:MOVE:*';
+      push @{ $master_order->{'CLASS Level'} },   'BONUS:MOVE:*';
+      push @{ $master_order->{'COMPANIONMOD'} },  'BONUS:MOVE:*';
+      push @{ $master_order->{'DEITY'} },         'BONUS:MOVE:*';
+      push @{ $master_order->{'DOMAIN'} },        'BONUS:MOVE:*';
+      push @{ $master_order->{'EQUIPMENT'} },     'BONUS:MOVE:*';
+      push @{ $master_order->{'EQUIPMOD'} },      'BONUS:MOVE:*';
+      push @{ $master_order->{'FEAT'} },          'BONUS:MOVE:*';
+      push @{ $master_order->{'RACE'} },          'BONUS:MOVE:*';
+      push @{ $master_order->{'SKILL'} },         'BONUS:MOVE:*';
+      push @{ $master_order->{'SUBCLASSLEVEL'} }, 'BONUS:MOVE:*';
+      push @{ $master_order->{'TEMPLATE'} },      'BONUS:MOVE:*';
+      push @{ $master_order->{'WEAPONPROF'} },    'BONUS:MOVE:*';
+   }
+
+   if (Pretty::Options::isConversionActive('WEAPONPROF:No more SIZE')) {
+      push @{ $master_order->{'WEAPONPROF'} }, 'SIZE';
+   }
+
+   if (Pretty::Options::isConversionActive('EQUIP:no more MOVE')) {
+      push @{ $master_order->{'EQUIPMENT'} }, 'MOVE';
+   }
+
+#   vvvvvv This one is disactivated
+   if (0 && Pretty::Options::isConversionActive('ALL:Convert SPELL to SPELLS')) {
+      push @{ $master_order->{'CLASS Level'} },    'SPELL:*';
+      push @{ $master_order->{'DOMAIN'} },         'SPELL:*';
+      push @{ $master_order->{'EQUIPMOD'} },       'SPELL:*';
+      push @{ $master_order->{'SUBCLASSLEVEL'} },  'SPELL:*';
+   }
+
+#   vvvvvv This one is disactivated
+   if (0 && Pretty::Options::isConversionActive('TEMPLATE:HITDICESIZE to HITDIE')) {
+      push @{ $master_order->{'TEMPLATE'} }, 'HITDICESIZE';
+   }
+
+}
+
+sub convertAddSA {
+   my ($lineTokens, $file, $line) = @_;
+
+   # [ 1864711 ] Convert ADD:SA to ADD:SAB
+   # In most files, take ADD:SA and replace with ADD:SAB
+
+   if ($conversion_enable{'ALL:Convert ADD:SA to ADD:SAB'} && exists $lineTokens->{'ADD:SA'})) {
+
+      my $logger = Pretty::Reformat::getLogger();
+
+      $logger->warning(
+         qq{Change ADD:SA for ADD:SAB in "$lineTokens->{'ADD:SA'}[0]"},
+         $file_for_error,
+         $line_for_error
+      );
+
+      # copy the array into the correct tag and then delete the origianal
+      $lineTokens->{'ADD:SAB'} = $lineTokens->{'ADD:SA'}; 
+      delete $lineTokens->{'ADD:SA'};
+
+      # modify the copies (possibly only one) so they have the correct tag
+      for my $tok ( @{ $lineTokens->{'ADD:SAB'} } ) {
+         $tok =~ s/ADD:SA/ADD:SAB/;
+      }
+   }
+}
