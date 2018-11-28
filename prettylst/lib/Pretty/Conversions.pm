@@ -12,8 +12,8 @@ use File::Basename qw(dirname);
 use Cwd  qw(abs_path);
 use lib dirname(dirname abs_path $0);
 
-use Pretty::Options (qw(getOption setOption));
 use Pretty::Logging;
+use Pretty::Options (qw(getOption setOption));
 
 our $logging = Pretty::Logging->new(warningLevel => getOption('warninglevel'));
 
@@ -254,23 +254,23 @@ my %tag_proper_value_for = (
    'false' =>  'NO',
 );
 
-my %source_tags                 = ()    if $conversion_enable{'SOURCE line replacement'};
-my $source_curent_file          = q{}   if $conversion_enable{'SOURCE line replacement'};
+my %source_tags               = ()  if Pretty::Options::isConversionActive('SOURCE line replacement');
+my $source_curent_file        = q{} if Pretty::Options::isConversionActive('SOURCE line replacement');
+                                       
+my %classskill_files          = ()  if Pretty::Options::isConversionActive('CLASSSKILL conversion to CLASS');
+                                       
+my %classspell_files          = ()  if Pretty::Options::isConversionActive('CLASSSPELL conversion to SPELL');
+                                       
+my %class_files               = ()  if Pretty::Options::isConversionActive('SPELL:Add TYPE tags');
+my %class_spelltypes          = ()  if Pretty::Options::isConversionActive('SPELL:Add TYPE tags');
+                                       
+my %Spells_For_EQMOD          = ()  if Pretty::Options::isConversionActive('EQUIPMENT: generate EQMOD');
+my %Spell_Files               = ()  if Pretty::Options::isConversionActive('EQUIPMENT: generate EQMOD') || 
+                                        Pretty::Options::isConversionActive('CLASS: SPELLLIST from Spell.MOD');
 
-my %classskill_files            = ()    if $conversion_enable{'CLASSSKILL conversion to CLASS'};
+my %bonus_prexxx_tag_report   = ()  if Pretty::Options::isConversionActive('Generate BONUS and PRExxx report');
 
-my %classspell_files            = ()    if $conversion_enable{'CLASSSPELL conversion to SPELL'};
-
-my %class_files                 = ()    if $conversion_enable{'SPELL:Add TYPE tags'};
-my %class_spelltypes            = ()    if $conversion_enable{'SPELL:Add TYPE tags'};
-
-my %Spells_For_EQMOD            = ()    if $conversion_enable{'EQUIPMENT: generate EQMOD'};
-my %Spell_Files                 = ()    if $conversion_enable{'EQUIPMENT: generate EQMOD'}
-                                                        || $conversion_enable{'CLASS: SPELLLIST from Spell.MOD'};
-
-my %bonus_prexxx_tag_report     = ()    if $conversion_enable{'Generate BONUS and PRExxx report'};
-
-my %PREALIGN_conversion_5715 = qw(
+my %PREALIGN_conversion_5715  = qw(
         0       LG
         1       LN
         2       LE
@@ -282,34 +282,34 @@ my %PREALIGN_conversion_5715 = qw(
         8       CE
         9       NONE
         10      Deity
-) if $conversion_enable{'ALL:PREALIGN conversion'};
+) if Pretty::Options::isConversionActive('ALL:PREALIGN conversion');
 
 my %Key_conversion_56 = qw(
         BIND            BLIND
-) if $conversion_enable{'ALL:EQMOD has new keys'};
-#       ABENHABON               BNS_ENHC_AB
+) if Pretty::Options::isConversionActive('ALL:EQMOD has new keys');
+#       ABENHABON       BNS_ENHC_AB
 #       ABILITYMINUS    BNS_ENHC_AB
-#       ABILITYPLUS             BNS_ENHC_AB
-#       ACDEFLBON               BNS_AC_DEFL
-#       ACENHABON               BNS_ENHC_AC
-#       ACINSIBON               BNS_AC_INSI
-#       ACLUCKBON               BNS_AC_LUCK
-#       ACOTHEBON               BNS_AC_OTHE
-#       ACPROFBON               BNS_AC_PROF
-#       ACSACRBON               BNS_AC_SCRD
+#       ABILITYPLUS     BNS_ENHC_AB
+#       ACDEFLBON       BNS_AC_DEFL
+#       ACENHABON       BNS_ENHC_AC
+#       ACINSIBON       BNS_AC_INSI
+#       ACLUCKBON       BNS_AC_LUCK
+#       ACOTHEBON       BNS_AC_OTHE
+#       ACPROFBON       BNS_AC_PROF
+#       ACSACRBON       BNS_AC_SCRD
 #       ADAARH          ADAM
 #       ADAARH          ADAM
 #       ADAARL          ADAM
 #       ADAARM          ADAM
-#       ADAWE                   ADAM
+#       ADAWE           ADAM
 #       AMINAT          ANMATD
 #       AMMO+1          PLUS1W
 #       AMMO+2          PLUS2W
 #       AMMO+3          PLUS3W
 #       AMMO+4          PLUS4W
 #       AMMO+5          PLUS5W
-#       AMMODARK                DARK
-#       AMMOSLVR                SLVR
+#       AMMODARK        DARK
+#       AMMOSLVR        SLVR
 #       ARFORH          FRT_HVY
 #       ARFORL          FRT_LGHT
 #       ARFORM          FRT_MOD
@@ -322,70 +322,70 @@ my %Key_conversion_56 = qw(
 #       ARMR+3          PLUS3A
 #       ARMR+4          PLUS4A
 #       ARMR+5          PLUS5A
-#       ARMRADMH                ADAM
-#       ARMRADML                ADAM
-#       ARMRADMM                ADAM
-#       ARMRMITH                MTHRL
-#       ARMRMITL                MTHRL
-#       ARMRMITM                MTHRL
+#       ARMRADMH        ADAM
+#       ARMRADML        ADAM
+#       ARMRADMM        ADAM
+#       ARMRMITH        MTHRL
+#       ARMRMITL        MTHRL
+#       ARMRMITM        MTHRL
 #       ARWCAT          ARW_CAT
 #       ARWDEF          ARW_DEF
-#       BANEA                   BANE_A
-#       BANEM                   BANE_M
-#       BANER                   BANE_R
-#       BASHH                   BASH_H
-#       BASHL                   BASH_L
-#       BIND                    BLIND
-#       BONSPELL                BNS_SPELL
-#       BONUSSPELL              BNS_SPELL
+#       BANEA           BANE_A
+#       BANEM           BANE_M
+#       BANER           BANE_R
+#       BASHH           BASH_H
+#       BASHL           BASH_L
+#       BIND            BLIND
+#       BONSPELL        BNS_SPELL
+#       BONUSSPELL      BNS_SPELL
 #       BRIENAI         BRI_EN_A
 #       BRIENM          BRI_EN_M
 #       BRIENT          BRI_EN_T
 #       CHAOSA          CHAOS_A
 #       CHAOSM          CHAOS_M
 #       CHAOSR          CHAOS_R
-#       CLDIRNAI                CIRON
+#       CLDIRNAI        CIRON
 #       CLDIRNW         CIRON
 #       DAGSLVR         SLVR
 #       DEFLECTBONUS    BNS_AC_DEFL
 #       DRGNAR          DRACO
 #       DRGNSH          DRACO
 #       DRKAMI          DARK
-#       DRKSH                   DARK
-#       DRKWE                   DARK
+#       DRKSH           DARK
+#       DRKWE           DARK
 #       ENBURM          EN_BUR_M
 #       ENBURR          EN_BUR_R
 #       ENERGM          ENERG_M
 #       ENERGR          ENERG_R
-#       FLAMA                   FLM_A
-#       FLAMM                   FLM_M
-#       FLAMR                   FLM_R
+#       FLAMA           FLM_A
+#       FLAMM           FLM_M
+#       FLAMR           FLM_R
 #       FLBURA          FLM_BR_A
 #       FLBURM          FLM_BR_M
 #       FLBURR          FLM_BR_R
-#       FROSA                   FROST_A
-#       FROSM                   FROST_M
-#       FROSR                   FROST_R
+#       FROSA           FROST_A
+#       FROSM           FROST_M
+#       FROSR           FROST_R
 #       GHTOUA          GHOST_A
 #       GHTOUAM         GHOST_AM
 #       GHTOUM          GHOST_M
 #       GHTOUR          GHOST_R
-#       HCLDIRNW                CIRON/2
-#       HOLYA                   HOLY_A
-#       HOLYM                   HOLY_M
-#       HOLYR                   HOLY_R
+#       HCLDIRNW        CIRON/2
+#       HOLYA           HOLY_A
+#       HOLYM           HOLY_M
+#       HOLYR           HOLY_R
 #       ICBURA          ICE_BR_A
 #       ICBURM          ICE_BR_M
 #       ICBURR          ICE_BR_R
-#       LAWA                    LAW_A
-#       LAWM                    LAW_M
-#       LAWR                    LAW_R
-#       LUCKBONUS               BNS_SAV_LUC
-#       LUCKBONUS2              BNS_SKL_LCK
-#       MERCA                   MERC_A
-#       MERCM                   MERC_M
-#       MERCR                   MERC_R
-#       MICLE                   MI_CLE
+#       LAWA            LAW_A
+#       LAWM            LAW_M
+#       LAWR            LAW_R
+#       LUCKBONUS       BNS_SAV_LUC
+#       LUCKBONUS2      BNS_SKL_LCK
+#       MERCA           MERC_A
+#       MERCM           MERC_M
+#       MERCR           MERC_R
+#       MICLE           MI_CLE
 #       MITHAMI         MTHRL
 #       MITHARH         MTHRL
 #       MITHARL         MTHRL
@@ -396,65 +396,65 @@ my %Key_conversion_56 = qw(
 #       NATENHA         BNS_ENHC_NAT
 #       NATURALARMOR    BNS_ENHC_NAT
 #       PLUS1AM         PLUS1W
-#       PLUS1AMI                PLUS1W
+#       PLUS1AMI        PLUS1W
 #       PLUS1WI         PLUS1W
 #       PLUS2AM         PLUS2W
-#       PLUS2AMI                PLUS2W
+#       PLUS2AMI        PLUS2W
 #       PLUS2WI         PLUS2W
 #       PLUS3AM         PLUS3W
-#       PLUS3AMI                PLUS3W
+#       PLUS3AMI        PLUS3W
 #       PLUS3WI         PLUS3W
 #       PLUS4AM         PLUS4W
-#       PLUS4AMI                PLUS4W
+#       PLUS4AMI        PLUS4W
 #       PLUS4WI         PLUS4W
 #       PLUS5AM         PLUS5W
-#       PLUS5AMI                PLUS5W
+#       PLUS5AMI        PLUS5W
 #       PLUS5WI         PLUS5W
 #       RESIMP          RST_IMP
 #       RESIST          RST_IST
-#       RESISTBONUS             BNS_SAV_RES
-#       SAVINSBON               BNS_SAV_INS
-#       SAVLUCBON               BNS_SAV_LUC
-#       SAVOTHBON               BNS_SAV_OTH
-#       SAVPROBON               BNS_SAV_PRO
-#       SAVRESBON               BNS_SAV_RES
-#       SAVSACBON               BNS_SAV_SAC
+#       RESISTBONUS     BNS_SAV_RES
+#       SAVINSBON       BNS_SAV_INS
+#       SAVLUCBON       BNS_SAV_LUC
+#       SAVOTHBON       BNS_SAV_OTH
+#       SAVPROBON       BNS_SAV_PRO
+#       SAVRESBON       BNS_SAV_RES
+#       SAVSACBON       BNS_SAV_SAC
 #       SE50CST         SPL_CHRG
-#       SECW                    SPL_CMD
-#       SESUCAMA                A_1USEMI
-#       SESUCAME                A_1USEMI
-#       SESUCAMI                A_1USEMI
-#       SESUCDMA                D_1USEMI
-#       SESUCDME                D_1USEMI
-#       SESUCDMI                D_1USEMI
+#       SECW            SPL_CMD
+#       SESUCAMA        A_1USEMI
+#       SESUCAME        A_1USEMI
+#       SESUCAMI        A_1USEMI
+#       SESUCDMA        D_1USEMI
+#       SESUCDME        D_1USEMI
+#       SESUCDMI        D_1USEMI
 #       SESUUA          SPL_1USE
-#       SEUA                    SPL_ACT
-#       SE_1USEACT              SPL_1USE
+#       SEUA            SPL_ACT
+#       SE_1USEACT      SPL_1USE
 #       SE_50TRIGGER    SPL_CHRG
 #       SE_COMMANDWORD  SPL_CMD
-#       SE_USEACT               SPL_ACT
+#       SE_USEACT       SPL_ACT
 #       SHBURA          SHK_BR_A
 #       SHBURM          SHK_BR_M
 #       SHBURR          SHK_BR_R
 #       SHDGRT          SHDW_GRT
 #       SHDIMP          SHDW_IMP
-#       SHDOW                   SHDW
+#       SHDOW           SHDW
 #       SHFORH          FRT_HVY
 #       SHFORL          FRT_LGHT
 #       SHFORM          FRT_MOD
-#       SHLDADAM                ADAM
-#       SHLDDARK                DARK
-#       SHLDMITH                MTHRL
-#       SHOCA                   SHOCK_A
-#       SHOCM                   SHOCK_M
-#       SHOCR                   SHOCK_R
-#       SKILLBONUS              BNS_SKL_CIR
-#       SKILLBONUS2             BNS_SKL_CMP
-#       SKLCOMBON               BNS_SKL_CMP
-#       SLICK                   SLK
+#       SHLDADAM        ADAM
+#       SHLDDARK        DARK
+#       SHLDMITH        MTHRL
+#       SHOCA           SHOCK_A
+#       SHOCM           SHOCK_M
+#       SHOCR           SHOCK_R
+#       SKILLBONUS      BNS_SKL_CIR
+#       SKILLBONUS2     BNS_SKL_CMP
+#       SKLCOMBON       BNS_SKL_CMP
+#       SLICK           SLK
 #       SLKGRT          SLK_GRT
 #       SLKIMP          SLK_IMP
-#       SLMV                    SLNT_MV
+#       SLMV            SLNT_MV
 #       SLMVGRT         SLNT_MV_GRT
 #       SLMVIM          SLNT_MV_IM
 #       SLVRAMI         ALCHM
@@ -463,8 +463,8 @@ my %Key_conversion_56 = qw(
 #       SLVRWEF         ALCHM
 #       SLVRWEH         ALCHM/2
 #       SLVRWEL         ALCHM
-#       SPELLRESI               BNS_SPL_RST
-#       SPELLRESIST             BNS_SPL_RST
+#       SPELLRESI       BNS_SPL_RST
+#       SPELLRESIST     BNS_SPL_RST
 #       SPLRES          SPL_RST
 #       SPLSTR          SPL_STR
 #       THNDRA          THNDR_A
@@ -478,2728 +478,80 @@ my %Key_conversion_56 = qw(
 #       WEAP+3          PLUS3W
 #       WEAP+4          PLUS4W
 #       WEAP+5          PLUS5W
-#       WEAPADAM                ADAM
-#       WEAPDARK                DARK
-#       WEAPMITH                MTHRL
-#       WILDA                   WILD_A
-#       WILDS                   WILD_S
-#       ) if $conversion_enable{'ALL:EQMOD has new keys'};
+#       WEAPADAM        ADAM
+#       WEAPDARK        DARK
+#       WEAPMITH        MTHRL
+#       WILDA           WILD_A
+#       WILDS           WILD_S
+#) if Pretty::Options::isConversionActive('ALL:EQMOD has new keys');
 
-if($conversion_enable{'ALL:EQMOD has new keys'})
-{
-        my ($old_key,$new_key);
-        while (($old_key,$new_key) = each %Key_conversion_56)
-        {
-                if($old_key eq $new_key) {
-                        print "==> $old_key\n";
-                        delete $Key_conversion_56{$old_key};
-                }
-        }
+if (Pretty::Options::isConversionActive('ALL:EQMOD has new keys')) {
+   my ($old_key,$new_key);
+   while (($old_key,$new_key) = each %Key_conversion_56)
+   {
+      if($old_key eq $new_key) {
+         print "==> $old_key\n";
+         delete $Key_conversion_56{$old_key};
+      }
+   }
 }
 
 my %srd_weapon_name_conversion_433 = (
-        q{Sword (Great)}                        => q{Greatsword},
-        q{Sword (Long)}                 => q{Longsword},
-        q{Dagger (Venom)}                       => q{Venom Dagger},
-        q{Dagger (Assassin's)}          => q{Assassin's Dagger},
-        q{Mace (Smiting)}                       => q{Mace of Smiting},
-        q{Mace (Terror)}                        => q{Mace of Terror},
-        q{Greataxe (Life-Drinker)}      => q{Life Drinker},
-        q{Rapier (Puncturing)}          => q{Rapier of Puncturing},
-        q{Scimitar (Sylvan)}            => q{Sylvan Scimitar},
-        q{Sword (Flame Tongue)}         => q{Flame Tongue},
-        q{Sword (Planes)}                       => q{Sword of the Planes},
-        q{Sword (Luck Blade)}           => q{Luck Blade},
-        q{Sword (Subtlety)}             => q{Sword of Subtlety},
-        q{Sword (Holy Avenger)}         => q{Holy Avenger},
-        q{Sword (Life Stealing)}        => q{Sword of Life Stealing},
-        q{Sword (Nine Lives Stealer)}   => q{Nine Lives Stealer},
-        q{Sword (Frost Brand)}          => q{Frost Brand},
-        q{Trident (Fish Command)}       => q{Trident of Fish Command},
-        q{Trident (Warning)}            => q{Trident of Warning},
-        q{Warhammer (Dwarven Thrower)}  => q{Dwarven Thrower},
-) if $conversion_enable{'ALL: 4.3.3 Weapon name change'};
+   q{Sword (Great)}                 => q{Greatsword},
+   q{Sword (Long)}                  => q{Longsword},
+   q{Dagger (Venom)}                => q{Venom Dagger},
+   q{Dagger (Assassin's)}           => q{Assassin's Dagger},
+   q{Mace (Smiting)}                => q{Mace of Smiting},
+   q{Mace (Terror)}                 => q{Mace of Terror},
+   q{Greataxe (Life-Drinker)}       => q{Life Drinker},
+   q{Rapier (Puncturing)}           => q{Rapier of Puncturing},
+   q{Scimitar (Sylvan)}             => q{Sylvan Scimitar},
+   q{Sword (Flame Tongue)}          => q{Flame Tongue},
+   q{Sword (Planes)}                => q{Sword of the Planes},
+   q{Sword (Luck Blade)}            => q{Luck Blade},
+   q{Sword (Subtlety)}              => q{Sword of Subtlety},
+   q{Sword (Holy Avenger)}          => q{Holy Avenger},
+   q{Sword (Life Stealing)}         => q{Sword of Life Stealing},
+   q{Sword (Nine Lives Stealer)}    => q{Nine Lives Stealer},
+   q{Sword (Frost Brand)}           => q{Frost Brand},
+   q{Trident (Fish Command)}        => q{Trident of Fish Command},
+   q{Trident (Warning)}             => q{Trident of Warning},
+   q{Warhammer (Dwarven Thrower)}   => q{Dwarven Thrower},
+) if Pretty::Options::isConversionActive('ALL: 4.3.3 Weapon name change');
 
 
 # Constants for master_line_type
 
 # Line importance (Mode)
-use constant MAIN               => 1;      # Main line type for the file
-use constant SUB                => 2;      # Sub line type, must be linked to a MAIN
-use constant SINGLE     => 3;      # Idependant line type
-use constant COMMENT    => 4;      # Comment or empty line.
+use constant MAIN          => 1;      # Main line type for the file
+use constant SUB           => 2;      # Sub line type, must be linked to a MAIN
+use constant SINGLE        => 3;      # Idependant line type
+use constant COMMENT       => 4;      # Comment or empty line.
 
 # Line formatting option
-use constant LINE                       => 1;   # Every line formatted by itself
-use constant BLOCK              => 2;   # Lines formatted as a block
-use constant FIRST_COLUMN       => 3;   # Only the first column of the block
-                                                # gets aligned
+use constant LINE          => 1;   # Every line formatted by itself
+use constant BLOCK         => 2;   # Lines formatted as a block
+use constant FIRST_COLUMN  => 3;   # Only the first column of the block
+                                                 # gets aligned
 
 # Line header option
-use constant NO_HEADER          => 1;   # No header
-use constant LINE_HEADER        => 2;   # One header before each line
-use constant BLOCK_HEADER       => 3;   # One header for the block
+use constant NO_HEADER     => 1;   # No header
+use constant LINE_HEADER   => 2;   # One header before each line
+use constant BLOCK_HEADER  => 3;   # One header for the block
 
 # Standard YES NO constants
 use constant NO  => 0;
 use constant YES => 1;
 
-# The SOURCE line is use in nearly all file type
-my %SOURCE_file_type_def = (
-                Linetype        => 'SOURCE',
-                RegEx           => qr(^SOURCE\w*:([^\t]*)),
-                Mode            => SINGLE,
-                Format  => LINE,
-                Header  => NO_HEADER,
-#               Sep             => q{|},                                        # use | instead of [tab] to split
-                SepRegEx        => qr{ (?: [|] ) | (?: \t+ ) }xms,  # Catch both | and tab
-);
-
-# Some ppl may still want to use the old ways (for PCGen v5.9.5 and older)
-if( getOption('oldsourcetag') ) {
-        $SOURCE_file_type_def{Sep} = q{|};  # use | instead of [tab] to split
-}
-
-# Information needed to parse the line type
-my %master_file_type = (
-
-        ABILITY => [
-                \%SOURCE_file_type_def,
-                { Linetype      => 'ABILITY',
-                        RegEx                   => qr(^([^\t:]+)),
-                        Mode                    => MAIN,
-                        Format          => BLOCK,
-                        Header          => BLOCK_HEADER,
-                        ValidateKeep    => YES,
-                },
-        ],
-
-        ABILITYCATEGORY => [
-                \%SOURCE_file_type_def,
-                { Linetype      => 'ABILITYCATEGORY',
-                        RegEx                   => qr(^([^\t:]+)),
-                        Mode                    => MAIN,
-                        Format          => BLOCK,
-                        Header          => BLOCK_HEADER,
-                        ValidateKeep    => YES,
-                },
-        ],
-
-        BIOSET => [
-                \%SOURCE_file_type_def,
-                { Linetype      => 'BIOSET AGESET',
-                        RegEx                   => qr(^AGESET:([^\t]*)),
-                        Mode                    => MAIN,
-                        Format          => BLOCK,
-                        Header          => NO_HEADER,
-                        ValidateKeep    => YES,
-                        RegExIsMod              => qr(AGESET:(.*)\.([^\t]+)),
-                        RegExGetEntry   => qr(AGESET:(.*)),
-                },
-                { Linetype      => 'BIOSET RACENAME',
-                        RegEx           => qr(^RACENAME:([^\t]*)),
-                        Mode            => SUB,
-                        Format  => FIRST_COLUMN,
-                        Header  => NO_HEADER,
-                },
-        ],
-
-        CLASS => [
-                { Linetype      => 'CLASS Level',
-                        RegEx           => qr(^(\d+)($|\t|:REPEATLEVEL:\d+)),
-                        Mode            => SUB,
-                        Format  => BLOCK,
-                        Header  => NO_HEADER,
-                },
-                { Linetype      => 'CLASS',
-                        RegEx                   => qr(^CLASS:([^\t]*)),
-                        Mode                    => MAIN,
-                        Format          => LINE,
-                        Header          => LINE_HEADER,
-                        ValidateKeep    => YES,
-                        RegExIsMod              => qr(CLASS:(.*)\.(MOD|FORGET|COPY=[^\t]+)),
-                        RegExGetEntry   => qr(CLASS:(.*)),
-                },
-                \%SOURCE_file_type_def,
-                { Linetype      => 'SUBCLASS',
-                        RegEx                   => qr(^SUBCLASS:([^\t]*)),
-                        Mode                    => SUB,
-                        Format          => BLOCK,
-                        Header          => NO_HEADER,
-                        ValidateKeep    => YES,
-                        RegExIsMod              => qr(SUBCLASS:(.*)\.(MOD|FORGET|COPY=[^\t]+)),
-                        RegExGetEntry   => qr(SUBCLASS:(.*)),
-                        # SUBCLASS can be refered to anywhere CLASS works.
-                        OtherValidEntries => ['CLASS'],
-                },
-                { Linetype      => 'SUBSTITUTIONCLASS',
-                        RegEx                   => qr(^SUBSTITUTIONCLASS:([^\t]*)),
-                        Mode                    => SUB,
-                        Format          => BLOCK,
-                        Header          => NO_HEADER,
-                        ValidateKeep    => YES,
-                        RegExIsMod              => qr(SUBSTITUTIONCLASS:(.*)\.(MOD|FORGET|COPY=[^\t]+)),
-                        RegExGetEntry   => qr(SUBSTITUTIONCLASS:(.*)),
-                        # SUBSTITUTIONCLASS can be refered to anywhere CLASS works.
-                        OtherValidEntries       => ['CLASS'],
-                },
-                { Linetype      => 'SUBCLASSLEVEL',
-                        RegEx           => qr(^SUBCLASSLEVEL:([^\t]*)),
-                        Mode            => SUB,
-                        Format  => BLOCK,
-                        Header  => NO_HEADER,
-                },
-                { Linetype      => 'SUBSTITUTIONLEVEL',
-                        RegEx           => qr(^SUBSTITUTIONLEVEL:([^\t]*)),
-                        Mode            => SUB,
-                        Format  => BLOCK,
-                        Header  => NO_HEADER,
-                },
-        ],
-
-        COMPANIONMOD => [
-                \%SOURCE_file_type_def,
-                { Linetype      => 'SWITCHRACE',
-                        RegEx           => qr(^SWITCHRACE:([^\t]*)),
-                        Mode            => SINGLE,
-                        Format  => LINE,
-                        Header  => NO_HEADER,
-                },
-                { Linetype      => 'COMPANIONMOD',
-                        RegEx                   => qr(^FOLLOWER:([^\t]*)),
-                        Mode                    => MAIN,
-                        Format          => BLOCK,
-                        Header          => BLOCK_HEADER,
-                        ValidateKeep    => YES,
-                        RegExIsMod              => qr(FOLLOWER:(.*)\.(MOD|FORGET|COPY=[^\t]+)),
-                        RegExGetEntry   => qr(FOLLOWER:(.*)),
-
-                        # Identifier that refer to other entry type
-                        IdentRefType    => 'CLASS,DEFINE Variable',
-                        IdentRefTag             => 'FOLLOWER',  # Tag name for the reference check
-                                                                        # Get the list of reference identifiers
-                                                                        # The syntax is FOLLOWER:class1,class2=level
-                                                                        # We need to extract the class names.
-                        GetRefList              => sub { split q{,}, ( $_[0] =~ / \A ( [^=]* ) /xms )[0]  },
-                },
-                { Linetype      => 'MASTERBONUSRACE',
-                        RegEx                   => qr(^MASTERBONUSRACE:([^\t]*)),
-                        Mode                    => MAIN,
-                        Format          => BLOCK,
-                        Header          => BLOCK_HEADER,
-                        ValidateKeep    => YES,
-                        RegExIsMod              => qr(MASTERBONUSRACE:(.*)\.(MOD|FORGET|COPY=[^\t]+)),
-                        RegExGetEntry   => qr(MASTERBONUSRACE:(.*)),
-                        IdentRefType    => 'RACE',                      # Identifier that refer to other entry type
-                        IdentRefTag             => 'MASTERBONUSRACE',   # Tag name for the reference check
-                                                                                # Get the list of reference identifiers
-                                                                                # The syntax is MASTERBONUSRACE:race
-                                                                                # We need to extract the race name.
-                        GetRefList      => sub { return @_ },
-                },
-        ],
-
-        DEITY => [
-                \%SOURCE_file_type_def,
-                { Linetype      => 'DEITY',
-                        RegEx                   => qr(^([^\t:]+)),
-                        Mode                    => MAIN,
-                        Format          => BLOCK,
-                        Header          => BLOCK_HEADER,
-                        ValidateKeep    => YES,
-                },
-        ],
-
-        DOMAIN => [
-                \%SOURCE_file_type_def,
-                { Linetype      => 'DOMAIN',
-                        RegEx                   => qr(^([^\t:]+)),
-                        Mode                    => MAIN,
-                        Format          => BLOCK,
-                        Header          => BLOCK_HEADER,
-                        ValidateKeep    => YES,
-                },
-        ],
-
-        EQUIPMENT => [
-                \%SOURCE_file_type_def,
-                { Linetype      => 'EQUIPMENT',
-                        RegEx                   => qr(^([^\t:]+)),
-                        Mode                    => MAIN,
-                        Format          => BLOCK,
-                        Header          => BLOCK_HEADER,
-                        ValidateKeep    => YES,
-                },
-        ],
-
-        EQUIPMOD => [
-                \%SOURCE_file_type_def,
-                { Linetype      => 'EQUIPMOD',
-                        RegEx                   => qr(^([^\t:]+)),
-                        Mode                    => MAIN,
-                        Format          => BLOCK,
-                        Header          => BLOCK_HEADER,
-                        ValidateKeep    => YES,
-                },
-        ],
-
-        FEAT => [
-                \%SOURCE_file_type_def,
-                { Linetype      => 'FEAT',
-                        RegEx                   => qr(^([^\t:]+)),
-                        Mode                    => MAIN,
-                        Format          => BLOCK,
-                        Header          => BLOCK_HEADER,
-                        ValidateKeep    => YES,
-                },
-        ],
-
-        KIT => [
-                \%SOURCE_file_type_def,
-                { Linetype      => 'KIT REGION',                                # Kits are grouped by Region.
-                        RegEx           => qr{^REGION:([^\t]*)},        # So REGION has a line of its own.
-                        Mode            => SINGLE,
-                        Format  => LINE,
-                        Header  => NO_HEADER,
-                },
-                { Linetype      => 'KIT STARTPACK',                     # The KIT name is defined here
-                        RegEx                   => qr{^STARTPACK:([^\t]*)},
-                        Mode                    => MAIN,
-                        Format          => LINE,
-                        Header          => NO_HEADER,
-                        ValidateKeep    => YES,
-                },
-                { Linetype      => 'KIT ABILITY',
-                        RegEx           => qr{^ABILITY:([^\t]*)},
-                        Mode            => SUB,
-                        Format  => FIRST_COLUMN,
-                        Header  => NO_HEADER,
-                },
-                { Linetype      => 'KIT ALIGN',
-                        RegEx           => qr{^ALIGN:([^\t]*)},
-                        Mode            => SUB,
-                        Format  => FIRST_COLUMN,
-                        Header  => NO_HEADER,
-                },
-                { Linetype      => 'KIT CLASS',
-                        RegEx           => qr{^CLASS:([^\t]*)},
-                        Mode            => SUB,
-                        Format  => FIRST_COLUMN,
-                        Header  => NO_HEADER,
-                },
-                { Linetype      => 'KIT DEITY',
-                        RegEx           => qr{^DEITY:([^\t]*)},
-                        Mode            => SUB,
-                        Format  => FIRST_COLUMN,
-                        Header  => NO_HEADER,
-                },
-                { Linetype      => 'KIT FEAT',
-                        RegEx           => qr{^FEAT:([^\t]*)},
-                        Mode            => SUB,
-                        Format  => BLOCK,
-                        Header  => NO_HEADER,
-                },
-                { Linetype      => 'KIT FUNDS',
-                        RegEx           => qr{^FUNDS:([^\t]*)},
-                        Mode            => SUB,
-                        Format  => BLOCK,
-                        Header  => NO_HEADER,
-                },
-                { Linetype      => 'KIT GEAR',
-                        RegEx           => qr{^GEAR:([^\t]*)},
-                        Mode            => SUB,
-                        Format  => BLOCK,
-                        Header  => NO_HEADER,
-                },
-                { Linetype      => 'KIT GENDER',
-                        RegEx           => qr{^GENDER:([^\t]*)},
-                        Mode            => SUB,
-                        Format  => FIRST_COLUMN,
-                        Header  => NO_HEADER,
-                },
-                { Linetype      => 'KIT KIT',
-                        RegEx           => qr{^KIT:([^\t]*)},
-                        Mode            => SUB,
-                        Format  => FIRST_COLUMN,
-                        Header  => NO_HEADER,
-                },
-                { Linetype      => 'KIT LANGAUTO',
-                        RegEx           => qr{^LANGAUTO:([^\t]*)},
-                        Mode            => SUB,
-                        Format  => FIRST_COLUMN,
-                        Header  => NO_HEADER,
-                },
-                { Linetype      => 'KIT LANGBONUS',
-                        RegEx           => qr{^LANGBONUS:([^\t]*)},
-                        Mode            => SUB,
-                        Format  => FIRST_COLUMN,
-                        Header  => NO_HEADER,
-                },
-                { Linetype      => 'KIT LEVELABILITY',
-                        RegEx           => qr{^LEVELABILITY:([^\t]*)},
-                        Mode            => SUB,
-                        Format  => FIRST_COLUMN,
-                        Header  => NO_HEADER,
-                },
-                { Linetype      => 'KIT NAME',
-                        RegEx           => qr{^NAME:([^\t]*)},
-                        Mode            => SUB,
-                        Format  => FIRST_COLUMN,
-                        Header  => NO_HEADER,
-                },
-                { Linetype      => 'KIT PROF',
-                        RegEx           => qr{^PROF:([^\t]*)},
-                        Mode            => SUB,
-                        Format  => BLOCK,
-                        Header  => NO_HEADER,
-                },
-                { Linetype      => 'KIT RACE',
-                        RegEx           => qr{^RACE:([^\t]*)},
-                        Mode            => SUB,
-                        Format  => FIRST_COLUMN,
-                        Header  => NO_HEADER,
-                },
-                { Linetype      => 'KIT SELECT',
-                        RegEx           => qr{^SELECT:([^\t]*)},
-                        Mode            => SUB,
-                        Format  => FIRST_COLUMN,
-                        Header  => NO_HEADER,
-                },
-                { Linetype      => 'KIT SKILL',
-                        RegEx           => qr{^SKILL:([^\t]*)},
-                        Mode            => SUB,
-                        Format  => BLOCK,
-                        Header  => NO_HEADER,
-                },
-                { Linetype      => 'KIT STAT',
-                        RegEx           => qr{^STAT:([^\t]*)},
-                        Mode            => SUB,
-                        Format  => FIRST_COLUMN,
-                        Header  => NO_HEADER,
-                },
-                { Linetype      => 'KIT SPELLS',
-                        RegEx           => qr{^SPELLS:([^\t]*)},
-                        Mode            => SUB,
-                        Format  => BLOCK,
-                        Header  => NO_HEADER,
-                },
-                { Linetype      => 'KIT TABLE',
-                        RegEx                   => qr{^TABLE:([^\t]*)},
-                        Mode                    => SUB,
-                        Format          => FIRST_COLUMN,
-                        Header          => NO_HEADER,
-                        ValidateKeep    => YES,
-                },
-                { Linetype      => 'KIT TEMPLATE',
-                        RegEx           => qr{^TEMPLATE:([^\t]*)},
-                        Mode            => SUB,
-                        Format  => FIRST_COLUMN,
-                        Header  => NO_HEADER,
-                },
-        ],
-
-        LANGUAGE => [
-                \%SOURCE_file_type_def,
-                { Linetype      => 'LANGUAGE',
-                        RegEx                   => qr(^([^\t:]+)),
-                        Mode                    => MAIN,
-                        Format          => BLOCK,
-                        Header          => BLOCK_HEADER,
-                        ValidateKeep    => YES,
-                },
-        ],
-
-        RACE => [
-                \%SOURCE_file_type_def,
-                { Linetype      => 'RACE',
-                        RegEx                   => qr(^([^\t:]+)),
-                        Mode                    => MAIN,
-                        Format          => BLOCK,
-                        Header          => BLOCK_HEADER,
-                        ValidateKeep    => YES,
-                },
-        ],
-
-        SKILL => [
-                \%SOURCE_file_type_def,
-                { Linetype      => 'SKILL',
-                        RegEx                   => qr(^([^\t:]+)),
-                        Mode                    => MAIN,
-                        Format          => BLOCK,
-                        Header          => BLOCK_HEADER,
-                        ValidateKeep    => YES,
-                },
-        ],
-
-        SPELL => [
-                \%SOURCE_file_type_def,
-                { Linetype      => 'SPELL',
-                        RegEx                   => qr(^([^\t:]+)),
-                        Mode                    => MAIN,
-                        Format          => BLOCK,
-                        Header          => BLOCK_HEADER,
-                        ValidateKeep    => YES,
-                },
-        ],
-
-        TEMPLATE => [
-                \%SOURCE_file_type_def,
-                { Linetype      => 'TEMPLATE',
-                        RegEx                   => qr(^([^\t:]+)),
-                        Mode                    => MAIN,
-                        Format          => BLOCK,
-                        Header          => BLOCK_HEADER,
-                        ValidateKeep    => YES,
-                },
-        ],
-
-        WEAPONPROF => [
-                \%SOURCE_file_type_def,
-                { Linetype      => 'WEAPONPROF',
-                        RegEx                   => qr(^([^\t:]+)),
-                        Mode                    => MAIN,
-                        Format          => BLOCK,
-                        Header          => BLOCK_HEADER,
-                        ValidateKeep    => YES,
-                },
-        ],
-
-        ARMORPROF => [
-                \%SOURCE_file_type_def,
-                { Linetype      => 'ARMORPROF',
-                        RegEx                   => qr(^([^\t:]+)),
-                        Mode                    => MAIN,
-                        Format          => BLOCK,
-                        Header          => BLOCK_HEADER,
-                        ValidateKeep    => YES,
-                },
-        ],
-
-        SHIELDPROF => [
-                \%SOURCE_file_type_def,
-                { Linetype      => 'SHIELDPROF',
-                        RegEx                   => qr(^([^\t:]+)),
-                        Mode                    => MAIN,
-                        Format          => BLOCK,
-                        Header          => BLOCK_HEADER,
-                        ValidateKeep    => YES,
-                },
-        ],
-
-        VARIABLE => [
-                \%SOURCE_file_type_def,
-                { Linetype      => 'VARIABLE',
-                        RegEx                   => qr(^([^\t:]+)),
-                        Mode                    => MAIN,
-                        Format          => BLOCK,
-                        Header          => BLOCK_HEADER,
-                        ValidateKeep    => YES,
-                },
-        ],
-
-        DATACONTROL => [
-                \%SOURCE_file_type_def,
-                { Linetype      => 'DATACONTROL',
-                        RegEx                   => qr(^([^\t:]+)),
-                        Mode                    => MAIN,
-                        Format          => BLOCK,
-                        Header          => BLOCK_HEADER,
-                        ValidateKeep    => YES,
-                },
-        ],
-        GLOBALMOD => [
-                \%SOURCE_file_type_def,
-                { Linetype      => 'GLOBALMOD',
-                        RegEx                   => qr(^([^\t:]+)),
-                        Mode                    => MAIN,
-                        Format          => BLOCK,
-                        Header          => BLOCK_HEADER,
-                        ValidateKeep    => YES,
-                },
-        ],
-
-        SAVE => [
-                \%SOURCE_file_type_def,
-                { Linetype      => 'SAVE',
-                        RegEx                   => qr(^([^\t:]+)),
-                        Mode                    => MAIN,
-                        Format          => BLOCK,
-                        Header          => BLOCK_HEADER,
-                        ValidateKeep    => YES,
-                },
-        ],
-        STAT => [
-                \%SOURCE_file_type_def,
-                { Linetype      => 'STAT',
-                        RegEx                   => qr(^([^\t:]+)),
-                        Mode                    => MAIN,
-                        Format          => BLOCK,
-                        Header          => BLOCK_HEADER,
-                        ValidateKeep    => YES,
-                },
-        ],
-        ALIGNMENT => [
-                \%SOURCE_file_type_def,
-                { Linetype      => 'ALIGNMENT',
-                        RegEx                   => qr(^([^\t:]+)),
-                        Mode                    => MAIN,
-                        Format          => BLOCK,
-                        Header          => BLOCK_HEADER,
-                        ValidateKeep    => YES,
-                },
-        ],
-
-);
-
-# The PRExxx tags. They are used in many of the line types.
-# From now on, they are defined in only one place and every
-# line type will get the same sort order.
-my @PRE_Tags = (
-        'PRE:.CLEAR',
-        'PREABILITY:*',
-        '!PREABILITY',
-        'PREAGESET',
-        '!PREAGESET',
-        'PREALIGN:*',
-        '!PREALIGN:*',
-        'PREARMORPROF:*',
-        '!PREARMORPROF',
-        'PREARMORTYPE',
-        '!PREARMORTYPE',
-        'PREATT',
-        '!PREATT',
-        'PREBASESIZEEQ',
-        '!PREBASESIZEEQ',
-        'PREBASESIZEGT',
-        '!PREBASESIZEGT',
-        'PREBASESIZEGTEQ',
-        '!PREBASESIZEGTEQ',
-        'PREBASESIZELT',
-        '!PREBASESIZELT',
-        'PREBASESIZELTEQ',
-        '!PREBASESIZELTEQ',
-        'PREBASESIZENEQ',
-        'PREBIRTHPLACE',
-        '!PREBIRTHPLACE',
-        'PRECAMPAIGN',
-        '!PRECAMPAIGN',
-        'PRECHECK',
-        '!PRECHECK',
-        'PRECHECKBASE',
-        '!PRECHECKBASE',
-        'PRECITY',
-        '!PRECITY',
-        'PRECHARACTERTYPE',
-        '!PRECHARACTERTYPE',
-        'PRECLASS',
-        '!PRECLASS',
-        'PRECLASSLEVELMAX',
-        '!PRECLASSLEVELMAX',
-        'PRECSKILL',
-        '!PRECSKILL',
-        'PREDEITY',
-        '!PREDEITY',
-        'PREDEITYALIGN',
-        '!PREDEITYALIGN',
-        'PREDEITYDOMAIN',
-        '!PREDEITYDOMAIN',
-        'PREDOMAIN',
-        '!PREDOMAIN',
-        'PREDR',
-        '!PREDR',
-        'PREEQUIP',
-        '!PREEQUIP',
-        'PREEQUIPBOTH',
-        '!PREEQUIPBOTH',
-        'PREEQUIPPRIMARY',
-        '!PREEQUIPPRIMARY',
-        'PREEQUIPSECONDARY',
-        '!PREEQUIPSECONDARY',
-        'PREEQUIPTWOWEAPON',
-        '!PREEQUIPTWOWEAPON',
-        'PREFEAT:*',
-        '!PREFEAT',
-        'PREFACT:*',
-        '!PREFACT',
-        'PREGENDER',
-        '!PREGENDER',
-        'PREHANDSEQ',
-        '!PREHANDSEQ',
-        'PREHANDSGT',
-        '!PREHANDSGT',
-        'PREHANDSGTEQ',
-        '!PREHANDSGTEQ',
-        'PREHANDSLT',
-        '!PREHANDSLT',
-        'PREHANDSLTEQ',
-        '!PREHANDSLTEQ',
-        'PREHANDSNEQ',
-        'PREHD',
-        '!PREHD',
-        'PREHP',
-        '!PREHP',
-        'PREITEM',
-        '!PREITEM',
-        'PRELANG',
-        '!PRELANG',
-        'PRELEGSEQ',
-        '!PRELEGSEQ',
-        'PRELEGSGT',
-        '!PRELEGSGT',
-        'PRELEGSGTEQ',
-        '!PRELEGSGTEQ',
-        'PRELEGSLT',
-        '!PRELEGSLT',
-        'PRELEGSLTEQ',
-        '!PRELEGSLTEQ',
-        'PRELEGSNEQ',
-        'PRELEVEL',
-        '!PRELEVEL',
-        'PRELEVELMAX',
-        '!PRELEVELMAX',
-        'PREKIT',
-        '!PREKIT',
-        'PREMOVE',
-        '!PREMOVE',
-        'PREMULT:*',
-        '!PREMULT:*',
-        'PREPCLEVEL',
-        '!PREPCLEVEL',
-        'PREPROFWITHARMOR',
-        '!PREPROFWITHARMOR',
-        'PREPROFWITHSHIELD',
-        '!PREPROFWITHSHIELD',
-        'PRERACE:*',
-        '!PRERACE:*',
-        'PREREACH',
-        '!PREREACH',
-        'PREREACHEQ',
-        '!PREREACHEQ',
-        'PREREACHGT',
-        '!PREREACHGT',
-        'PREREACHGTEQ',
-        '!PREREACHGTEQ',
-        'PREREACHLT',
-        '!PREREACHLT',
-        'PREREACHLTEQ',
-        '!PREREACHLTEQ',
-        'PREREACHNEQ',
-        'PREREGION',
-        '!PREREGION',
-        'PRERULE',
-        '!PRERULE',
-        'PRESA',
-        '!PRESA',
-        'PRESITUATION',
-        '!PRESITUATION',
-        'PRESHIELDPROF',
-        '!PRESHIELDPROF',
-        'PRESIZEEQ',
-        '!PRESIZEEQ',
-        'PRESIZEGT',
-        '!PRESIZEGT',
-        'PRESIZEGTEQ',
-        '!PRESIZEGTEQ',
-        'PRESIZELT',
-        '!PRESIZELT',
-        'PRESIZELTEQ',
-        '!PRESIZELTEQ',
-        'PRESIZENEQ',
-        'PRESKILL:*',
-        '!PRESKILL',
-        'PRESKILLMULT',
-        '!PRESKILLMULT',
-        'PRESKILLTOT',
-        '!PRESKILLTOT',
-        'PRESPELL:*',
-        '!PRESPELL',
-        'PRESPELLBOOK',
-        '!PRESPELLBOOK',
-        'PRESPELLCAST:*',
-        '!PRESPELLCAST:*',
-        'PRESPELLDESCRIPTOR',
-        'PRESPELLSCHOOL:*',
-        '!PRESPELLSCHOOL',
-        'PRESPELLSCHOOLSUB',
-        '!PRESPELLSCHOOLSUB',
-        'PRESPELLTYPE:*',
-        '!PRESPELLTYPE',
-        'PRESREQ',
-        '!PRESREQ',
-        'PRESRGT',
-        '!PRESRGT',
-        'PRESRGTEQ',
-        '!PRESRGTEQ',
-        'PRESRLT',
-        '!PRESRLT',
-        'PRESRLTEQ',
-        '!PRESRLTEQ',
-        'PRESRNEQ',
-        'PRESTAT:*',
-        '!PRESTAT',
-        'PRESTATEQ',
-        '!PRESTATEQ',
-        'PRESTATGT',
-        '!PRESTATGT',
-        'PRESTATGTEQ',
-        '!PRESTATGTEQ',
-        'PRESTATLT',
-        '!PRESTATLT',
-        'PRESTATLTEQ',
-        '!PRESTATLTEQ',
-        'PRESTATNEQ',
-        'PRESUBCLASS',
-        '!PRESUBCLASS',
-        'PRETEMPLATE:*',
-        '!PRETEMPLATE:*',
-        'PRETEXT',
-        '!PRETEXT',
-        'PRETYPE:*',
-        '!PRETYPE:*',
-        'PRETOTALAB:*',
-        '!PRETOTALAB:*',
-        'PREUATT',
-        '!PREUATT',
-        'PREVAREQ:*',
-        '!PREVAREQ:*',
-        'PREVARGT:*',
-        '!PREVARGT:*',
-        'PREVARGTEQ:*',
-        '!PREVARGTEQ:*',
-        'PREVARLT:*',
-        '!PREVARLT:*',
-        'PREVARLTEQ:*',
-        '!PREVARLTEQ:*',
-        'PREVARNEQ:*',
-        'PREVISION',
-        '!PREVISION',
-        'PREWEAPONPROF:*',
-        '!PREWEAPONPROF:*',
-        'PREWIELD',
-        '!PREWIELD',
-
-        # Removed tags
-        #       'PREVAR',
-);
-
-# Hash used by validate_pre_tag to verify if a PRExxx tag exists
-my %PRE_Tags = (
-        'PREAPPLY'              => 1,   # Only valid when embeded - THIS IS DEPRECATED
-# Uncommenting until conversion for monster kits is done to prevent error messages.
-        'PREDEFAULTMONSTER' => 1,       # Only valid when embeded
-);
-
-for my $pre_tag (@PRE_Tags) {
-        # We need a copy since we don't want to modify the original
-        my $pre_tag_name = $pre_tag;
-
-        # We strip the :* at the end to get the real name for the lookup table
-        $pre_tag_name =~ s/ [:][*] \z//xms;
-
-        $PRE_Tags{$pre_tag_name} = 1;
-}
-
-my %double_PCC_tags = (
-        'BONUS:ABILITYPOOL',            => 1,
-        'BONUS:CASTERLEVEL',            => 1,
-        'BONUS:CHECKS',                 => 1,
-        'BONUS:COMBAT',                 => 1,
-        'BONUS:DC',                             => 1,
-        'BONUS:DOMAIN',                 => 1,
-        'BONUS:DR',                             => 1,
-        'BONUS:FEAT',                   => 1,
-        'BONUS:FOLLOWERS',              => 1,
-        'BONUS:HP',                             => 1,
-        'BONUS:MISC',                   => 1,
-        'BONUS:MOVEADD',                        => 1,
-        'BONUS:MOVEMULT',                       => 1,
-        'BONUS:PCLEVEL',                        => 1,
-        'BONUS:POSTMOVEADD',            => 1,
-        'BONUS:POSTRANGEADD',           => 1,
-        'BONUS:RANGEADD',                       => 1,
-        'BONUS:RANGEMULT',              => 1,
-        'BONUS:SITUATION',              => 1,
-        'BONUS:SIZEMOD',                        => 1,
-        'BONUS:SKILL',                  => 1,
-        'BONUS:SKILLPOINTS',            => 1,
-        'BONUS:SKILLPOOL',              => 1,
-        'BONUS:SKILLRANK',              => 1,
-        'BONUS:SLOTS',                  => 1,
-        'BONUS:SPECIALTYSPELLKNOWN',    => 1,
-        'BONUS:SPELLCAST',              => 1,
-        'BONUS:SPELLCASTMULT',          => 1,
-        'BONUS:SPELLKNOWN',             => 1,
-        'BONUS:STAT',                   => 1,
-        'BONUS:UDAM',                   => 1,
-        'BONUS:VAR',                    => 1,
-        'BONUS:VISION',                 => 1,
-        'BONUS:WEAPONPROF',             => 1,
-        'BONUS:WIELDCATEGORY',          => 1,
- );
-
-
-my @SOURCE_Tags = (
-        'SOURCELONG',
-        'SOURCESHORT',
-        'SOURCEWEB',
-        'SOURCEPAGE:.CLEAR',
-        'SOURCEPAGE',
-        'SOURCELINK',
-);
-
-my @QUALIFY_Tags = (
-        'QUALIFY:ABILITY',
-        'QUALIFY:CLASS',
-        'QUALIFY:DEITY',
-        'QUALIFY:DOMAIN',
-        'QUALIFY:EQUIPMENT',
-        'QUALIFY:EQMOD',
-        'QUALIFY:FEAT',
-        'QUALIFY:RACE',
-        'QUALIFY:SPELL',
-        'QUALIFY:SKILL',
-        'QUALIFY:TEMPLATE',
-        'QUALIFY:WEAPONPROF',
-);
-
-# [ 1956340 ] Centralize global BONUS tags
-# The global BONUS:xxx tags. They are used in many of the line types.
-# From now on, they are defined in only one place and every
-# line type will get the same sort order.
-# BONUSes only valid for specific line types are listed on those line types
-my @Global_BONUS_Tags = (
-        'BONUS:ABILITYPOOL:*',                  # Global
-        'BONUS:CASTERLEVEL:*',                  # Global
-        'BONUS:CHECKS:*',                               # Global        DEPRECATED
-        'BONUS:COMBAT:*',                               # Global
-        'BONUS:CONCENTRATION:*',                # Global
-        'BONUS:DC:*',                           # Global
-        'BONUS:DOMAIN:*',                               # Global
-        'BONUS:DR:*',                           # Global
-        'BONUS:FEAT:*',                         # Global
-        'BONUS:FOLLOWERS',                      # Global
-        'BONUS:HP:*',                           # Global
-        'BONUS:MISC:*',                         # Global
-        'BONUS:MOVEADD:*',                      # Global
-        'BONUS:MOVEMULT:*',                     # Global
-        'BONUS:PCLEVEL:*',                      # Global
-        'BONUS:POSTMOVEADD:*',                  # Global
-        'BONUS:POSTRANGEADD:*',                 # Global
-        'BONUS:RANGEADD:*',                     # Global
-        'BONUS:RANGEMULT:*',                    # Global
-        'BONUS:SAVE:*',                         # Global        Replacement for CHECKS
-        'BONUS:SITUATION:*',                    # Global
-        'BONUS:SIZEMOD:*',                      # Global
-        'BONUS:SKILL:*',                                # Global
-        'BONUS:SKILLPOINTS:*',                  # Global
-        'BONUS:SKILLPOOL:*',                    # Global
-        'BONUS:SKILLRANK:*',                    # Global
-        'BONUS:SLOTS:*',                                # Global
-        'BONUS:SPECIALTYSPELLKNOWN:*',  # Global
-        'BONUS:SPELLCAST:*',                    # Global
-        'BONUS:SPELLCASTMULT:*',                # Global
-#       'BONUS:SPELLPOINTCOST:*',               # Global
-        'BONUS:SPELLKNOWN:*',                   # Global
-        'BONUS:STAT:*',                         # Global
-        'BONUS:UDAM:*',                         # Global
-        'BONUS:VAR:*',                          # Global
-        'BONUS:VISION:*',                               # Global
-        'BONUS:WEAPONPROF:*',                   # Global
-        'BONUS:WIELDCATEGORY:*',                # Global
-#       'BONUS:DAMAGE:*',                               # Deprecated
-#       'BONUS:DEFINE:*',                               # Not listed in the Docs
-#       'BONUS:EQM:*',                          # Equipment and EquipMod files only
-#       'BONUS:EQMARMOR:*',                     # Equipment and EquipMod files only
-#       'BONUS:EQMWEAPON:*',                    # Equipment and EquipMod files only
-#       'BONUS:ESIZE:*',                                # Not listed in the Docs
-#       'BONUS:HD',                                     # Class Lines
-#       'BONUS:LANGUAGES:*',                    # Not listed in the Docs
-#       'BONUS:LANG:*',                         # BONUS listed in the Code which is to be used instead of the deprecated BONUS:LANGNUM tag.
-#       'BONUS:MONSKILLPTS',                    # Templates
-#       'BONUS:REPUTATION:*',                   # Not listed in the Docs
-#       'BONUS:RING:*',                         # Not listed in the Docs
-#       'BONUS:SCHOOL:*',                               # Not listed in the Docs
-#       'BONUS:SPELL:*',                                # Not listed in the Docs
-#       'BONUS:TOHIT:*',                                # Deprecated
-#       'BONUS:WEAPON:*',                               # Equipment and EquipMod files only
-);
-
-# Global tags allowed in PCC files.
-my @double_PCC_tags = (
-        'BONUS:ABILITYPOOL:*',          
-        'BONUS:CASTERLEVEL:*',          
-        'BONUS:CHECKS:*',                       
-        'BONUS:COMBAT:*',                       
-        'BONUS:CONCENTRATION:*',
-        'BONUS:DC:*',                   
-        'BONUS:DOMAIN:*',                       
-        'BONUS:DR:*',                   
-        'BONUS:FEAT:*',                 
-        'BONUS:FOLLOWERS',              
-        'BONUS:HP:*',                   
-        'BONUS:MISC:*',                 
-        'BONUS:MOVEADD:*',              
-        'BONUS:MOVEMULT:*',             
-        'BONUS:PCLEVEL:*',              
-        'BONUS:POSTMOVEADD:*',          
-        'BONUS:POSTRANGEADD:*',         
-        'BONUS:RANGEADD:*',             
-        'BONUS:RANGEMULT:*',            
-        'BONUS:SAVE:*',                 
-        'BONUS:SIZEMOD:*',              
-        'BONUS:SKILL:*',                        
-        'BONUS:SKILLPOINTS:*',          
-        'BONUS:SKILLPOOL:*',            
-        'BONUS:SKILLRANK:*',            
-        'BONUS:SLOTS:*',                        
-        'BONUS:SPECIALTYSPELLKNOWN:*',
-        'BONUS:SPELLCAST:*',            
-        'BONUS:SPELLCASTMULT:*',        
-        'BONUS:SPELLKNOWN:*',           
-        'BONUS:STAT:*',                 
-        'BONUS:UDAM:*',                 
-        'BONUS:VAR:*',                  
-        'BONUS:VISION:*',                       
-        'BONUS:WEAPONPROF:*',           
-        'BONUS:WIELDCATEGORY:*',        
-);      
-
-
-# Order for the tags for each line type.
-my %master_order = (
-        'ABILITY' => [
-                '000AbilityName',
-                'KEY',
-                'SORTKEY',
-                'NAMEISPI',
-                'OUTPUTNAME',
-                'CATEGORY',
-                'TYPE:.CLEAR',
-                'TYPE:*',
-                'VISIBLE',
-                @PRE_Tags,
-                @QUALIFY_Tags,
-                'SERVESAS',
-                'SAB:.CLEAR',
-                'SAB:*',
-                'DEFINE:*',
-                'DEFINESTAT:*',
-                'SPELL:*',
-                'SPELLS:*',
-                'DESCISPI',
-                'DESC:.CLEAR',
-                'DESC:*',
-                'STACK',
-                'MULT',
-                'CHOOSE',
-                'SELECT',
-                'TEMPLATE:.CLEAR',
-                'TEMPLATE:*',
-                'MOVE',
-                'MOVECLONE',
-                'AUTO:ARMORPROF:*',
-                'AUTO:EQUIP:*',
-                'AUTO:LANG:*',
-                'AUTO:SHIELDPROF:*',
-                'AUTO:WEAPONPROF:*',
-                'UDAM',
-                'UMULT',
-                'ABILITY:*',
-                'ADD:.CLEAR',
-                'ADD:*',
-                'ADD:ABILITY:*',
-                'ADD:CLASSSKILLS',
-                'ADD:EQUIP:*',
-                'ADD:FAVOREDCLASS',
-                'ADD:FORCEPOINT',
-                'ADD:LANGUAGE:*',
-                'ADD:SKILL:*',
-                'ADD:SPELLCASTER:*',
-                'ADD:TEMPLATE:*',
-                'ADD:WEAPONPROFS',
-                'ADDSPELLLEVEL',
-                'REMOVE',
-                @Global_BONUS_Tags,             # [ 1956340 ] Centralize global BONUS tags
-                'FOLLOWERS',
-                'CHANGEPROF',
-                'COMPANIONLIST:*',
-                'CSKILL:.CLEAR',
-                'CSKILL',
-                'CCSKILL',
-                'VISION',
-                'SR',
-                'DR',
-                'REP',
-                'COST',
-                'KIT',
-                @SOURCE_Tags,
-                'NATURALATTACKS',
-                'ASPECT:*',
-                'BENEFIT:*',
-                'TEMPDESC',
-                'SPELLKNOWN:CLASS:*',
-                'SPELLKNOWN:DOMAIN:*',
-                'SPELLLEVEL:CLASS:*',
-                'SPELLLEVEL:DOMAIN:*',
-                'UNENCUMBEREDMOVE',
-                'TEMPBONUS:*',
-                'AUTO:FEAT:*',                  # Deprecated 6.05.01
-                'VFEAT:*',                              # Deprecated 6.05.01
-                'ADD:FEAT:*',                   # Deprecated 6.05.01
-                'ADD:VFEAT:*',                  # Deprecated 6.05.01
-                'APPLIEDNAME',                  # Deprecated 6.05.01
-                'SA:.CLEAR',                    # Deprecated
-                'SA:*',                         # Deprecated
-                'ADD:SPECIAL',                  # Deprecated - Remove 5.16 - Special abilities are now set using hidden feats 0r Abilities.
-                'LANGAUTO:.CLEAR',              # Deprecated - 6.0
-                'LANGAUTO:*',                   # Deprecated - 6.0
-#               'SPELLPOINTCOST:*',
-        ],
-
-        'ABILITYCATEGORY' => [
-                '000AbilityCategory',
-                'VISIBLE',
-                'EDITABLE',
-                'EDITPOOL',
-                'FRACTIONALPOOL',
-                'POOL',
-                'CATEGORY',
-                'TYPE',
-                'ABILITYLIST',
-                'PLURAL',
-                'DISPLAYNAME',
-                'DISPLAYLOCATION',
-        ],
-
-        'ARMORPROF' => [
-                '000ArmorName',
-                'KEY',
-                'NAMEISPI',
-                'OUTPUTNAME',
-                'TYPE',
-                'HANDS',
-                @PRE_Tags,
-                @SOURCE_Tags,
-                @Global_BONUS_Tags,             # [ 1956340 ] Centralize global BONUS tags
-                'SAB:.CLEAR',
-                'SAB:*',
-                'SA:.CLEAR',                    # Deprecated
-                'SA:*',                         # Deprecated
-        ],
-
-        'BIOSET AGESET' => [
-                'AGESET',
-                'BONUS:STAT:*',
-        ],
-
-        'BIOSET RACENAME' => [
-                'RACENAME',
-                'CLASS',
-                'SEX',
-                'BASEAGE',
-                'MAXAGE',
-                'AGEDIEROLL',
-                'HAIR',
-                'EYES',
-                'SKINTONE',
-                ],
-
-        'CLASS' => [
-                '000ClassName',
-                'SORTKEY',
-                'KEY',                          # [ 1695877 ] KEY tag is global
-                'NAMEISPI',
-                'OUTPUTNAME',
-                'HD',
-                'XTRAFEATS',
-                'SPELLSTAT',
-                'BONUSSPELLSTAT',
-                'FACT:SpellType:*',
-                'SPELLTYPE',
-                'TYPE',
-                'CLASSTYPE',
-                'FACT:Abb:*',
-                'ABB',
-                'MAXLEVEL',
-                'CASTAS',
-                'MEMORIZE',
-                'KNOWNSPELLS',
-                'SPELLBOOK',
-                'HASSUBCLASS',
-                'ALLOWBASECLASS',
-                'HASSUBSTITUTIONLEVEL',
-                'EXCLASS',
-                @SOURCE_Tags,
-                'LANGBONUS:.CLEAR',
-                'LANGBONUS:*',
-                'WEAPONBONUS',
-                'VISION',
-                'SR',
-                'DR',
-                'ATTACKCYCLE',
-                'DEF',
-                'ITEMCREATE',
-                'KNOWNSPELLSFROMSPECIALTY',
-                'PROHIBITED',
-                'PROHIBITSPELL:*',
-                'LEVELSPERFEAT',
-                'ABILITY:*',
-                'VFEAT:*',
-                'MULTIPREREQS',
-                'VISIBLE',
-                'DEFINE:*',
-                'DEFINESTAT:*',
-                'AUTO:ARMORPROF:*',
-                'AUTO:EQUIP:*',
-                'AUTO:FEAT:*',
-                'AUTO:LANG:*',
-                'AUTO:SHIELDPROF:*',
-                'AUTO:WEAPONPROF:*',
-                'ADD:.CLEAR',
-                'ADD:*',
-                'ADD:ABILITY:*',
-                'ADD:CLASSSKILLS',
-                'ADD:EQUIP:*',
-                'ADD:FEAT:*',
-                'ADD:LANGUAGE:*',
-                'ADD:SPELLCASTER:*',
-                'ADD:TEMPLATE:*',
-                'ADD:VFEAT:*',
-                'CHANGEPROF',
-                'DOMAIN:*',                             # [ 1973526 ] DOMAIN is supported on Class line
-                'ADDDOMAINS:*',
-                'REMOVE',
-                'BONUS:HD:*',                   # Class Lines
-                @Global_BONUS_Tags,             # [ 1956340 ] Centralize global BONUS tags
-                'BONUS:WEAPON:*',
-                'REP:*',
-                'SPELLLIST',
-                'GENDER',
-                'TEMPLATE:.CLEAR',
-                'TEMPLATE:*',
-                'KIT',
-                'DEITY',
-                @PRE_Tags,
-                'PRERACETYPE',
-                '!PRERACETYPE',
-                'STARTSKILLPTS',
-                'MODTOSKILLS',
-                'SKILLLIST',
-                'CSKILL:.CLEAR',
-                'CSKILL',
-                'CCSKILL:.CLEAR',
-                'CCSKILL',
-                'MONSKILL',
-                'MONNONSKILLHD:*',
-                'SPELLKNOWN:CLASS:*',
-                'SPELLKNOWN:DOMAIN:*',
-                'SPELLLEVEL:CLASS',
-                'SPELLLEVEL:DOMAIN',
-                'UNENCUMBEREDMOVE',
-                'TEMPBONUS',
-                'ROLE',
-                'HASSPELLFORMULA',              # [ 1893279 ] HASSPELLFORMULA Class Line tag  # [ 1973497 ] HASSPELLFORMULA is deprecated
-                'ADD:SPECIAL',                  # Deprecated - Remove 5.16 - Special abilities are now set using hidden feats 0r Abilities.
-                'LANGAUTO:.CLEAR',              # Deprecated - 6.0
-                'LANGAUTO:*',                   # Deprecated - 6.0
-        ],
-
-        'CLASS Level' => [
-                '000Level',
-                'REPEATLEVEL',
-                'DONOTADD',
-                'UATT',
-                'UDAM',
-                'UMULT',
-                'ADD:SPELLCASTER',
-                'CAST',
-                'KNOWN',
-                'SPECIALTYKNOWN',
-                'KNOWNSPELLS',
-                'PROHIBITSPELL:*',
-                'HITDIE',
-                'MOVE',
-                'VISION',
-                'SR',
-                'DR',
-                'DOMAIN:*',
-                'DEITY',
-                @PRE_Tags,
-                'SAB:.CLEAR',
-                'SAB:*',
-                'BONUS:HD:*',                   # Class Lines
-                @Global_BONUS_Tags,             # [ 1956340 ] Centralize global BONUS tags
-                'BONUS:WEAPON:*',
-                'TEMPDESC',
-                'DEFINE:*',
-                'DEFINESTAT:*',
-                'CSKILL:.CLEAR',
-                'CSKILL',
-                'CCSKILL:.CLEAR',
-                'CCSKILL',
-                'ADD:.CLEAR',
-                'ADD:*',
-                'ADD:ABILITY:*',
-                'ADD:CLASSSKILLS',
-                'ADD:EQUIP:*',
-                'ADD:LANGUAGE:*',
-                'ADD:TEMPLATE:*',
-                'REMOVE',
-                'LANGBONUS:.CLEAR',
-                'LANGBONUS:*',
-                'STACK',
-                'MULT',
-                'CHOOSE',
-                'SELECT',
-                'EXCHANGELEVEL',
-                'ABILITY:*',
-                'SPELL',
-                'SPELLS:*',
-                'TEMPLATE:.CLEAR',
-                'TEMPLATE:*',
-                'KIT',
-                'AUTO:ARMORPROF:*',
-                'AUTO:EQUIP:*',
-                'AUTO:LANG:*',
-                'AUTO:SHIELDPROF:*',
-                'AUTO:WEAPONPROF:*',
-                'CHANGEPROF:*',
-                'ADDDOMAINS',                   # [ 1973660 ] ADDDOMAINS is supported on Class Level lines
-                @QUALIFY_Tags,
-                'SERVESAS',
-                'WEAPONBONUS',
-                'SUBCLASS',
-                'SPELLKNOWN:CLASS:*',
-                'SPELLKNOWN:DOMAIN:*',
-                'SPELLLEVEL:CLASS',
-                'SPELLLEVEL:DOMAIN',
-                'SPELLLIST',
-                'NATURALATTACKS',
-                'UNENCUMBEREDMOVE',
-                'ADD:FEAT:*',                   # Deprecated 6.05.01
-                'ADD:VFEAT:*',                  # Deprecated 6.05.01
-                'SPECIALS',                             # Deprecated 6.05.01
-                'FEAT',                         # Deprecated 6.05.01
-                'VFEAT:*',                              # Deprecated 6.05.01
-                'AUTO:FEAT:*',                  # Deprecated 6.05.01
-                'SA:.CLEAR:*',                  # Deprecated 6.05.01
-                'SA:*',                         # Deprecated 6.05.01
-                'ADD:SPECIAL',                  # Deprecated - Remove 5.16 - Special abilities are now set using hidden feats 0r Abilities.
-                'LANGAUTO:.CLEAR',              # Deprecated - 6.0
-                'LANGAUTO:*',                   # Deprecated - 6.0
-                'FEATAUTO:.CLEAR',              # Deprecated - 6.0
-                'FEATAUTO:*',                   # Deprecated - 6.0
-        ],
-
-        'COMPANIONMOD' => [
-                '000Follower',
-                'SORTKEY',
-                'KEY',                          # [ 1695877 ] KEY tag is global
-                'FOLLOWER',
-                'TYPE',
-                'HD',
-                'DR',
-                'SR',
-                'ABILITY:.CLEAR',
-                'ABILITY:*',
-                'COPYMASTERBAB',
-                'COPYMASTERCHECK',
-                'COPYMASTERHP',
-                'USEMASTERSKILL',
-                'GENDER',
-                'PRERACE',
-                '!PRERACE',
-                'MOVE',
-                'KIT',
-                'AUTO:ARMORPROF:*',
-                'SAB:.CLEAR',
-                'SAB:*',
-                'ADD:LANGUAGE',
-                'DEFINE:*',
-                'DEFINESTAT:*',
-                @Global_BONUS_Tags,             # [ 1956340 ] Centralize global BONUS tags
-                'RACETYPE',
-                'SWITCHRACE:*',
-                'TEMPLATE:*',                   # [ 2946558 ] TEMPLATE can be used in COMPANIONMOD lines
-                'STACK',
-                'MULT',
-                'CHOOSE',
-                'SELECT',
-                'DESC:.CLEAR',
-                'DESC:*',
-                'FEAT:.CLEAR',                  #  Deprecated 6.05.01
-                'FEAT:*',                               #  Deprecated 6.05.01
-                'VFEAT:*',                              #  Deprecated 6.05.01
-                'AUTO:FEAT:.CLEAR',             #  Deprecated 6.05.01
-                'AUTO:FEAT:*',                  #  Deprecated 6.05.01
-                'SA:.CLEAR',                    #  Deprecated 6.05.01
-                'SA:*',                         #  Deprecated 6.05.01
-        ],
-
-        'DEITY' => [
-                '000DeityName',
-                'SORTKEY',
-                'KEY',                          # [ 1695877 ] KEY tag is global
-                'NAMEISPI',
-                'OUTPUTNAME',
-                'DOMAINS:*',
-                'FOLLOWERALIGN',
-                'DESCISPI',
-                'DESC',
-                'FACT:*',
-                'FACTSET:*',
-                'DEITYWEAP',
-                'ALIGN',
-                @SOURCE_Tags,
-                @PRE_Tags,
-                @QUALIFY_Tags,
-                @Global_BONUS_Tags,             # [ 1956340 ] Centralize global BONUS tags
-                'DEFINE:*',
-                'DEFINESTAT:*',
-                'SR',
-                'DR',
-                'AUTO:WEAPONPROF',
-                'SAB:.CLEAR',
-                'SAB:*',
-                'ABILITY:*',
-                'UNENCUMBEREDMOVE',
-                'SYMBOL',                               #  Deprecated 6.05.01
-                'PANTHEON',                             #  Deprecated 6.05.01
-                'TITLE',                                #  Deprecated 6.05.01
-                'WORSHIPPERS',                  #  Deprecated 6.05.01
-                'APPEARANCE',                   #  Deprecated 6.05.01
-                'VFEAT:*',                              #  Deprecated 6.05.01
-                'SA:.CLEAR',                    #  Deprecated 6.05.01
-                'SA:*',                         #  Deprecated 6.05.01
-                'RACE:*',                               #  Deprecated 6.05.01
-        ],
-
-        'DOMAIN' => [
-                '000DomainName',
-                'SORTKEY',
-                'KEY',                          # [ 1695877 ] KEY tag is global
-                'NAMEISPI',
-                'OUTPUTNAME',
-                @PRE_Tags,
-                @QUALIFY_Tags,
-                'CSKILL:.CLEAR',
-                'CSKILL',
-                'CCSKILL',
-                'STACK',
-                'MULT',
-                'CHOOSE',
-                'SELECT',
-                'SPELL',
-                'SPELLS:*',
-                'VISION',
-                'SR',
-                'DR',
-                'ABILITY:*',
-                'ADD:.CLEAR',
-                'ADD:*',
-                'ADD:ABILITY:*',
-                'ADD:CLASSSKILLS',
-                'ADD:EQUIP:*',
-                'ADD:LANGUAGE:*',
-                'ADD:SPELLCASTER:*',
-                'ADD:TEMPLATE:*',
-                'AUTO:ARMORPROF:*',
-                'AUTO:EQUIP:*',
-                'AUTO:LANG:*',
-                'AUTO:SHIELDPROF:*',
-                'AUTO:WEAPONPROF:*',
-                'SAB:.CLEAR',
-                'SAB:*',
-                'DEFINE:*',
-                'DEFINESTAT:*',
-                @Global_BONUS_Tags,             # [ 1956340 ] Centralize global BONUS tags
-                @SOURCE_Tags,
-                'DESCISPI',
-                'DESC:.CLEAR',
-                'DESC:*',
-                'SPELLKNOWN:DOMAIN:*',
-                'SPELLLEVEL:DOMAIN',
-                'UNENCUMBEREDMOVE',
-                'FEAT:*',                               # Deprecated 6.05.01
-                'VFEAT:*',                              # Deprecated 6.05.01
-                'ADD:FEAT:*',                   # Deprecated 6.05.01
-                'ADD:VFEAT:*',                  # Deprecated 6.05.01
-                'AUTO:FEAT:*',                  # Deprecated 6.05.01
-                'FEATAUTO',                             # Deprecated
-                'SA:*',                         # Deprecated 
-                'ADD:SPECIAL',                  # Deprecated - Remove 5.16 - Special abilities are now set using hidden feats 0r Abilities.
-        ],
-
-        'EQUIPMENT' => [
-                '000EquipmentName',
-                'KEY',
-                'SORTKEY',
-                'NAMEISPI',
-                'OUTPUTNAME',
-                'PROFICIENCY:WEAPON',
-                'PROFICIENCY:ARMOR',
-                'PROFICIENCY:SHIELD',
-                'TYPE:.CLEAR',
-                'TYPE:*',
-                'ALTTYPE',
-                'RESIZE',                               # [ 1956719 ] Add RESIZE tag to Equipment file
-                'CONTAINS',
-                'NUMPAGES',
-                'PAGEUSAGE',
-                'COST',
-                'WT',
-                'SLOTS',
-                @PRE_Tags,
-                @QUALIFY_Tags,
-                'DEFINE:*',
-                'DEFINESTAT:*',
-                'ACCHECK:*',
-                'BASEITEM',
-                'BASEQTY',
-                'STACK',
-                'MULT',
-                'CHOOSE',
-                'SELECT',
-                'CRITMULT',
-                'CRITRANGE',
-                'ALTCRITMULT',
-                'ALTCRITRANGE',
-                'FUMBLERANGE',
-                'DAMAGE',
-                'ALTDAMAGE',
-                'EQMOD:*',
-                'ALTEQMOD',
-                'HANDS',
-                'WIELD',
-                'MAXDEX',
-                'MODS',
-                'RANGE',
-                'REACH',
-                'REACHMULT',
-                'SIZE',
-                'MOVE',
-                'MOVECLONE',
-                @SOURCE_Tags,
-                'SPELLFAILURE',
-                'ADD:.CLEAR',
-                'ADD:*',
-                'ADD:ABILITY:*',
-                'ADD:CLASSSKILLS',
-                'ADD:EQUIP:*',
-                'ADD:LANGUAGE:*',
-                'ADD:SPELLCASTER:*',
-                'ADD:TEMPLATE:*',
-                'ABILITY:*',
-                'VISION',
-                'SR',
-                'DR',
-                'SPELL:*',
-                'SPELLS:*',
-                @Global_BONUS_Tags,             # [ 1956340 ] Centralize global BONUS tags
-                'BONUS:EQM:*',
-                'BONUS:EQMARMOR:*',
-                'BONUS:EQMWEAPON:*',
-                'BONUS:ESIZE:*',
-                'BONUS:ITEMCOST:*',
-                'BONUS:WEAPON:*',
-                'QUALITY:*',                    # [ 1593868 ] New equipment tag "QUALITY"
-                'SPROP:.CLEAR',
-                'SPROP:*',
-                'SAB:.CLEAR',
-                'SAB:*',
-                'CSKILL:.CLEAR',
-                'CSKILL',
-                'UDAM',
-                'UMULT',
-                'AUTO:EQUIP:*',
-                'AUTO:WEAPONPROF:*',
-                'DESC:*',
-                'TEMPDESC',
-                'UNENCUMBEREDMOVE',
-                'ICON',
-                'VFEAT:.CLEAR',                 # Deprecated 6.05.01
-                'VFEAT:*',                              # Deprecated 6.05.01
-                'ADD:FEAT:*',                   # Deprecated 6.05.01
-                'ADD:VFEAT:*',                  # Deprecated 6.05.01
-                'LANGAUTO:.CLEAR',              # Deprecated - replaced by AUTO:LANG
-                'LANGAUTO:*',                   # Deprecated - replaced by AUTO:LANG
-                'RATEOFFIRE',                   # Deprecated 6.05.01 - replaced by FACT
-                'ADD:SPECIAL',                  # Deprecated - Remove 5.16 - Special abilities are now set using hidden feats 0r Abilities.
-                'SA:.CLEAR',                    # Deprecated - replaced by SAB
-                'SA:*',                         # Deprecated
-#               'ALTCRITICAL',                  # Removed [ 1615457 ] Replace ALTCRITICAL with ALTCRITMULT
-        ],
-
-        'EQUIPMOD' => [
-                '000ModifierName',
-                'KEY',
-                'NAMEISPI',
-                'OUTPUTNAME',
-                'FORMATCAT',
-                'NAMEOPT',
-                'TYPE:.CLEAR',
-                'TYPE:*',
-                'PLUS',
-                'COST',
-                'VISIBLE',
-                'ITYPE',
-                'IGNORES',
-                'REPLACES',
-                'COSTPRE',
-                @SOURCE_Tags,
-                @PRE_Tags,
-                @QUALIFY_Tags,
-                'ADDPROF',
-                'VISION',
-                'SR',
-                'DR',
-                @Global_BONUS_Tags,             # [ 1956340 ] Centralize global BONUS tags
-                'BONUS:EQM:*',
-                'BONUS:EQMARMOR:*',
-                'BONUS:EQMWEAPON:*',
-                'BONUS:ITEMCOST:*',
-                'BONUS:WEAPON:*',
-                'SPROP:*',
-                'ABILITY',
-                'FUMBLERANGE',
-                'SAB:.CLEAR',
-                'SAB:*',
-                'ARMORTYPE:*',
-                'STACK',
-                'MULT',
-                'CHOOSE',
-                'SELECT',
-                'ASSIGNTOALL',
-                'CHARGES',
-                'DEFINE:*',
-                'DEFINESTAT:*',
-                'SPELL',
-                'SPELLS:*',
-                'AUTO:EQUIP:*',
-                'UNENCUMBEREDMOVE',
-                'RATEOFFIRE',                   #  Deprecated 6.05.01
-                'VFEAT:*',                              #  Deprecated 6.05.01
-                'SA:.CLEAR',                    #  Deprecated 6.05.01
-                'SA:*',                         #  Deprecated 6.05.01
-        ],
-
-# This entire File is being deprecated
-        'FEAT' => [
-                '000FeatName',
-                'KEY',                          # [ 1695877 ] KEY tag is global
-                'NAMEISPI',
-                'OUTPUTNAME',
-                'TYPE:.CLEAR',
-                'TYPE',
-                'VISIBLE',
-                'CATEGORY',                             # [ 1671410 ] xcheck CATEGORY:Feat in Feat object.
-                @PRE_Tags,
-                @QUALIFY_Tags,
-                'SERVESAS',
-                'SA:.CLEAR',
-                'SA:*',
-                'SAB:.CLEAR',
-                'SAB:*',
-                'DEFINE:*',
-                'DEFINESTAT:*',
-                'SPELL:*',
-                'SPELLS:*',
-                'DESCISPI',
-                'DESC:.CLEAR',                  # [ 1594651 ] New Tag: Feat.lst: DESC:.CLEAR and multiple DESC tags
-                'DESC:*',                               # [ 1594651 ] New Tag: Feat.lst: DESC:.CLEAR and multiple DESC tags
-                'STACK',
-                'MULT',
-                'CHOOSE',
-                'SELECT',
-                'TEMPLATE:.CLEAR',
-                'TEMPLATE:*',
-                'MOVE',
-                'MOVECLONE',
-                'REMOVE',
-                'AUTO:ARMORPROF:*',
-                'AUTO:EQUIP:*',
-                'AUTO:FEAT:*',
-                'AUTO:LANG:*',
-                'AUTO:SHIELDPROF:*',
-                'AUTO:WEAPONPROF:*',
-                'UDAM',
-                'UMULT',
-                'VFEAT:*',
-                'ABILITY:*',
-                'ADD:*',
-                'ADD:.CLEAR',
-                'ADD:ABILITY:*',
-                'ADD:CLASSSKILLS',
-                'ADD:EQUIP:*',
-                'ADD:FAVOREDCLASS',
-                'ADD:FEAT:*',
-                'ADD:FORCEPOINT',
-                'ADD:LANGUAGE:*',
-                'ADD:SKILL',
-                'ADD:SPELLCASTER:*',
-                'ADD:TEMPLATE:*',
-                'ADD:VFEAT:*',
-                'ADD:WEAPONPROFS',
-                'ADDSPELLLEVEL',
-                'APPLIEDNAME',
-                @Global_BONUS_Tags,             # [ 1956340 ] Centralize global BONUS tags
-                'BONUS:WEAPON:*',
-                'CHANGEPROF:*',
-                'FOLLOWERS',
-                'COMPANIONLIST:*',
-                'CSKILL:.CLEAR',
-                'CSKILL',
-                'CCSKILL',
-                'VISION',
-                'SR',
-                'DR:.CLEAR',
-                'DR:*',
-                'REP',
-                'COST',
-                'KIT',
-                @SOURCE_Tags,
-                'NATURALATTACKS',
-                'ASPECT:*',
-                'BENEFIT:*',
-                'TEMPDESC',
-                'SPELLKNOWN:CLASS:*',
-                'SPELLKNOWN:DOMAIN:*',
-                'SPELLLEVEL:CLASS:*',
-                'SPELLLEVEL:DOMAIN:*',
-                'UNENCUMBEREDMOVE',
-                'TEMPBONUS',
-                'ADD:SPECIAL',                  # Deprecated - Remove 5.16 - Special abilities are now set using hidden feats 0r Abilities.
-                'LANGAUTO:.CLEAR',              # Deprecated - 6.0
-                'LANGAUTO:*',                   # Deprecated - 6.0
-        ],
-
-        'KIT ALIGN' => [
-                'ALIGN',
-                'OPTION',
-                @PRE_Tags,
-        ],
-
-        'KIT CLASS' => [
-                'CLASS',
-                'LEVEL',
-                'SUBCLASS',
-                'OPTION',
-                @PRE_Tags,
-        ],
-
-        'KIT DEITY' => [
-                'DEITY',
-                'DOMAIN',
-                'COUNT',
-                'OPTION',
-                @PRE_Tags,
-        ],
-
-        'KIT FEAT' => [
-                'FEAT',
-                'FREE',
-                'COUNT',
-                'OPTION',
-                @PRE_Tags,
-        ],
-        'KIT ABILITY' => [
-                'ABILITY',
-                'FREE',
-                'OPTION',
-                @PRE_Tags,
-        ],
-
-        'KIT FUNDS' => [
-                'FUNDS',
-                'QTY',
-                'OPTION',
-                @PRE_Tags,
-        ],
-
-        'KIT GEAR' => [
-                'GEAR',
-                'QTY',
-                'SIZE',
-                'MAXCOST',
-                'LOCATION',
-                'EQMOD',
-                'LOOKUP',
-                'LEVEL',
-                'SPROP',
-                'OPTION',
-                @PRE_Tags,
-        ],
-
-        'KIT GENDER' => [
-                'GENDER',
-                'OPTION',
-                @PRE_Tags,
-        ],
-
-        'KIT KIT' => [
-                'KIT',
-                'OPTION',
-                @PRE_Tags,
-        ],
-
-        'KIT LANGBONUS' => [
-                'LANGBONUS',
-                'OPTION',
-                @PRE_Tags,
-        ],
-
-        'KIT LEVELABILITY' => [
-                'LEVELABILITY',
-                'ABILITY',
-                @PRE_Tags,
-        ],
-
-        'KIT NAME' => [
-                'NAME',
-                @PRE_Tags,
-        ],
-
-        'KIT PROF' => [
-                'PROF',
-                'RACIAL',
-                'COUNT',
-                @PRE_Tags,
-        ],
-
-        'KIT RACE' => [
-                'RACE',
-                @PRE_Tags,
-        ],
-
-        'KIT REGION' => [
-                'REGION',
-                @PRE_Tags,
-        ],
-
-        'KIT SELECT' => [
-                'SELECT',
-                @PRE_Tags,
-        ],
-
-        'KIT SKILL' => [
-                'SKILL',
-                'RANK',
-                'FREE',
-                'COUNT',
-                'OPTION',
-                'SELECTION',
-                @PRE_Tags,
-        ],
-
-        'KIT SPELLS' => [
-                'SPELLS',
-                'COUNT',
-                'OPTION',
-                @PRE_Tags,
-        ],
-
-        'KIT STARTPACK' => [
-                'STARTPACK',
-                'TYPE',
-                'VISIBLE',
-                'APPLY',
-                'EQUIPBUY',
-                'EQUIPSELL',
-                @PRE_Tags,
-                'SOURCEPAGE',
-        ],
-
-        'KIT STAT' => [
-                'STAT',
-                'OPTION',
-                @PRE_Tags,
-        ],
-
-        'KIT TABLE' => [
-                'TABLE',
-                'LOOKUP',
-                'VALUES',
-                @PRE_Tags,
-        ],
-
-        'KIT TEMPLATE' => [
-                'TEMPLATE',
-                'OPTION',
-                @PRE_Tags,
-        ],
-
-        'LANGUAGE' => [
-                '000LanguageName',
-                'KEY',                          # [ 1695877 ] KEY tag is global
-                'NAMEISPI',
-                'TYPE',
-                'SOURCEPAGE',
-                @PRE_Tags,
-                @QUALIFY_Tags,
-        ],
-
-        'MASTERBONUSRACE' => [
-                '000MasterBonusRace',
-                'TYPE',
-                'BONUS:ABILITYPOOL:*',
-                'BONUS:CASTERLEVEL:*',
-                'BONUS:CHECKS:*',
-                'BONUS:COMBAT:*',
-                'BONUS:CONCENTRATION:*',
-                'BONUS:DC:*',
-                'BONUS:FEAT:*',
-                'BONUS:MOVEADD:*',
-                'BONUS:HP:*',
-                'BONUS:MOVEMULT:*',
-                'BONUS:POSTMOVEADD:*',
-                'BONUS:SAVE:*',                 # Global        Replacement for CHECKS
-                'BONUS:SKILL:*',
-                'BONUS:STAT:*',
-                'BONUS:UDAM:*',
-                'BONUS:VAR:*',
-                'ADD:LANGUAGE',
-                'ABILITY:*',                    # [ 2596967 ] ABILITY not recognized for MASTERBONUSRACE
-                'VFEAT:*',                              # Deprecated 6.05.01
-                'SA:.CLEAR',                    # Deprecated 6.05.01
-                'SA:*',                         # Deprecated 6.05.01
-                'SAB:.CLEAR',
-                'SAB:*',
-
-        ],
-
-        'PCC' => [
-                'ALLOWDUPES',
-                'CAMPAIGN',
-                'GAMEMODE',
-                'GENRE',
-                'BOOKTYPE',
-                'KEY',                          # KEY is allowed
-                'PUBNAMELONG',
-                'PUBNAMESHORT',
-                'PUBNAMEWEB',
-                'RANK',
-                'SETTING',
-                'TYPE',
-                'PRECAMPAIGN',
-                '!PRECAMPAIGN',
-                'SHOWINMENU',                   # [ 1718370 ] SHOWINMENU tag missing for PCC files
-                'SOURCELONG',
-                'SOURCESHORT',
-                'SOURCEWEB',
-                'SOURCEDATE',                   # [ 1584007 ] New Tag: SOURCEDATE in PCC
-                'COVER',
-                'COPYRIGHT',
-                'LOGO',
-                'DESC',
-                'URL',
-                'LICENSE',
-                'HELP',
-                'INFOTEXT',
-                'ISD20',
-                'ISLICENSED',
-                'ISOGL',
-                'ISMATURE',
-                'BIOSET',
-                'HIDETYPE',
-                'COMPANIONLIST',                        # [ 1672551 ] PCC tag COMPANIONLIST
-                'REQSKILL',
-                'STATUS',
-                'FORWARDREF',
-                'OPTION',
-
-                # These tags load files
-                'DATACONTROL',
-                'STAT',
-                'SAVE',
-                'ALIGNMENT',
-                'ABILITY',
-                'ABILITYCATEGORY',
-                'ARMORPROF',
-                'CLASS',
-                'CLASSSKILL',
-                'CLASSSPELL',
-                'COMPANIONMOD',
-                'DEITY',
-                'DOMAIN',
-                'EQUIPMENT',
-                'EQUIPMOD',
-                'FEAT',
-                'KIT',
-                'LANGUAGE',
-                'LSTEXCLUDE',
-                'PCC',
-                'RACE',
-                'SHIELDPROF',
-                'SKILL',
-                'SPELL',
-                'TEMPLATE',
-                'WEAPONPROF',
-                '#EXTRAFILE',                   # Fix #EXTRAFILE so it recognizes #EXTRAFILE references (so OGL is a known referenced file again.)
-
-                #These tags are normal file global tags....
-                @double_PCC_tags,                       #Global tags that are double - $tag does not end with ':'
-        ],
-
-        'RACE' => [
-                '000RaceName',
-                'SORTKEY',
-                'KEY',                          # [ 1695877 ] KEY tag is global
-                'NAMEISPI',
-                'OUTPUTNAME',
-                'FAVCLASS',
-                'XTRASKILLPTSPERLVL',
-                'STARTFEATS',
-                'FACT:*',
-                'SIZE',
-                'MOVE',
-                'MOVECLONE',
-                'UNENCUMBEREDMOVE',
-                'FACE',
-                'REACH',
-                'VISION',
-                @PRE_Tags,
-                @QUALIFY_Tags,
-                'SERVESAS',
-                'LANGBONUS:.CLEAR',
-                'LANGBONUS:*',
-                'WEAPONBONUS:*',
-                'CHANGEPROF:*',
-                'PROF',
-                @Global_BONUS_Tags,             # [ 1956340 ] Centralize global BONUS tags
-                'CSKILL:.CLEAR',
-                'CSKILL',
-                'CCSKILL',
-                'MONCSKILL',
-                'MONCCSKILL',
-                'AUTO:ARMORPROF:*',
-                'AUTO:EQUIP:*',
-                'AUTO:FEAT:*',                  #  Deprecated 6.05.01
-                'AUTO:LANG:*',
-                'AUTO:SHIELDPROF:*',
-                'AUTO:WEAPONPROF:*',
-                'VFEAT:*',                              #  Deprecated 6.05.01
-                'FEAT:*',                               #  Deprecated 6.05.01
-                'ABILITY:*',
-                'MFEAT:*',
-                'LEGS',
-                'HANDS',
-                'GENDER',
-                'NATURALATTACKS:*',
-                'SAB:.CLEAR',
-                'SAB:*',
-                'DEFINE:*',
-                'DEFINESTAT:*',
-                'HITDICE',
-                'SR',
-                'DR:.CLEAR',
-                'DR:*',
-                'SKILLMULT',
-                'BAB',
-                'HITDIE',
-                'MONSTERCLASS',
-                'RACETYPE:.CLEAR',
-                'RACETYPE:*',
-                'RACESUBTYPE:.CLEAR',
-                'RACESUBTYPE:*',
-                'TYPE',
-                'TEMPLATE:.CLEAR',
-                'TEMPLATE:*',
-                'HITDICEADVANCEMENT',
-                'LEVELADJUSTMENT',
-                'CR',
-                'CRMOD',
-                'ROLE',
-                @SOURCE_Tags,
-                'SPELL:*',
-                'SPELLS:*',
-                'STACK',
-                'MULT',
-                'CHOOSE',
-                'SELECT',
-                'ADD:.CLEAR',
-                'ADD:*',
-                'ADD:ABILITY:*',
-                'ADD:CLASSSKILLS',
-                'ADD:EQUIP:*',
-                'ADD:FEAT:*',                   # Deprecated 6.05.01
-                'ADD:LANGUAGE:*',
-                'ADD:SPELLCASTER:*',
-                'ADD:TEMPLATE:*',
-                'ADD:VFEAT:*',                  # Deprecated 6.05.01
-                'REGION',
-                'SUBREGION',
-                'SPELLKNOWN:CLASS:*',
-                'SPELLKNOWN:DOMAIN:*',
-                'SPELLLEVEL:CLASS:*',
-                'SPELLLEVEL:DOMAIN:*',
-                'KIT',
-                'SA:.CLEAR',                    # Deprecated
-                'SA:*',                         # Deprecated
-                'ADD:SPECIAL',                  # Deprecated - Remove 5.16 - Special abilities are now set using hidden feats 0r Abilities.
-                'LANGAUTO:.CLEAR',              # Deprecated - 6.0
-                'LANGAUTO:*',                   # Deprecated - 6.0
-        ],
-
-        'SHIELDPROF' => [
-                '000ShieldName',
-                'KEY',
-                'NAMEISPI',
-                'OUTPUTNAME',
-                'TYPE',
-                'HANDS',
-                @PRE_Tags,
-                @SOURCE_Tags,
-                @Global_BONUS_Tags,             # [ 1956340 ] Centralize global BONUS tags
-                'SAB:.CLEAR',
-                'SAB:*',
-                'SA:.CLEAR',                    # Deprecated
-                'SA:*',                         # Deprecated
-        ],
-
-        'SKILL' => [
-                '000SkillName',
-                'SORTKEY',
-                'KEY',                          # [ 1695877 ] KEY tag is global
-                'NAMEISPI',
-                'OUTPUTNAME',
-                'KEYSTAT',
-                'USEUNTRAINED',
-                'ACHECK',
-                'EXCLUSIVE',
-                'CLASSES',
-                'TYPE',
-                'VISIBLE',
-                @PRE_Tags,
-                @QUALIFY_Tags,
-                'SERVESAS',
-                @SOURCE_Tags,
-                'STACK',
-                'MULT',
-                'CHOOSE',
-                'SELECT',
-                'SITUATION',
-                'DEFINE',
-                'DEFINESTAT:*',
-                'VFEAT:*',                              #  Deprecated 6.05.01
-                'AUTO:EQUIP:*',
-                'ABILITY',
-                @Global_BONUS_Tags,             # [ 1956340 ] Centralize global BONUS tags
-                'BONUS:WEAPON:*',
-                'CSKILL:.CLEAR',
-                'CSKILL',
-                'CCSKILL:.CLEAR',
-                'CCSKILL',
-                'REQ',
-                'SAB:.CLEAR',
-                'SAB:*',
-                'DESC',
-                'TEMPDESC',
-                'TEMPBONUS',
-                'SA:.CLEAR:*',                  # Deprecated
-                'SA:*',                         # Deprecated
-        ],
-
-        'SOURCE' => [
-                'SOURCELONG',
-                'SOURCESHORT',
-                'SOURCEWEB',
-                'SOURCEDATE',                   # [ 1584007 ] New Tag: SOURCEDATE in PCC
-        ],
-
-        'SPELL' => [
-                '000SpellName',
-                'SORTKEY',
-                'KEY',                          # [ 1695877 ] KEY tag is global
-                'NAMEISPI',
-                'OUTPUTNAME',
-                'TYPE',
-                'CLASSES:.CLEARALL',
-                'CLASSES:*',
-                'DOMAINS',
-                'STAT:*',
-                'PPCOST',
-#               'SPELLPOINTCOST:*',             # Delay implementing this until SPELLPOINTCOST is documented
-                'SCHOOL:.CLEAR',
-                'SCHOOL:*',
-                'SUBSCHOOL',
-                'DESCRIPTOR:.CLEAR',
-                'DESCRIPTOR:*',
-                'VARIANTS:.CLEAR',
-                'VARIANTS:*',
-                'COMPS',
-                'CASTTIME:.CLEAR',
-                'CASTTIME:*',
-                'RANGE:.CLEAR',
-                'RANGE:*',
-                'ITEM:*',
-                'TARGETAREA:.CLEAR',
-                'TARGETAREA:*',
-                'DURATION:.CLEAR',
-                'DURATION:*',
-                'CT',
-                'SAVEINFO',
-                'SPELLRES',
-                'COST',
-                'XPCOST',
-                @PRE_Tags,
-                'DEFINE',
-                'DEFINESTAT:*',
-#               @Global_BONUS_Tags,             # [ 1956340 ] Centralize global BONUS tags
-                'BONUS:PPCOST',                 # SPELL has a short list of BONUS tags
-                'BONUS:CASTERLEVEL:*',
-                'BONUS:CHECKS',
-                'BONUS:COMBAT:*',
-                'BONUS:DAMAGE:*',
-                'BONUS:DR:*',
-                'BONUS:FEAT:*',
-                'BONUS:HP',
-                'BONUS:MISC:*',
-                'BONUS:MOVEADD',
-                'BONUS:MOVEMULT:*',
-                'BONUS:POSTMOVEADD',
-                'BONUS:RANGEMULT:*',
-                'BONUS:SAVE:*',                 # Global        Replacement for CHECKS
-                'BONUS:SIZEMOD',
-                'BONUS:SKILL:*',
-                'BONUS:STAT:*',
-                'BONUS:UDAM:*',
-                'BONUS:VAR:*',
-                'BONUS:VISION',
-                'BONUS:WEAPON:*',
-                'BONUS:WEAPONPROF:*',
-                'BONUS:WIELDCATEGORY:*',
-                'DR:.CLEAR',
-                'DR:*',
-                'STACK',
-                'MULT',
-                'CHOOSE',
-                'SELECT',
-                @SOURCE_Tags,
-                'DESCISPI',
-                'DESC:.CLEAR',
-                'DESC:*',
-                'TEMPDESC',
-                'TEMPBONUS',
-#               'SPELLPOINTCOST:*',
-        ],
-
-        'SUBCLASS' => [
-                '000SubClassName',
-                'KEY',                          # [ 1695877 ] KEY tag is global
-                'NAMEISPI',
-                'OUTPUTNAME',
-                'HD',
-#               'ABB',                          # Invalid for SubClass
-                'COST',
-                'PROHIBITCOST',
-                'CHOICE',
-                'SPELLSTAT',
-                'SPELLTYPE',
-                'LANGAUTO:.CLEAR',              # Deprecated 6.05.01
-                'LANGAUTO:*',                   # Deprecated 6.05.01
-                'LANGBONUS:.CLEAR',
-                'LANGBONUS:*',
-                'BONUS:ABILITYPOOL:*',          # SubClass has a short list of BONUS tags
-                'BONUS:CASTERLEVEL:*',
-                'BONUS:CHECKS:*',
-                'BONUS:COMBAT:*',
-                'BONUS:DC:*',
-                'BONUS:FEAT:*',                 # Deprecated 6.05.01
-                'BONUS:HD:*',
-                'BONUS:SAVE:*',                 # Global        Replacement for CHECKS
-                'BONUS:SKILL:*',
-                'BONUS:UDAM:*',
-                'BONUS:VAR:*',
-                'BONUS:WEAPON:*',
-                'BONUS:WIELDCATEGORY:*',
-                'ADD:.CLEAR',
-                'ADD:*',
-                'ADD:ABILITY:*',
-                'ADD:CLASSSKILLS',
-                'ADD:EQUIP:*',
-                'ADD:FEAT:*',                   # Deprecated 6.05.01
-                'ADD:LANGUAGE:*',
-                'ADD:SPELLCASTER:*',
-                'ADD:TEMPLATE:*',
-                'ADD:VFEAT:*',                  # Deprecated 6.05.01
-                'REMOVE',
-                'TEMPLATE:.CLEAR',
-                'TEMPLATE:*',
-                'SPELLLIST',
-                'KNOWNSPELLSFROMSPECIALTY',
-                'PROHIBITED',
-                'PROHIBITSPELL:*',
-                'STARTSKILLPTS',
-                'SAB:.CLEAR',
-                'SAB:*',
-                'DEFINE',
-                'DEFINESTAT:*',
-                @PRE_Tags,
-                'CSKILL:.CLEAR',
-                'CSKILL',
-                'CCSKILL:.CLEAR',
-                'CCSKILL',
-                'DOMAIN:*',                             # [ 1973526 ] DOMAIN is supported on Class line
-                'ADDDOMAINS',
-                'UNENCUMBEREDMOVE',
-                @SOURCE_Tags,
-                'SA:.CLEAR:*',                  # Deprecated
-                'SA:*',                         # Deprecated
-                'ADD:SPECIAL',                  # Deprecated - Remove 5.16 - Special abilities are now set using hidden feats 0r Abilities.
-        ],
-
-        'SUBSTITUTIONCLASS' => [
-                '000SubstitutionClassName',
-                'KEY',                          # [ 1695877 ] KEY tag is global
-                'NAMEISPI',
-                'OUTPUTNAME',
-#               'ABB',                          # Invalid for SubClass
-                'COST',
-                'PROHIBITCOST',
-                'CHOICE',
-                'SPELLSTAT',
-                'SPELLTYPE',
-                'BONUS:ABILITYPOOL:*',          # Substitution Class has a short list of BONUS tags
-                'BONUS:CASTERLEVEL:*',
-                'BONUS:CHECKS:*',
-                'BONUS:COMBAT:*',
-                'BONUS:DC:*',
-                'BONUS:FEAT:*',                 # Deprecated 6.05.01
-                'BONUS:HD:*',
-                'BONUS:SAVE:*',                 # Global        Replacement for CHECKS
-                'BONUS:SKILL:*',
-                'BONUS:UDAM:*',
-                'BONUS:VAR:*',
-                'BONUS:WEAPON:*',
-                'BONUS:WIELDCATEGORY:*',
-                'ADD:.CLEAR',
-                'ADD:*',
-                'ADD:ABILITY:*',
-                'ADD:CLASSSKILLS',
-                'ADD:EQUIP:*',
-                'ADD:FEAT:*',                   # Deprecated 6.05.01
-                'ADD:LANGUAGE:*',
-                'ADD:SPELLCASTER:*',
-                'ADD:TEMPLATE:*',
-                'ADD:VFEAT:*',                  # Deprecated 6.05.01
-                'TEMPLATE:.CLEAR',
-                'TEMPLATE:*',
-                'REMOVE',
-                'SPELLLIST',
-                'KNOWNSPELLSFROMSPECIALTY',
-                'PROHIBITED',
-                'PROHIBITSPELL:*',
-                'STARTSKILLPTS',
-                'SAB:.CLEAR',
-                'SAB:*',
-                'DEFINE',
-                'DEFINESTAT:*',
-                @PRE_Tags,
-                'CSKILL:.CLEAR',
-                'CSKILL',
-                'CCSKILL:.CLEAR',
-                'CCSKILL',
-                'ADDDOMAINS',
-                'UNENCUMBEREDMOVE',
-                @SOURCE_Tags,
-                'ADD:SPECIAL',                  # Deprecated - Remove 5.16 - Special abilities are now set using hidden feats 0r Abilities.
-                'SA:.CLEAR:*',                  # Deprecated
-                'SA:*',                         # Deprecated
-        ],
-
-        'SUBCLASSLEVEL' => [
-                'SUBCLASSLEVEL',
-                'REPEATLEVEL',
-                @QUALIFY_Tags,
-                'SERVESAS',
-                'UATT',
-                'UDAM',
-                'UMULT',
-                'ADD:SPELLCASTER:*',
-                'SPELLKNOWN:CLASS:*',
-                'SPELLLEVEL:CLASS:*',
-                'CAST',
-                'KNOWN',
-                'SPECIALTYKNOWN',
-                'KNOWNSPELLS',
-                'PROHIBITSPELL:*',
-                'VISION',
-                'SR',
-                'DR',
-                'DOMAIN:*',
-                'SA:.CLEAR:*',                  # Deprecated 6.05.01
-                'SA:*',                         # Deprecated 6.05.01
-                'SAB:.CLEAR',
-                'SAB:*',
-                'BONUS:HD:*',                   # Class Lines
-                @Global_BONUS_Tags,             # [ 1956340 ] Centralize global BONUS tags
-                'BONUS:WEAPON:*',
-                'HITDIE',
-                'ABILITY:*',
-                'DEFINE:*',
-                'DEFINESTAT:*',
-                'CSKILL:.CLEAR',
-                'CSKILL:*',
-                'CCSKILL:.CLEAR',
-                'CCSKILL:*',
-                'LANGAUTO.CLEAR',                       # Deprecated - Remove 6.0
-                'LANGAUTO:*',                   # Deprecated - Remove 6.0
-                'ADD:.CLEAR',
-                'ADD:*',
-                'ADD:ABILITY:*',
-                'ADD:CLASSSKILLS',
-                'ADD:EQUIP:*',
-                'ADD:FEAT:*',                   # Deprecated 6.05.01
-                'ADD:LANGUAGE:*',
-                'ADD:SPECIAL',                  # Deprecated - Remove 5.16 - Special abilities are now set using hidden feats 0r Abilities.
-                'ADD:TEMPLATE:*',
-                'ADD:VFEAT:*',                  # Deprecated 6.05.01
-                'EXCHANGELEVEL',
-                'SPELLS:*',
-                'TEMPLATE:.CLEAR',
-                'TEMPLATE:*',
-                'VFEAT:*',                              # Deprecated 6.05.01
-                'AUTO:ARMORPROF:*',
-                'AUTO:EQUIP:*',
-                'AUTO:FEAT:*',                  # Deprecated 6.05.01
-                'AUTO:SHIELDPROF:*',
-                'AUTO:WEAPONPROF:*',
-                'CHANGEPROF:*',
-                'REMOVE',
-                'ADDDOMAINS',
-                'WEAPONBONUS',
-                'FEATAUTO:.CLEAR',              # Deprecated 6.05.01
-                'FEATAUTO:*',                   # Deprecated 6.05.01
-                'SUBCLASS',
-                'SPELLLIST',
-                'NATURALATTACKS',
-                'UNENCUMBEREDMOVE',
-                'SPECIALS',                             # Deprecated
-                'SPELL',                                # Deprecated
-        ],
-
-        'SUBSTITUTIONLEVEL' => [
-                'SUBSTITUTIONLEVEL',
-                'REPEATLEVEL',
-                @QUALIFY_Tags,
-                'SERVESAS',
-                'HD',
-                'STARTSKILLPTS',
-                'UATT',
-                'UDAM',
-                'UMULT',
-                'ADD:SPELLCASTER',
-                'SPELLKNOWN:CLASS:*',
-                'SPELLLEVEL:CLASS:*',
-                'CAST',
-                'KNOWN',
-                'SPECIALTYKNOWN',
-                'KNOWNSPELLS',
-                'PROHIBITSPELL:*',
-                'VISION',
-                'SR',
-                'DR',
-                'DOMAIN',
-                'SA:.CLEAR:*',                  # Deprecated 6.05.01
-                'SA:*',                         # Deprecated 6.05.01
-                'SAB:.CLEAR',
-                'SAB:*',
-                'BONUS:HD:*',                   # Class Lines
-                @Global_BONUS_Tags,             # [ 1956340 ] Centralize global BONUS tags
-                'BONUS:WEAPON:*',
-                'HITDIE',
-                'ABILITY:*',
-                'DEFINE:*',
-                'DEFINESTAT:*',
-                'CSKILL:.CLEAR',
-                'CSKILL',
-                'CCSKILL:.CLEAR',
-                'CCSKILL',
-                'ADD:.CLEAR',
-                'ADD:*',
-                'ADD:ABILITY:*',
-                'ADD:CLASSSKILLS',
-                'ADD:EQUIP:*',
-                'ADD:FEAT:*',                   # Deprecated 6.05.01
-                'ADD:LANGUAGE:*',
-                'ADD:TEMPLATE:*',
-                'ADD:VFEAT:*',                  # Deprecated 6.05.01
-                'EXCHANGELEVEL',
-                'SPECIALS',                             # Deprecated 6.05.01
-                'SPELL',
-                'SPELLS:*',
-                'TEMPLATE:.CLEAR',
-                'TEMPLATE:*',
-                'VFEAT:*',                              # Deprecated 6.05.01
-                'AUTO:ARMORPROF:*',
-                'AUTO:EQUIP:*',
-                'AUTO:FEAT:*',                  # Deprecated 6.05.01
-                'AUTO:SHIELDPROF:*',
-                'AUTO:WEAPONPROF:*',
-                'CHANGEPROF:*',
-                'REMOVE',
-                'ADDDOMAINS',
-                'WEAPONBONUS',
-                'FEATAUTO:.CLEAR',              # Deprecated 6.05.01
-                'FEATAUTO:*',                   # Deprecated 6.05.01
-                'SUBCLASS',
-                'SPELLLIST',
-                'NATURALATTACKS',
-                'UNENCUMBEREDMOVE',
-                'LANGAUTO.CLEAR',                       # Deprecated - Remove 6.0
-                'LANGAUTO:*',                   # Deprecated - Remove 6.0
-                'ADD:SPECIAL',                  # Deprecated - Remove 5.16 - Special abilities are now set using hidden feats 0r Abilities.
-        ],
-
-        'SWITCHRACE' => [
-                'SWITCHRACE',
-        ],
-
-        'TEMPLATE' => [
-                '000TemplateName',
-                'SORTKEY',
-                'KEY',                          # [ 1695877 ] KEY tag is global
-                'NAMEISPI',
-                'OUTPUTNAME',
-                'HITDIE',
-                'HITDICESIZE',
-                'CR',
-                'SIZE',
-                'FACE',
-                'REACH',
-                'LEGS',
-                'HANDS',
-                'GENDER',
-                'VISIBLE',
-                'REMOVEABLE',
-                'DR:*',
-                'LEVELADJUSTMENT',
-                'TEMPLATE:.CLEAR',
-                'TEMPLATE:*',
-                @SOURCE_Tags,
-                'SA:.CLEAR',                    # Deprecated 6.05.01
-                'SA:*',                         # Deprecated 6.05.01
-                'SAB:.CLEAR',
-                'SAB:*',
-                'DEFINE:*',
-                'DEFINESTAT:*',
-                'LEVEL:*',
-                @PRE_Tags,
-                @QUALIFY_Tags,
-                @Global_BONUS_Tags,             # [ 1956340 ] Centralize global BONUS tags
-                'BONUSFEATS',                   # Template Bonus
-                'BONUS:MONSKILLPTS',            # Template Bonus
-                'BONUSSKILLPOINTS',             # Template Bonus
-                'BONUS:WEAPON:*',
-                'NONPP',
-                'STACK',
-                'MULT',
-                'CHOOSE',
-                'SELECT',
-                'CSKILL:.CLEAR',
-                'CSKILL',
-                'CCSKILL:.CLEAR',
-                'CCSKILL',
-                'ADD:.CLEAR',
-                'ADD:*',
-                'ADD:ABILITY:*',
-                'ADD:CLASSSKILLS',
-                'ADD:EQUIP:*',
-                'ADD:FEAT:*',                   # Deprecated 6.05.01
-                'ADD:LANGUAGE:*',
-                'ADD:TEMPLATE:*',
-                'ADD:VFEAT:*',                  # Deprecated 6.05.01
-                'FAVOREDCLASS',
-                'ABILITY:*',
-                'FEAT:*',                               # Deprecated 6.05.01
-                'VFEAT:*',                              # Deprecated 6.05.01
-                'AUTO:ARMORPROF:*',
-                'AUTO:EQUIP:*',
-                'AUTO:FEAT:*',                  # Deprecated 6.05.01
-                'AUTO:LANG:*',
-                'AUTO:SHIELDPROF:*',
-                'AUTO:WEAPONPROF:*',
-                'REMOVE:*',
-                'CHANGEPROF:*',
-                'KIT',
-                'LANGBONUS:.CLEAR',
-                'LANGBONUS:*',
-                'MOVE',
-                'MOVEA',                                # Deprecated 6.05.01
-                'MOVECLONE',
-                'REGION',
-                'SUBREGION',
-                'REMOVABLE',
-                'SR:*',
-                'SUBRACE',
-                'RACETYPE',
-                'RACESUBTYPE:.REMOVE',
-                'RACESUBTYPE:*',
-                'TYPE',
-                'ADDLEVEL',
-                'VISION',
-                'HD:*',
-                'WEAPONBONUS',
-                'GENDERLOCK',
-                'SPELLS:*',
-                'SPELLKNOWN:CLASS:*',
-                'SPELLKNOWN:DOMAIN:*',
-                'SPELLLEVEL:CLASS:*',
-                'SPELLLEVEL:DOMAIN:*',
-                'ADD:SPELLCASTER',
-                'NATURALATTACKS:*',
-                'UNENCUMBEREDMOVE',
-                'COMPANIONLIST',
-                'FOLLOWERS',
-                'DESC:.CLEAR',
-                'DESC:*',
-                'TEMPDESC',
-                'TEMPBONUS',
-                'SPELL:*',                              # Deprecated 5.x.x - Remove 6.0 - use SPELLS
-                'ADD:SPECIAL',                  # Deprecated - Remove 5.16 - Special abilities are now set using hidden feats 0r Abilities.
-#               'HEIGHT',                               # Deprecated
-                'LANGAUTO:.CLEAR',              # Deprecated - 6.0
-                'LANGAUTO:*',                   # Deprecated - 6.0
-#               'WEIGHT',                               # Deprecated
-        ],
-
-        'WEAPONPROF' => [
-                '000WeaponName',
-                'KEY',                          # [ 1695877 ] KEY tag is global
-                'NAMEISPI',
-                'OUTPUTNAME',
-                'TYPE',
-                'HANDS',
-                @PRE_Tags,
-                @SOURCE_Tags,
-                @Global_BONUS_Tags,             # [ 1956340 ] Centralize global BONUS tags
-                'SAB:.CLEAR',
-                'SAB:*',
-                'SA:.CLEAR',                    # Deprecated 6.05.01
-                'SA:*',                         # Deprecated 6.05.01
-        ],
-
-        'VARIABLE' => [
-                '000VariableName',
-                'EXPLANATION',                  
-        ],
-
-        'DATACONTROL' => [
-                '000DatacontrolName',
-                'DATAFORMAT',
-                'REQUIRED',
-                'SELECTABLE',
-                'VISIBLE',
-                'DISPLAYNAME',
-                'EXPLANATION',                  
-        ],
-
-        'GLOBALMOD' => [
-                '000GlobalmonName',
-                'EXPLANATION',                  
-        ],
-
-        'ALIGNMENT' => [
-                '000AlignmentName',
-                'SORTKEY',                      
-                'ABB',                  
-                'KEY',                  
-                'VALIDFORDEITY',                        
-                'VALIDFORFOLLOWER',                     
-        ],
-
-        'STAT' => [
-                '000StatName',
-                'SORTKEY',                      
-                'ABB',                  
-                'KEY',                  
-                'STATMOD',                      
-                'DEFINE:MAXLEVELSTAT',                  
-                'DEFINE',                       
-                @Global_BONUS_Tags,                     
-                'ABILITY',                      
-        ],
-
-        'SAVE' => [
-                '000SaveName',
-                'SORTKEY',                      
-                'KEY',                  
-                @Global_BONUS_Tags,                     
-        ],
-
-);
-
-#################################################################
-######################## Conversion #############################
-# Tags that must be seen as valid to allow conversion.
-
-if ( $conversion_enable{'ALL:Convert ADD:SA to ADD:SAB'} ) {
-        push @{ $master_order{'CLASS'} },               'ADD:SA';
-        push @{ $master_order{'CLASS Level'} },   'ADD:SA';
-        push @{ $master_order{'COMPANIONMOD'} },  'ADD:SA';
-        push @{ $master_order{'DEITY'} },               'ADD:SA';
-        push @{ $master_order{'DOMAIN'} },              'ADD:SA';
-        push @{ $master_order{'EQUIPMENT'} },   'ADD:SA';
-        push @{ $master_order{'EQUIPMOD'} },    'ADD:SA';
-        push @{ $master_order{'FEAT'} },                'ADD:SA';
-        push @{ $master_order{'RACE'} },                'ADD:SA';
-        push @{ $master_order{'SKILL'} },               'ADD:SA';
-        push @{ $master_order{'SUBCLASSLEVEL'} }, 'ADD:SA';
-        push @{ $master_order{'TEMPLATE'} },    'ADD:SA';
-        push @{ $master_order{'WEAPONPROF'} },  'ADD:SA';
-}
-if ( $conversion_enable{'EQUIP: ALTCRITICAL to ALTCRITMULT'} ) {
-        push @{ $master_order{'EQUIPMENT'} }, 'ALTCRITICAL';
-}
-
-if ( $conversion_enable{'BIOSET:generate the new files'} ) {
-        push @{ $master_order{'RACE'} }, 'AGE', 'HEIGHT', 'WEIGHT';
-}
-
-if ( $conversion_enable{'EQUIPMENT: remove ATTACKS'} ) {
-        push @{ $master_order{'EQUIPMENT'} }, 'ATTACKS';
-}
-
-if ( $conversion_enable{'PCC:GAME to GAMEMODE'} ) {
-        push @{ $master_order{'PCC'} }, 'GAME';
-}
-
-if ( $conversion_enable{'ALL:BONUS:MOVE conversion'} ) {
-        push @{ $master_order{'CLASS'} },               'BONUS:MOVE:*';
-        push @{ $master_order{'CLASS Level'} }, 'BONUS:MOVE:*';
-        push @{ $master_order{'COMPANIONMOD'} },        'BONUS:MOVE:*';
-        push @{ $master_order{'DEITY'} },               'BONUS:MOVE:*';
-        push @{ $master_order{'DOMAIN'} },              'BONUS:MOVE:*';
-        push @{ $master_order{'EQUIPMENT'} },   'BONUS:MOVE:*';
-        push @{ $master_order{'EQUIPMOD'} },    'BONUS:MOVE:*';
-        push @{ $master_order{'FEAT'} },                'BONUS:MOVE:*';
-        push @{ $master_order{'RACE'} },                'BONUS:MOVE:*';
-        push @{ $master_order{'SKILL'} },               'BONUS:MOVE:*';
-        push @{ $master_order{'SUBCLASSLEVEL'} }, 'BONUS:MOVE:*';
-        push @{ $master_order{'TEMPLATE'} },    'BONUS:MOVE:*';
-        push @{ $master_order{'WEAPONPROF'} },  'BONUS:MOVE:*';
-}
-
-if ( $conversion_enable{'WEAPONPROF:No more SIZE'} ) {
-        push @{ $master_order{'WEAPONPROF'} }, 'SIZE';
-}
-
-if ( $conversion_enable{'EQUIP:no more MOVE'} ) {
-        push @{ $master_order{'EQUIPMENT'} }, 'MOVE';
-}
-
-#   vvvvvv This one is disactivated
-if ( 0 && $conversion_enable{'ALL:Convert SPELL to SPELLS'} ) {
-        push @{ $master_order{'CLASS Level'} },   'SPELL:*';
-        push @{ $master_order{'DOMAIN'} },              'SPELL:*';
-        push @{ $master_order{'EQUIPMOD'} },    'SPELL:*';
-        push @{ $master_order{'SUBCLASSLEVEL'} }, 'SPELL:*';
-}
-
-#   vvvvvv This one is disactivated
-if ( 0 && $conversion_enable{'TEMPLATE:HITDICESIZE to HITDIE'} ) {
-        push @{ $master_order{'TEMPLATE'} }, 'HITDICESIZE';
-}
+my %SOURCE_file_type_def = ();
+my %master_file_type = ();
+my @PRE_Tags = ();
+my %PRE_Tags = ();
+my @double_PCC_tags = ();      
+my %double_PCC_tags = ();
+my @SOURCE_Tags = ();
+my @QUALIFY_Tags = ();
+my @Global_BONUS_Tags = ();
 
 # Working variables
 my %column_with_no_tag = (
@@ -4282,81 +1634,81 @@ if (getOption('inputpath')) {
       }
    }
 
-        ##########################################################
-        # Files that needs to be open for special conversions
+   ##########################################################
+   # Files that needs to be open for special conversions
 
-        if ( $conversion_enable{'Export lists'} ) {
-                # The files should be opened in alpha order since they will
-                # be closed in reverse alpha order.
+   if ( $conversion_enable{'Export lists'} ) {
+	   # The files should be opened in alpha order since they will
+	   # be closed in reverse alpha order.
 
-                # Will hold the list of all classes found in CLASS filetypes
-                open $filehandle_for{CLASS}, '>', 'class.csv';
-                print { $filehandle_for{CLASS} } qq{"Class Name","Line","Filename"\n};
+	   # Will hold the list of all classes found in CLASS filetypes
+	   open $filehandle_for{CLASS}, '>', 'class.csv';
+	   print { $filehandle_for{CLASS} } qq{"Class Name","Line","Filename"\n};
 
-                # Will hold the list of all deities found in DEITY filetypes
-                open $filehandle_for{DEITY}, '>', 'deity.csv';
-                print { $filehandle_for{DEITY} } qq{"Deity Name","Line","Filename"\n};
+	   # Will hold the list of all deities found in DEITY filetypes
+	   open $filehandle_for{DEITY}, '>', 'deity.csv';
+	   print { $filehandle_for{DEITY} } qq{"Deity Name","Line","Filename"\n};
 
-                # Will hold the list of all domains found in DOMAIN filetypes
-                open $filehandle_for{DOMAIN}, '>', 'domain.csv';
-                print { $filehandle_for{DOMAIN} } qq{"Domain Name","Line","Filename"\n};
+	   # Will hold the list of all domains found in DOMAIN filetypes
+	   open $filehandle_for{DOMAIN}, '>', 'domain.csv';
+	   print { $filehandle_for{DOMAIN} } qq{"Domain Name","Line","Filename"\n};
 
-                # Will hold the list of all equipements found in EQUIPMENT filetypes
-                open $filehandle_for{EQUIPMENT}, '>', 'equipment.csv';
-                print { $filehandle_for{EQUIPMENT} } qq{"Equipment Name","Output Name","Line","Filename"\n};
+	   # Will hold the list of all equipements found in EQUIPMENT filetypes
+	   open $filehandle_for{EQUIPMENT}, '>', 'equipment.csv';
+	   print { $filehandle_for{EQUIPMENT} } qq{"Equipment Name","Output Name","Line","Filename"\n};
 
-                # Will hold the list of all equipmod entries found in EQUIPMOD filetypes
-                open $filehandle_for{EQUIPMOD}, '>', 'equipmod.csv';
-                print { $filehandle_for{EQUIPMOD} } qq{"Equipmod Name","Key","Type","Line","Filename"\n};
+	   # Will hold the list of all equipmod entries found in EQUIPMOD filetypes
+	   open $filehandle_for{EQUIPMOD}, '>', 'equipmod.csv';
+	   print { $filehandle_for{EQUIPMOD} } qq{"Equipmod Name","Key","Type","Line","Filename"\n};
 
-                # Will hold the list of all feats found in FEAT filetypes
-                open $filehandle_for{FEAT}, '>', 'feat.csv';
-                print { $filehandle_for{FEAT} } qq{"Feat Name","Line","Filename"\n};
+	   # Will hold the list of all feats found in FEAT filetypes
+	   open $filehandle_for{FEAT}, '>', 'feat.csv';
+	   print { $filehandle_for{FEAT} } qq{"Feat Name","Line","Filename"\n};
 
-                # Will hold the list of all kits found in KIT filetypes
-                open $filehandle_for{KIT}, '>', 'kit.csv';
-                print { $filehandle_for{KIT} } qq{"Kit Startpack Name","Line","Filename"\n};
+	   # Will hold the list of all kits found in KIT filetypes
+	   open $filehandle_for{KIT}, '>', 'kit.csv';
+	   print { $filehandle_for{KIT} } qq{"Kit Startpack Name","Line","Filename"\n};
 
-                # Will hold the list of all kit Tables found in KIT filetypes
-                open $filehandle_for{TABLE}, '>', 'kit-table.csv';
-                print { $filehandle_for{TABLE} } qq{"Table Name","Line","Filename"\n};
+	   # Will hold the list of all kit Tables found in KIT filetypes
+	   open $filehandle_for{TABLE}, '>', 'kit-table.csv';
+	   print { $filehandle_for{TABLE} } qq{"Table Name","Line","Filename"\n};
 
-                # Will hold the list of all language found in LANGUAGE linetypes
-                open $filehandle_for{LANGUAGE}, '>', 'language.csv';
-                print { $filehandle_for{LANGUAGE} } qq{"Language Name","Line","Filename"\n};
+	   # Will hold the list of all language found in LANGUAGE linetypes
+	   open $filehandle_for{LANGUAGE}, '>', 'language.csv';
+	   print { $filehandle_for{LANGUAGE} } qq{"Language Name","Line","Filename"\n};
 
-                # Will hold the list of all PCC files found
-                open $filehandle_for{PCC}, '>', 'pcc.csv';
-                print { $filehandle_for{PCC} } qq{"SOURCELONG","SOURCESHORT","GAMEMODE","Full Path"\n};
+	   # Will hold the list of all PCC files found
+	   open $filehandle_for{PCC}, '>', 'pcc.csv';
+	   print { $filehandle_for{PCC} } qq{"SOURCELONG","SOURCESHORT","GAMEMODE","Full Path"\n};
 
-                # Will hold the list of all races and race types found in RACE filetypes
-                open $filehandle_for{RACE}, '>', 'race.csv';
-                print { $filehandle_for{RACE} } qq{"Race Name","Race Type","Race Subtype","Line","Filename"\n};
+	   # Will hold the list of all races and race types found in RACE filetypes
+	   open $filehandle_for{RACE}, '>', 'race.csv';
+	   print { $filehandle_for{RACE} } qq{"Race Name","Race Type","Race Subtype","Line","Filename"\n};
 
-                # Will hold the list of all skills found in SKILL filetypes
-                open $filehandle_for{SKILL}, '>', 'skill.csv';
-                print { $filehandle_for{SKILL} } qq{"Skill Name","Line","Filename"\n};
+	   # Will hold the list of all skills found in SKILL filetypes
+	   open $filehandle_for{SKILL}, '>', 'skill.csv';
+	   print { $filehandle_for{SKILL} } qq{"Skill Name","Line","Filename"\n};
 
-                # Will hold the list of all spells found in SPELL filetypes
-                open $filehandle_for{SPELL}, '>', 'spell.csv';
-                print { $filehandle_for{SPELL} } qq{"Spell Name","Source Page","Line","Filename"\n};
+	   # Will hold the list of all spells found in SPELL filetypes
+	   open $filehandle_for{SPELL}, '>', 'spell.csv';
+	   print { $filehandle_for{SPELL} } qq{"Spell Name","Source Page","Line","Filename"\n};
 
-                # Will hold the list of all templates found in TEMPLATE filetypes
-                open $filehandle_for{TEMPLATE}, '>', 'template.csv';
-                print { $filehandle_for{TEMPLATE} } qq{"Tempate Name","Line","Filename"\n};
+	   # Will hold the list of all templates found in TEMPLATE filetypes
+	   open $filehandle_for{TEMPLATE}, '>', 'template.csv';
+	   print { $filehandle_for{TEMPLATE} } qq{"Tempate Name","Line","Filename"\n};
 
-                # Will hold the list of all variables found in DEFINE tags
-                if ( getOption('xcheck') ) {
-                open $filehandle_for{VARIABLE}, '>', 'variable.csv';
-                print { $filehandle_for{VARIABLE} } qq{"Var Name","Line","Filename"\n};
-                }
+	   # Will hold the list of all variables found in DEFINE tags
+	   if ( getOption('xcheck') ) {
+		   open $filehandle_for{VARIABLE}, '>', 'variable.csv';
+		   print { $filehandle_for{VARIABLE} } qq{"Var Name","Line","Filename"\n};
+	   }
 
-                # We need to list the tags that use Willpower
-                if ( $conversion_enable{'ALL:Find Willpower'} ) {
-                open $filehandle_for{Willpower}, '>', 'willpower.csv';
-                print { $filehandle_for{Willpower} } qq{"Tag","Line","Filename"\n};
-                }
-        }
+	   # We need to list the tags that use Willpower
+	   if ( $conversion_enable{'ALL:Find Willpower'} ) {
+		   open $filehandle_for{Willpower}, '>', 'willpower.csv';
+		   print { $filehandle_for{Willpower} } qq{"Tag","Line","Filename"\n};
+	   }
+   }
 
         ##########################################################
         # Cross-checking must be activated for the CLASSSPELL
@@ -14451,3 +11803,28 @@ sub constructLoggingHeader {
 
    $header   .= "----------------------------------------------------------------\n";
 }
+
+sub convertEntities {
+   my ($line) = @_;
+
+   $line =~ s/\x82/,/g;
+   $line =~ s/\x84/,,/g;
+   $line =~ s/\x85/.../g;
+   $line =~ s/\x88/^/g;
+   $line =~ s/\x8B/</g;
+   $line =~ s/\x8C/Oe/g;
+   $line =~ s/\x91/\'/g;
+   $line =~ s/\x92/\'/g;
+   $line =~ s/\x93/\"/g;
+   $line =~ s/\x94/\"/g;
+   $line =~ s/\x95/*/g;
+   $line =~ s/\x96/-/g;
+   $line =~ s/\x97/-/g;
+   $line =~ s-\x98-<sup>~</sup>-g;
+   $line =~ s-\x99-<sup>TM</sup>-g;
+   $line =~ s/\x9B/>/g;
+   $line =~ s/\x9C/oe/g;
+
+   return $line;
+}
+

@@ -270,23 +270,23 @@ my %tag_proper_value_for = (
    'false' =>  'NO',
 );
 
-my %source_tags                 = ()    if $conversion_enable{'SOURCE line replacement'};
-my $source_curent_file          = q{}   if $conversion_enable{'SOURCE line replacement'};
+my %source_tags               = ()  if Pretty::Options::isConversionActive('SOURCE line replacement');
+my $source_curent_file        = q{} if Pretty::Options::isConversionActive('SOURCE line replacement');
+                                       
+my %classskill_files          = ()  if Pretty::Options::isConversionActive('CLASSSKILL conversion to CLASS');
+                                       
+my %classspell_files          = ()  if Pretty::Options::isConversionActive('CLASSSPELL conversion to SPELL');
+                                       
+my %class_files               = ()  if Pretty::Options::isConversionActive('SPELL:Add TYPE tags');
+my %class_spelltypes          = ()  if Pretty::Options::isConversionActive('SPELL:Add TYPE tags');
+                                       
+my %Spells_For_EQMOD          = ()  if Pretty::Options::isConversionActive('EQUIPMENT: generate EQMOD');
+my %Spell_Files               = ()  if Pretty::Options::isConversionActive('EQUIPMENT: generate EQMOD') || 
+                                        Pretty::Options::isConversionActive('CLASS: SPELLLIST from Spell.MOD');
 
-my %classskill_files            = ()    if $conversion_enable{'CLASSSKILL conversion to CLASS'};
+my %bonus_prexxx_tag_report   = ()  if Pretty::Options::isConversionActive('Generate BONUS and PRExxx report');
 
-my %classspell_files            = ()    if $conversion_enable{'CLASSSPELL conversion to SPELL'};
-
-my %class_files                 = ()    if $conversion_enable{'SPELL:Add TYPE tags'};
-my %class_spelltypes            = ()    if $conversion_enable{'SPELL:Add TYPE tags'};
-
-my %Spells_For_EQMOD            = ()    if $conversion_enable{'EQUIPMENT: generate EQMOD'};
-my %Spell_Files                 = ()    if $conversion_enable{'EQUIPMENT: generate EQMOD'}
-                                                        || $conversion_enable{'CLASS: SPELLLIST from Spell.MOD'};
-
-my %bonus_prexxx_tag_report     = ()    if $conversion_enable{'Generate BONUS and PRExxx report'};
-
-my %PREALIGN_conversion_5715 = qw(
+my %PREALIGN_conversion_5715  = qw(
         0       LG
         1       LN
         2       LE
@@ -298,34 +298,34 @@ my %PREALIGN_conversion_5715 = qw(
         8       CE
         9       NONE
         10      Deity
-) if $conversion_enable{'ALL:PREALIGN conversion'};
+) if Pretty::Options::isConversionActive('ALL:PREALIGN conversion');
 
 my %Key_conversion_56 = qw(
         BIND            BLIND
-) if $conversion_enable{'ALL:EQMOD has new keys'};
-#       ABENHABON               BNS_ENHC_AB
+) if Pretty::Options::isConversionActive('ALL:EQMOD has new keys');
+#       ABENHABON       BNS_ENHC_AB
 #       ABILITYMINUS    BNS_ENHC_AB
-#       ABILITYPLUS             BNS_ENHC_AB
-#       ACDEFLBON               BNS_AC_DEFL
-#       ACENHABON               BNS_ENHC_AC
-#       ACINSIBON               BNS_AC_INSI
-#       ACLUCKBON               BNS_AC_LUCK
-#       ACOTHEBON               BNS_AC_OTHE
-#       ACPROFBON               BNS_AC_PROF
-#       ACSACRBON               BNS_AC_SCRD
+#       ABILITYPLUS     BNS_ENHC_AB
+#       ACDEFLBON       BNS_AC_DEFL
+#       ACENHABON       BNS_ENHC_AC
+#       ACINSIBON       BNS_AC_INSI
+#       ACLUCKBON       BNS_AC_LUCK
+#       ACOTHEBON       BNS_AC_OTHE
+#       ACPROFBON       BNS_AC_PROF
+#       ACSACRBON       BNS_AC_SCRD
 #       ADAARH          ADAM
 #       ADAARH          ADAM
 #       ADAARL          ADAM
 #       ADAARM          ADAM
-#       ADAWE                   ADAM
+#       ADAWE           ADAM
 #       AMINAT          ANMATD
 #       AMMO+1          PLUS1W
 #       AMMO+2          PLUS2W
 #       AMMO+3          PLUS3W
 #       AMMO+4          PLUS4W
 #       AMMO+5          PLUS5W
-#       AMMODARK                DARK
-#       AMMOSLVR                SLVR
+#       AMMODARK        DARK
+#       AMMOSLVR        SLVR
 #       ARFORH          FRT_HVY
 #       ARFORL          FRT_LGHT
 #       ARFORM          FRT_MOD
@@ -338,70 +338,70 @@ my %Key_conversion_56 = qw(
 #       ARMR+3          PLUS3A
 #       ARMR+4          PLUS4A
 #       ARMR+5          PLUS5A
-#       ARMRADMH                ADAM
-#       ARMRADML                ADAM
-#       ARMRADMM                ADAM
-#       ARMRMITH                MTHRL
-#       ARMRMITL                MTHRL
-#       ARMRMITM                MTHRL
+#       ARMRADMH        ADAM
+#       ARMRADML        ADAM
+#       ARMRADMM        ADAM
+#       ARMRMITH        MTHRL
+#       ARMRMITL        MTHRL
+#       ARMRMITM        MTHRL
 #       ARWCAT          ARW_CAT
 #       ARWDEF          ARW_DEF
-#       BANEA                   BANE_A
-#       BANEM                   BANE_M
-#       BANER                   BANE_R
-#       BASHH                   BASH_H
-#       BASHL                   BASH_L
-#       BIND                    BLIND
-#       BONSPELL                BNS_SPELL
-#       BONUSSPELL              BNS_SPELL
+#       BANEA           BANE_A
+#       BANEM           BANE_M
+#       BANER           BANE_R
+#       BASHH           BASH_H
+#       BASHL           BASH_L
+#       BIND            BLIND
+#       BONSPELL        BNS_SPELL
+#       BONUSSPELL      BNS_SPELL
 #       BRIENAI         BRI_EN_A
 #       BRIENM          BRI_EN_M
 #       BRIENT          BRI_EN_T
 #       CHAOSA          CHAOS_A
 #       CHAOSM          CHAOS_M
 #       CHAOSR          CHAOS_R
-#       CLDIRNAI                CIRON
+#       CLDIRNAI        CIRON
 #       CLDIRNW         CIRON
 #       DAGSLVR         SLVR
 #       DEFLECTBONUS    BNS_AC_DEFL
 #       DRGNAR          DRACO
 #       DRGNSH          DRACO
 #       DRKAMI          DARK
-#       DRKSH                   DARK
-#       DRKWE                   DARK
+#       DRKSH           DARK
+#       DRKWE           DARK
 #       ENBURM          EN_BUR_M
 #       ENBURR          EN_BUR_R
 #       ENERGM          ENERG_M
 #       ENERGR          ENERG_R
-#       FLAMA                   FLM_A
-#       FLAMM                   FLM_M
-#       FLAMR                   FLM_R
+#       FLAMA           FLM_A
+#       FLAMM           FLM_M
+#       FLAMR           FLM_R
 #       FLBURA          FLM_BR_A
 #       FLBURM          FLM_BR_M
 #       FLBURR          FLM_BR_R
-#       FROSA                   FROST_A
-#       FROSM                   FROST_M
-#       FROSR                   FROST_R
+#       FROSA           FROST_A
+#       FROSM           FROST_M
+#       FROSR           FROST_R
 #       GHTOUA          GHOST_A
 #       GHTOUAM         GHOST_AM
 #       GHTOUM          GHOST_M
 #       GHTOUR          GHOST_R
-#       HCLDIRNW                CIRON/2
-#       HOLYA                   HOLY_A
-#       HOLYM                   HOLY_M
-#       HOLYR                   HOLY_R
+#       HCLDIRNW        CIRON/2
+#       HOLYA           HOLY_A
+#       HOLYM           HOLY_M
+#       HOLYR           HOLY_R
 #       ICBURA          ICE_BR_A
 #       ICBURM          ICE_BR_M
 #       ICBURR          ICE_BR_R
-#       LAWA                    LAW_A
-#       LAWM                    LAW_M
-#       LAWR                    LAW_R
-#       LUCKBONUS               BNS_SAV_LUC
-#       LUCKBONUS2              BNS_SKL_LCK
-#       MERCA                   MERC_A
-#       MERCM                   MERC_M
-#       MERCR                   MERC_R
-#       MICLE                   MI_CLE
+#       LAWA            LAW_A
+#       LAWM            LAW_M
+#       LAWR            LAW_R
+#       LUCKBONUS       BNS_SAV_LUC
+#       LUCKBONUS2      BNS_SKL_LCK
+#       MERCA           MERC_A
+#       MERCM           MERC_M
+#       MERCR           MERC_R
+#       MICLE           MI_CLE
 #       MITHAMI         MTHRL
 #       MITHARH         MTHRL
 #       MITHARL         MTHRL
@@ -412,65 +412,65 @@ my %Key_conversion_56 = qw(
 #       NATENHA         BNS_ENHC_NAT
 #       NATURALARMOR    BNS_ENHC_NAT
 #       PLUS1AM         PLUS1W
-#       PLUS1AMI                PLUS1W
+#       PLUS1AMI        PLUS1W
 #       PLUS1WI         PLUS1W
 #       PLUS2AM         PLUS2W
-#       PLUS2AMI                PLUS2W
+#       PLUS2AMI        PLUS2W
 #       PLUS2WI         PLUS2W
 #       PLUS3AM         PLUS3W
-#       PLUS3AMI                PLUS3W
+#       PLUS3AMI        PLUS3W
 #       PLUS3WI         PLUS3W
 #       PLUS4AM         PLUS4W
-#       PLUS4AMI                PLUS4W
+#       PLUS4AMI        PLUS4W
 #       PLUS4WI         PLUS4W
 #       PLUS5AM         PLUS5W
-#       PLUS5AMI                PLUS5W
+#       PLUS5AMI        PLUS5W
 #       PLUS5WI         PLUS5W
 #       RESIMP          RST_IMP
 #       RESIST          RST_IST
-#       RESISTBONUS             BNS_SAV_RES
-#       SAVINSBON               BNS_SAV_INS
-#       SAVLUCBON               BNS_SAV_LUC
-#       SAVOTHBON               BNS_SAV_OTH
-#       SAVPROBON               BNS_SAV_PRO
-#       SAVRESBON               BNS_SAV_RES
-#       SAVSACBON               BNS_SAV_SAC
+#       RESISTBONUS     BNS_SAV_RES
+#       SAVINSBON       BNS_SAV_INS
+#       SAVLUCBON       BNS_SAV_LUC
+#       SAVOTHBON       BNS_SAV_OTH
+#       SAVPROBON       BNS_SAV_PRO
+#       SAVRESBON       BNS_SAV_RES
+#       SAVSACBON       BNS_SAV_SAC
 #       SE50CST         SPL_CHRG
-#       SECW                    SPL_CMD
-#       SESUCAMA                A_1USEMI
-#       SESUCAME                A_1USEMI
-#       SESUCAMI                A_1USEMI
-#       SESUCDMA                D_1USEMI
-#       SESUCDME                D_1USEMI
-#       SESUCDMI                D_1USEMI
+#       SECW            SPL_CMD
+#       SESUCAMA        A_1USEMI
+#       SESUCAME        A_1USEMI
+#       SESUCAMI        A_1USEMI
+#       SESUCDMA        D_1USEMI
+#       SESUCDME        D_1USEMI
+#       SESUCDMI        D_1USEMI
 #       SESUUA          SPL_1USE
-#       SEUA                    SPL_ACT
-#       SE_1USEACT              SPL_1USE
+#       SEUA            SPL_ACT
+#       SE_1USEACT      SPL_1USE
 #       SE_50TRIGGER    SPL_CHRG
 #       SE_COMMANDWORD  SPL_CMD
-#       SE_USEACT               SPL_ACT
+#       SE_USEACT       SPL_ACT
 #       SHBURA          SHK_BR_A
 #       SHBURM          SHK_BR_M
 #       SHBURR          SHK_BR_R
 #       SHDGRT          SHDW_GRT
 #       SHDIMP          SHDW_IMP
-#       SHDOW                   SHDW
+#       SHDOW           SHDW
 #       SHFORH          FRT_HVY
 #       SHFORL          FRT_LGHT
 #       SHFORM          FRT_MOD
-#       SHLDADAM                ADAM
-#       SHLDDARK                DARK
-#       SHLDMITH                MTHRL
-#       SHOCA                   SHOCK_A
-#       SHOCM                   SHOCK_M
-#       SHOCR                   SHOCK_R
-#       SKILLBONUS              BNS_SKL_CIR
-#       SKILLBONUS2             BNS_SKL_CMP
-#       SKLCOMBON               BNS_SKL_CMP
-#       SLICK                   SLK
+#       SHLDADAM        ADAM
+#       SHLDDARK        DARK
+#       SHLDMITH        MTHRL
+#       SHOCA           SHOCK_A
+#       SHOCM           SHOCK_M
+#       SHOCR           SHOCK_R
+#       SKILLBONUS      BNS_SKL_CIR
+#       SKILLBONUS2     BNS_SKL_CMP
+#       SKLCOMBON       BNS_SKL_CMP
+#       SLICK           SLK
 #       SLKGRT          SLK_GRT
 #       SLKIMP          SLK_IMP
-#       SLMV                    SLNT_MV
+#       SLMV            SLNT_MV
 #       SLMVGRT         SLNT_MV_GRT
 #       SLMVIM          SLNT_MV_IM
 #       SLVRAMI         ALCHM
@@ -479,8 +479,8 @@ my %Key_conversion_56 = qw(
 #       SLVRWEF         ALCHM
 #       SLVRWEH         ALCHM/2
 #       SLVRWEL         ALCHM
-#       SPELLRESI               BNS_SPL_RST
-#       SPELLRESIST             BNS_SPL_RST
+#       SPELLRESI       BNS_SPL_RST
+#       SPELLRESIST     BNS_SPL_RST
 #       SPLRES          SPL_RST
 #       SPLSTR          SPL_STR
 #       THNDRA          THNDR_A
@@ -494,48 +494,46 @@ my %Key_conversion_56 = qw(
 #       WEAP+3          PLUS3W
 #       WEAP+4          PLUS4W
 #       WEAP+5          PLUS5W
-#       WEAPADAM                ADAM
-#       WEAPDARK                DARK
-#       WEAPMITH                MTHRL
-#       WILDA                   WILD_A
-#       WILDS                   WILD_S
-#       ) if $conversion_enable{'ALL:EQMOD has new keys'};
+#       WEAPADAM        ADAM
+#       WEAPDARK        DARK
+#       WEAPMITH        MTHRL
+#       WILDA           WILD_A
+#       WILDS           WILD_S
+#) if Pretty::Options::isConversionActive('ALL:EQMOD has new keys');
 
-if($conversion_enable{'ALL:EQMOD has new keys'})
-{
-        my ($old_key,$new_key);
-        while (($old_key,$new_key) = each %Key_conversion_56)
-        {
-                if($old_key eq $new_key) {
-                        print "==> $old_key\n";
-                        delete $Key_conversion_56{$old_key};
-                }
-        }
+if (Pretty::Options::isConversionActive('ALL:EQMOD has new keys')) {
+   my ($old_key,$new_key);
+   while (($old_key,$new_key) = each %Key_conversion_56)
+   {
+      if($old_key eq $new_key) {
+         print "==> $old_key\n";
+         delete $Key_conversion_56{$old_key};
+      }
+   }
 }
 
 my %srd_weapon_name_conversion_433 = (
-        q{Sword (Great)}                        => q{Greatsword},
-        q{Sword (Long)}                 => q{Longsword},
-        q{Dagger (Venom)}                       => q{Venom Dagger},
-        q{Dagger (Assassin's)}          => q{Assassin's Dagger},
-        q{Mace (Smiting)}                       => q{Mace of Smiting},
-        q{Mace (Terror)}                        => q{Mace of Terror},
-        q{Greataxe (Life-Drinker)}      => q{Life Drinker},
-        q{Rapier (Puncturing)}          => q{Rapier of Puncturing},
-        q{Scimitar (Sylvan)}            => q{Sylvan Scimitar},
-        q{Sword (Flame Tongue)}         => q{Flame Tongue},
-        q{Sword (Planes)}                       => q{Sword of the Planes},
-        q{Sword (Luck Blade)}           => q{Luck Blade},
-        q{Sword (Subtlety)}             => q{Sword of Subtlety},
-        q{Sword (Holy Avenger)}         => q{Holy Avenger},
-        q{Sword (Life Stealing)}        => q{Sword of Life Stealing},
-        q{Sword (Nine Lives Stealer)}   => q{Nine Lives Stealer},
-        q{Sword (Frost Brand)}          => q{Frost Brand},
-        q{Trident (Fish Command)}       => q{Trident of Fish Command},
-        q{Trident (Warning)}            => q{Trident of Warning},
-        q{Warhammer (Dwarven Thrower)}  => q{Dwarven Thrower},
-) if $conversion_enable{'ALL: 4.3.3 Weapon name change'};
-
+   q{Sword (Great)}                 => q{Greatsword},
+   q{Sword (Long)}                  => q{Longsword},
+   q{Dagger (Venom)}                => q{Venom Dagger},
+   q{Dagger (Assassin's)}           => q{Assassin's Dagger},
+   q{Mace (Smiting)}                => q{Mace of Smiting},
+   q{Mace (Terror)}                 => q{Mace of Terror},
+   q{Greataxe (Life-Drinker)}       => q{Life Drinker},
+   q{Rapier (Puncturing)}           => q{Rapier of Puncturing},
+   q{Scimitar (Sylvan)}             => q{Sylvan Scimitar},
+   q{Sword (Flame Tongue)}          => q{Flame Tongue},
+   q{Sword (Planes)}                => q{Sword of the Planes},
+   q{Sword (Luck Blade)}            => q{Luck Blade},
+   q{Sword (Subtlety)}              => q{Sword of Subtlety},
+   q{Sword (Holy Avenger)}          => q{Holy Avenger},
+   q{Sword (Life Stealing)}         => q{Sword of Life Stealing},
+   q{Sword (Nine Lives Stealer)}    => q{Nine Lives Stealer},
+   q{Sword (Frost Brand)}           => q{Frost Brand},
+   q{Trident (Fish Command)}        => q{Trident of Fish Command},
+   q{Trident (Warning)}             => q{Trident of Warning},
+   q{Warhammer (Dwarven Thrower)}   => q{Dwarven Thrower},
+) if Pretty::Options::isConversionActive('ALL: 4.3.3 Weapon name change');
 
 
 # The PRExxx tags. They are used in many of the line types.
