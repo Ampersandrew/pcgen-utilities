@@ -4261,44 +4261,26 @@ my @modified_files;     # Will hold the name of the modified files
 
 if (getOption('inputpath')) {
 
-        # Verify if the outputpath exist
-        if ( getOption('outputpath') && !-d getOption('outputpath') ) {
-                my $error_message = "\nThe directory " . getOption('outputpath') . " does not exist.";
+   #################################################
+   # We populate %valid_tags for all file types.
 
-                Pod::Usage::pod2usage(
-                {
-                        -msg       => $error_message,
-                        -exitval => 1,
-                        -output  => \*STDERR,
-                }
-                );
-                exit;
-        }
+   for my $line_type ( keys %master_order ) {
+      for my $tag ( @{ $master_order{$line_type} } ) {
+         if ( $tag =~ / ( .* ) [:][*] \z /xms ) {
+            # Tag that end by :* in @master_order are allowed
+            # to be present more then once on the same line
+            $tag = $1;
+            $master_mult{$line_type}{$tag} = 1;
+         }
 
-        # Change the \ for / in order to ease things
-        $cl_options{input_path}  =~ tr{\\}{/};
-        $cl_options{output_path} =~ tr{\\}{/};
-
-        #################################################
-        # We populate %valid_tags for all file types.
-
-        for my $line_type ( keys %master_order ) {
-                for my $tag ( @{ $master_order{$line_type} } ) {
-                        if ( $tag =~ / ( .* ) [:][*] \z /xms ) {
-                                # Tag that end by :* in @master_order are allowed
-                                # to be present more then once on the same line
-                                $tag = $1;
-                                $master_mult{$line_type}{$tag} = 1;
-                        }
-
-                        if ( exists $valid_tags{$line_type}{$tag} ) {
-                                die "Tag $tag found more then once for $line_type";
-                        }
-                        else {
-                                $valid_tags{$line_type}{$tag} = 1;
-                        }
-                }
-        }
+         if ( exists $valid_tags{$line_type}{$tag} ) {
+            die "Tag $tag found more then once for $line_type";
+         }
+         else {
+            $valid_tags{$line_type}{$tag} = 1;
+         }
+      }
+   }
 
         ##########################################################
         # Files that needs to be open for special conversions

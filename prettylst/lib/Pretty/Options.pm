@@ -344,6 +344,8 @@ sub processOptions {
    }
 
    fixPath(getOption('basepath'));
+   fixPath(getOption('inputpath'));
+   fixPath(getOption('outputpath'));
 };
 
 sub fixPath {
