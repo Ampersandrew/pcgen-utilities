@@ -43,19 +43,26 @@ our %count_tags;        # Will hold the number of each tag found (by linetype)
 
 our %masterMult;        # Will hold the tags that can be there more then once
 
-our %missing_headers;    # Will hold the tags that do not have defined headers for each linetype.
+our %missing_headers;   # Will hold the tags that do not have defined headers for each linetype.
 
 our %referer;           # Will hold the tags that refer to other entries
-                           # Format: push @{$referer{$EntityType}{$entryname}},
-                           #               [ $tags{$column}, $fileForError, $lineForError ]
+                        # Format: push @{$referer{$EntityType}{$entryname}},
+                        #               [ $tags{$column}, $fileForError, $lineForError ]
 
 our %valid_entities;    # Will hold the entries that may be refered
-                           # by other tags
-                           # Format $valid_entities{$entitytype}{$entityname}
-                           # We initialise the hash with global system values
-                           # that are valid but never defined in the .lst files.
+                        # by other tags
+                        # Format $valid_entities{$entitytype}{$entityname}
+                        # We initialise the hash with global system values
+                        # that are valid but never defined in the .lst files.
 
 our %validTags;         # Will hold the valid tags for each type of file.
+
+our @xcheck_to_process; # Will hold the information for the entries that must
+                        # be added in %referer or %referer_types. The array
+                        # is needed because all the files must have been
+                        # parsed before processing the information to be added.
+                        # The function add_to_xcheck_tables will be called with
+                        # each line of the array.
 
 
 # The SOURCE line is use in nearly all file types
@@ -833,7 +840,7 @@ my @PRETags = (
    #       'PREVAR',
 );
 
-# Hash used by validate_pre_tag to verify if a PRExxx tag exists
+# Hash used by validatePreTag to verify if a PRExxx tag exists
 our %preTags = (
    'PREAPPLY'          => 1,  # Only valid when embeded - THIS IS DEPRECATED
 # Uncommenting until conversion for monster kits is done to prevent error messages.
@@ -2762,7 +2769,7 @@ our %masterOrder = (
 sub getLogger {
 
    if (not defined $logger) {
-      logger = Pretty::logger->new(warningLevel => getOption('warninglevel'));
+      $logger = Pretty::logger->new(warningLevel => getOption('warninglevel'));
    }
 
    return $logger;
@@ -2790,8 +2797,7 @@ sub constructValidTags {
 
          if ( exists $validTags{$lineType}{$tag} ) {
             die "Tag $tag found more then once for $lineType";
-         }
-         else {
+         } else { 
             $validTags{$lineType}{$tag} = 1;
          }
       }
@@ -3116,13 +3122,13 @@ sub FILETYPE_parse {
                         # current header
                         my $this_header =
                                 $currentLinetype
-                                ? get_header( $masterOrder{$currentLinetype}[0], $currentLinetype )
+                                ? getHeader( $masterOrder{$currentLinetype}[0], $currentLinetype )
                                 : "";
 
                         # Next line header
                         my $next_header =
                                 $next_linetype
-                                ? get_header( $masterOrder{$next_linetype}[0], $next_linetype )
+                                ? getHeader( $masterOrder{$next_linetype}[0], $next_linetype )
                                 : "";
 
                         if (   ( $this_header && index( $line_tokens, $this_header ) == 0 )
@@ -3154,11 +3160,11 @@ sub FILETYPE_parse {
         #
         #       # Header begins with the line type header.
         #       my $this_header = $currentLinetype
-        #                               ? get_header($masterOrder{$currentLinetype}[0],$fileType)
+        #                               ? getHeader($masterOrder{$currentLinetype}[0],$fileType)
         #                               : "";
         #       my $next_header = $line_index <= @newlines && ref($newlines[$line_index+1]) eq 'ARRAY' &&
         #                               $newlines[$line_index+1][0]
-        #                               ? get_header($masterOrder{$newlines[$line_index+1][0]}[0],$fileType)
+        #                               ? getHeader($masterOrder{$newlines[$line_index+1][0]}[0],$fileType)
         #                               : "";
         #       if(($this_header && index($line_tokens, $this_header) == 0) ||
         #               ($next_header && index($line_tokens,$next_header) == 0))
@@ -3307,7 +3313,7 @@ sub FILETYPE_parse {
                                 $line_entity = $line_tokens->{$tag}[0] unless $line_entity;
 
                                 # What is the length of the column?
-                                my $header_text   = get_header( $tag, $currentLinetype );
+                                my $header_text   = getHeader( $tag, $currentLinetype );
                                 my $header_length = mylength($header_text);
                                 my $col_length  =
                                         $header_length > $col_length{$tag}
@@ -3336,7 +3342,7 @@ sub FILETYPE_parse {
                         for my $tag ( sort keys %$line_tokens ) {
 
                                 # What is the length of the column?
-                                my $header_text   = get_header( $tag, $currentLinetype );
+                                my $header_text   = getHeader( $tag, $currentLinetype );
                                 my $header_length = mylength($header_text);
                                 my $col_length  =
                                         $header_length > $col_length{$tag}
@@ -3443,7 +3449,7 @@ sub FILETYPE_parse {
 
                                 # We add the length of the headers if needed.
                                 for my $tag ( keys %col_length ) {
-                                my $length = mylength( get_header( $tag, $fileType ) );
+                                my $length = mylength( getHeader( $tag, $fileType ) );
 
                                 $col_length{$tag} = $length if $length > $col_length{$tag};
                                 }
@@ -3523,7 +3529,7 @@ sub FILETYPE_parse {
 
                                 # Round the col_length up to the next tab
                                 my $col_max_length = TABSIZE * ( int( $col_length{$tag} / TABSIZE ) + 1 );
-                                my $current_header = get_header( $tag, $main_linetype );
+                                my $current_header = getHeader( $tag, $main_linetype );
                                 my $current_length = mylength($current_header);
                                 my $tab_to_add  = int( ( $col_max_length - $current_length ) / TABSIZE )
                                         + ( ( $col_max_length - $current_length ) % TABSIZE ? 1 : 0 );
@@ -3613,7 +3619,7 @@ sub FILETYPE_parse {
 
                                 # We add the length of the headers if needed.
                                 for my $tag ( keys %col_length ) {
-                                my $length = mylength( get_header( $tag, $fileType ) );
+                                my $length = mylength( getHeader( $tag, $fileType ) );
 
                                 $col_length{$tag} = $length if $length > $col_length{$tag};
                                 }
@@ -3732,7 +3738,7 @@ sub FILETYPE_parse {
                                 # Round the col_length up to the next tab
                                 my $col_max_length
                                         = TABSIZE * ( int( $col_length{$tag} / TABSIZE ) + 1 );
-                                my $current_header = get_header( $tag, $sub_linetype );
+                                my $current_header = getHeader( $tag, $sub_linetype );
                                 my $current_length = mylength($current_header);
                                 my $tab_to_add  = int( ( $col_max_length - $current_length ) / TABSIZE )
                                         + ( ( $col_max_length - $current_length ) % TABSIZE ? 1 : 0 );
@@ -3879,64 +3885,13 @@ sub additionnal_line_parsing {
    # check if the line contains ADD:SA, convert if necessary
    Pretty::Conversions::convertAddSA($lineTokens, $file_for_error, $line_for_error);
 
+   # Remove the PREDEFAULTMONSTER tags if that conversion is switched on 
+   Pretty::Conversions::removePREDefaultMonster($lineTokens, $filetype, $file_for_error, $line_for_error);
 
-   # [ 1514765 ] Conversion to remove old defaultmonster tags
-   # Gawaine42 (Richard Bowers)
-   # Bonuses associated with a PREDEFAULTMONSTER:Y need to be removed
-   # This should remove the whole tag.
-
-   if ($conversion_enable{'RACE:Fix PREDEFAULTMONSTER bonuses'} && $filetype eq "RACE") {
-      for my $key ( keys %$lineTokens ) {
-         my $ary = $lineTokens->{$key};
-         my $iCount = 0;
-         foreach (@$ary) {
-            my $ttag = $$ary[$iCount];
-            if ($ttag =~ /PREDEFAULTMONSTER:Y/) {
-               $$ary[$iCount] = "";
-               $logger->warning(
-                  qq{Removing "$ttag".},
-                  $file_for_error,
-                  $line_for_error
-               );
-            }
-            $iCount++;
-         }
-      }
-   }
-
-
-
-        ##################################################################
-        # [ 1615457 ] Replace ALTCRITICAL with ALTCRITMULT'
-        #
-        # In EQUIPMENT files, take ALTCRITICAL and replace with ALTCRITMULT'
-
-        if (   $conversion_enable{'EQUIP: ALTCRITICAL to ALTCRITMULT'}
-                && $filetype eq "EQUIPMENT"
-                && exists $lineTokens->{'ALTCRITICAL'}
-        ) {
-        # Throw warning if both ALTCRITICAL and ALTCRITMULT are on the same line,
-        #   then remove ALTCRITICAL.
-        if ( exists $lineTokens->{ALTCRITMULT} ) {
-                $logger->warning(
-                        qq{Removing ALTCRITICAL, ALTCRITMULT already present on same line.},
-                        $file_for_error,
-                        $line_for_error
-                );
-                delete $lineTokens->{'ALTCRITICAL'};
-        } else {
-                $logger->warning(
-                        qq{Change ALTCRITICAL for ALTCRITMULT in "$lineTokens->{'ALTCRITICAL'}[0]"},
-                        $file_for_error,
-                        $line_for_error
-                );
-                my $ttag;
-                $ttag = $lineTokens->{'ALTCRITICAL'}[0];
-                $ttag =~ s/ALTCRITICAL/ALTCRITMULT/;
-                $lineTokens->{'ALTCRITMULT'}[0] = $ttag;
-                delete $lineTokens->{'ALTCRITICAL'};
-                }
-        }
+   # Convert ALTCRITICAL to ALTCRITMULT if that conversion is switched on
+   Pretty::Conversions::removeALTCRITICAL($lineTokens, $filetype, $file_for_error, $line_for_error);
+   
+   my ($lineTokens, $filetype, $file_for_error, $line_for_error, $line_info) = @_;
 
 
         ##################################################################
@@ -4978,5 +4933,813 @@ sub additionnal_line_parsing {
         }
 
 }       # End of BEGIN
+
+
+=head2 getHeader
+   
+   Return the correct header for a particular tag in a
+   particular file type.
+   
+   If no tag is define for the filetype, the default for the
+   tag is used. If not default, the tag name is returned.
+   
+   Parameters: $tagName, $lineType
+
+=cut
+
+sub getHeader {
+   my ( $tagName, $lineType ) = @_;
+
+   my $header = $tagheader{$lineType}{$tagName} || $tagheader{default}{$tagName} || $tagName;
+
+   if ( getOption('missingheader') && $tagName eq $header ) {
+      $missing_headers{$lineType}{$header}++;
+   }
+
+   $header;
+}
+
+
+=head2 normalizeFile 
+
+   Detect filetype and normalize lines
+   
+   Parameters: $buffer => raw file data in a single string (embeded newlines \n)
+   
+   Returns: $filetype => either 'tab-based' or 'multi-line'
+            $lines => arrayref containing logical lines normalized to tab-based format
+
+=cut
+
+sub normalizeFile {
+
+   # TODO: handle empty buffers, other corner-cases
+   my $buffer = shift || "";    # default to empty line when passed undef
+   my $filetype;
+   my @lines;
+
+   # first, we clean out empty lines that contain only white-space. Otherwise,
+   # we could have false positives on the filetype
+   $buffer =~ s/^\s*$//g;
+
+   # detect file-type multi-line
+
+   # having a tab as a first character on a non-whitespace line is a sign of a
+   # multi-line file
+   if ($buffer =~ /^\t+\S/m) {
+
+      $filetype = "multi-line";
+
+      # Normalize to tab-based
+      # 1) All lines that start with a tab belong to the previous line.
+      # 2) Copy the lines as-is to the end of the previous line
+      #
+      # We use a regexp that just removes the newlines, which is easier than copying
+
+      $buffer =~ s/\n\t/\t/mg;
+
+      @lines = split /\n/, $buffer;
+
+   } else {
+      $filetype = "tab-based";
+   }
+
+   # The buffer iw not normalized. Split on newline
+   @lines = split /\n/, $buffer;
+
+   # return a arrayref so we are a little more efficient
+   return (\@lines, $filetype);
+}
+
+=head2 registerCrossCheck
+
+   Register data to be checked later
+
+=cut
+
+sub registerXCheck {
+   push @xcheck_to_process, [ @_ ];
+}
+
+=head2 
+
+   There is a pre tag with no value and no .CLEAR
+
+=cut
+
+sub missingValue {
+
+   my ($tagName, $enclosingTag, $file, $line) = @_;
+
+   # No value found
+   my $message = qq{Check for missing ":", no value for "$tagName"};
+   $message .= qq{ found in "$enclosingTag"} if $enclosingTag;
+
+   my $logging = getLogger();
+
+   $logging->warning($message, $file, $line);
+};
+
+=head2 processPREABILITY
+
+   Process the PREABILITY tags
+
+   Check for deprecated syntax and quque up for cross check.
+
+=cut
+
+sub processPREABILITY {
+
+   my ( $tag, $tagValue, $enclosingTag, $file, $line) = @_;
+
+   # [ 1671407 ] xcheck PREABILITY tag
+   # Shamelessly copied from the above FEAT code.
+   # PREABILITY:number,feat,feat,TYPE=type,CATEGORY=category
+
+   # We get the list of abilities and ability types
+   my @abilities = embedded_coma_split($tagValue);
+
+   if ( $abilities[0] =~ / \A \d+ \z /xms ) {
+
+      # We drop the number at the beginning
+      shift @abilities;       
+
+   } else {
+
+      # The PREtag doesn't begin by a number
+      warn_deprecate("$tag:$tagValue", $file, $line, $enclosingTag);
+   }
+
+   registerXCheck('ABILITY', $tag, $file, $line, @abilities);
+}
+
+=head2 processPRECLASS
+
+   Process the PRECSKILL tags
+
+   Ensure they start with a number and if so, queue for cross checking.
+
+=cut
+
+sub processPRECLASS {
+   my ( $tag, $tagValue, $enclosingTag, $file, $line) = @_;
+
+   #PRECLASS:number,Class,Class=ClassLevel
+   my @classes = split ',', $tagValue;
+
+   if ( $classes[0] =~ /^\d+$/ ) {
+
+      # We drop the number at the beginning
+      shift @classes;
+
+   } else {
+
+      # The PREtag doesn't begin with a number
+      warn_deprecate("$tag:$tagValue", $file, $line, $enclosingTag);
+   }
+
+   registerXCheck( 'CLASS', $tag, $file, $line, @classes );
+};
+
+=head2 processPRECHECK
+
+   Check the PRECHECK familiy of PRE tags for validity.
+
+   Ensures they start with a number.
+
+   Ensures that the checks are valid.
+
+=cut
+
+sub processPRECHECK {
+
+   my ( $tag, $tagValue, $enclosingTag, $file, $line) = @_;
+
+   # PRECHECK:<number>,<check equal value list>
+   # PRECHECKBASE:<number>,<check equal value list>
+   # <check equal value list> := <check name> "=" <number>
+   my @items = split q{,}, $tagValue;
+
+   if ( $items[0] =~ / \A \d+ \z /xms ) {
+
+      # We drop the number at the beginning
+      shift @items;
+   
+   } else {
+
+      # The PREtag doesn't begin by a number
+      warn_deprecate("$tag:$tagValue", $file, $line, $enclosingTag);
+   }
+   
+   my $logging = getLogger();
+
+   for my $item ( @items ) {
+
+      # Extract the check name
+      if ( my ($check_name,$value) = ( $item =~ / \A ( \w+ ) = ( \d+ ) \z /xms ) ) {
+
+         # If we don't recognise it.
+         if ( !exists $valid_check_name{$check_name} ) {
+            $logging->notice(
+               qq{Invalid save check name "$check_name" found in "$tag:$tagValue"},
+               $file,
+               $line
+            );
+         }
+      } else {
+         $logging->notice(
+            qq{$tag syntax error in "$item" found in "$tag:$tagValue"},
+            $file,
+            $line
+         );
+      }
+   }
+}
+
+=head2 processPRECSKILL
+
+   Process the PRECSKILL tags
+
+   Ensure they start with a number and if so, queue for cross checking.
+
+=cut
+
+sub processPRECSKILL {
+
+   my ( $tag, $tagValue, $enclosingTag, $file, $line) = @_;
+
+   # We get the list of skills and skill types
+   my @skills = split ',', $tagValue;
+
+   if ( $skills[0] =~ / \A \d+ \z /xms ) {
+
+      # We drop the number at the beginning
+      shift @skills;
+
+   } else {
+
+      # The PREtag doesn't begin with a number
+      warn_deprecate("$tag:$tagValue", $file, $line, $enclosingTag);
+   }
+
+   registerXCheck('SKILL', $tag, $file, $line, @skills);
+};
+
+=head2 processPREDIETY
+
+   Process the PREDIETY tags
+
+   Queue up for Cross check.
+
+=cut
+
+sub processPREDIETY {
+
+   my ( $tag, $tagValue, $file, $line) = @_;
+
+   #PREDEITY:Y
+   #PREDEITY:YES
+   #PREDEITY:N
+   #PREDEITY:NO
+   #PREDEITY:1,<deity name>,<deity name>,etc.
+   
+   if ( $tagValue !~ / \A (?: Y(?:ES)? | N[O]? ) \z /xms ) {
+      #We ignore the single yes or no
+      registerXCheck('DEITY', $tag, $file, $line, (split /[,]/, $tagValue)[1,-1],);
+   }
+};
+
+=head2 processPREDOMAIN
+
+   Process the PREDOMAIN tags
+
+   Check for deprecated syntax and quque up for cross check.
+
+=cut
+
+sub processPREDOMAIN {
+
+   my ( $tag, $tagValue, $enclosingTag, $file, $line) = @_;
+
+   #PREDOMAIN:number,Domain,Domain
+   my @domains = split ',', $tagValue;
+
+   if ( $domains[0] =~ /^\d+$/ ) {
+
+      # We drop the number at the beginning
+      shift @domains;
+   
+   } else {
+
+      # The PREtag doesn't begin with a number
+      warn_deprecate("$tag:$tagValue", $file, $line, $enclosingTag);
+   }
+
+   registerXCheck('DOMAIN', $tag, $file, $line, @domains);
+}
+
+=head2 processPREFEAT
+
+   Process the PREFEAT tags
+
+   Check for deprecated syntax and quque up for cross check.
+
+=cut
+
+sub processPREFEAT {
+
+   my ( $tag, $tagValue, $enclosingTag, $file, $line) = @_;
+
+   # PREFEAT:number,feat,feat,TYPE=type
+
+   # We get the list of feats and feat types
+   my @feats = embedded_coma_split($tagValue);
+
+   if ( $feats[0] =~ / \A \d+ \z /xms ) {
+
+      # We drop the number at the beginning
+      shift @feats;
+
+   } else {
+
+      # The PREtag doesn't begin with a number
+      warn_deprecate("$tag:$tagValue", $file, $line, $enclosingTag);
+   }
+
+   registerXCheck('FEAT', $tag, $file, $line, @feats);
+}
+
+=head2 processPREITEM
+
+   Process the PREITEM tags
+
+   Check for deprecated syntax and quque up for cross check.
+
+=cut 
+
+processPREITEM {
+
+   my ($tag, $tagValue, $enclosingTag, $file, $line) = @_;
+
+   # PRETIEM:number,item,TYPE=itemtype
+   # The list of items may include () with embeded coma
+   my @items = embedded_coma_split($tagValue);
+
+   if ( $items[0] =~ / \A \d+ \z /xms ) {
+      shift @items;   # We drop the number at the beginning
+   }
+   else {
+
+      # The PREtag doesn't begin by a number
+      warn_deprecate( "$tag:$tagValue",
+         $file,
+         $line,
+         $enclosingTag
+      );
+   }
+
+   registerXCheck('EQUIPMENT', $tag, $file, $line, @items);
+}
+      
+=head2 processPRELANG
+
+   Process the PRELANG tags
+
+   Check for deprecated syntax and quque up for cross check.
+
+=cut
+
+sub processPRELANG {
+
+   my ($tag, $tagValue, $enclosingTag, $file, $line) = @_;
+
+   # PRELANG:number,language,language,TYPE=type
+
+   # We get the list of feats and feat types
+   my @languages = split ',', $tagValue;
+
+   if ( $languages[0] =~ / \A \d+ \z /xms ) {
+
+      # We drop the number at the beginning
+      shift @languages;
+
+   } else {
+
+      # The PREtag doesn't begin by a number
+      warn_deprecate( "$tag:$tagValue", $file, $line, $enclosingTag);
+   }
+
+   registerXCheck('LANGUAGE', $tag, $file, $line, grep { $_ ne 'ANY' } @languages);
+}
+
+=head2 processPREMOVE
+
+   Process the PREMOVE tags
+
+   Check for deprecated syntax and quque up for cross check.
+
+=cut
+
+sub processPREMOVE {
+
+   my ($tag, $tagValue, $enclosingTag, $file, $line) = @_;
+
+   # PREMOVE:[<number>,]<move>=<number>,<move>=<number>,...
+
+   my @moves = split ',', $tagValue;
+
+   if ( $moves[0] =~ / \A \d+ \z /xms ) {
+
+      # We drop the number at the beginning
+      shift @moves;
+
+   } else { 
+
+      warn_deprecate("$tag:$tagValue", $file, $line, $enclosingTag);
+   }
+
+   for my $move (@moves) {
+
+      # Verify that the =<number> is there
+      if ( $move =~ /^([^=]*)=([^=]*)$/ ) {
+
+         registerXCheck('MOVE Type', $tag, $file, $line, $1);
+
+         # The value should be a number
+         my $value = $2;
+
+         if ($value !~ /^\d+$/ ) {
+            my $message = qq{Not a number after the = for "$move" in "$tag:$tagValue"};
+            $message .= qq{ found in "$enclosingTag"} if $enclosingTag;
+   
+            my $logging = getLogger();
+            $logging->notice( $message, $file, $line );
+         }
+
+      } else {
+
+         my $message = qq{Invalid "$move" in "$tag:$tagValue"};
+         $message .= qq{ found in "$enclosingTag"} if $enclosingTag;
+   
+         my $logging = getLogger();
+         $logging->notice( $message, $file, $line );
+
+      }
+   }
+}
+
+=head2 processPREMULT
+
+   split and check the PREMULT tags
+
+   Each PREMULT tag has two or more embedded PRE tags, which are individually
+   checked using validatePreTag.
+
+=cut
+
+sub processPREMULT {
+
+   my ($tag, $tagValue, $enclosingTag, $lineType, $file, $line) = @_;
+
+   my $working_value = $tagValue;
+   my $inside;
+
+   # We add only one level of PREMULT to the error message.
+   my $emb_tag;
+   if ($enclosingTag) {
+
+      $emb_tag = $enclosingTag;
+      $emb_tag .= ':PREMULT' unless $emb_tag =~ /PREMULT$/;
+
+   } else {
+
+      $emb_tag .= 'PREMULT';
+   }
+
+   FIND_BRACE:
+   while ($working_value) {
+
+      ( $inside, $working_value ) = Text::Balanced::extract_bracketed( $working_value, '[]', qr{[^[]*} );
+
+      last FIND_BRACE if !$inside;
+
+      # We extract what we need
+      my ( $XXXPREXXX, $value ) = ( $inside =~ /^\[(!?PRE[A-Z]+):(.*)\]$/ );
+
+      if ($XXXPREXXX) {
+
+         validatePreTag($XXXPREXXX, $value, $emb_tag, $lineType, $file, $line);
+      
+      } else {
+
+         my $logging = getLogger();
+
+         # No PRExxx tag found inside the PREMULT
+         $logging->warning(
+            qq{No valid PRExxx tag found in "$inside" inside "PREMULT:$tagValue"},
+            $file,
+            $line
+         );
+      }
+   }
+}
+
+=head2 processPRERACE
+
+
+=cut
+
+sub processPRERACE {
+
+   my ($tag, $tagValue, $enclosingTag, $file, $line) = @_;
+
+   # We get the list of races
+   my @races_tmp = split ',', $tagValue;
+
+   # Validate that the first entry is a number
+   if ( $races_tmp[0] =~ / \A \d+ \z /xms ) {
+      
+      # We drop the number at the beginning
+      shift @races_tmp;
+
+   } else {
+
+      # The PREtag doesn't begin by a number
+      warn_deprecate("$tag:$tagValue", $file, $line, $enclosingTag);
+   }
+
+   my ( @races, @races_wild );
+
+   for my $race (@races_tmp)
+   {
+      if ( $race =~ / (.*?) [%] (.*?) /xms ) {
+         # Special case for PRERACE:xxx%
+         my $race_wild  = $1;
+         my $after_wild = $2;
+
+         push @races_wild, $race_wild;
+
+         if ( $after_wild ne q{} ) {
+
+            my $logging = getLogger();
+
+            $logging->notice(
+               qq{% used in wild card context should end the race name in "$race"},
+               $file,
+               $line
+            );
+
+         } else {
+
+            # Don't bother warning if it matches everything.
+            # For now, we warn and do nothing else.
+            if ($race_wild eq '') {
+
+               ## Matches everything, no reason to warn.
+
+            } elsif ($valid_entities{'RACE'}{$race_wild}) {
+
+               ## Matches an existing race, no reason to warn.
+
+            } elsif ($race_partial_match{$race_wild}) {
+
+               ## Partial match already confirmed, no need to confirm.
+               #
+            } else {
+
+               my $found = 0;
+
+               while (($found == 0) && ((my $check_race,my $val) = each(%{$valid_entities{'RACE'}}))) {
+
+                  if ( $check_race =~ m/^\Q$race_wild/) {
+                     $found=1;
+                     $race_partial_match{$race_wild} = 1;
+                  }
+               }
+
+               if ($found == 0) {
+
+                  my $logging = getLogger();
+
+                  $logging->info(
+                     qq{Not able to validate "$race" in "PRERACE:$tagValue." This warning is order dependent. If the race is defined in a later file, this warning may not be accurate.},
+                     $file,
+                     $line
+                  )
+               }
+            }
+         }
+      } else {
+         push @races, $race;
+      }
+   }
+
+   registerXCheck('RACE', $tag, $file, $line, @races);
+}
+
+
+=head2 processPRESKILL
+
+   Process the PRESKILL tags
+
+   Check for deprecated syntax and quque up for cross check.
+
+=cut
+
+sub processPRESKILL {
+
+   my ($tag, $tagValue, $enclosingTag, $file, $line) = @_;
+
+   # We get the list of skills and skill types
+   my @skills = split ',', $tagValue;
+
+   if ( $skills[0] =~ / \A \d+ \z /xms ) {
+
+      # We drop the number at the beginning
+      shift @skills;
+
+   } else {
+
+      # The PREtag doesn't begin by a number
+      warn_deprecate("$tag:$tagValue", $file, $line, $enclosingTag);
+   }
+
+   registerXCheck('SKILL', $tag, $file, $line, @skills);
+}
+
+=head2 processPRESPELL
+
+   Process the PRESPELL tags
+
+   Check for deprecated syntax and quque up for cross check.
+
+=cut
+
+sub processPRESPELL {
+
+   my ($tag, $tagValue, $enclosingTag, $file, $line) = @_;
+
+   # We get the list of skills and skill types
+   my @spells = split ',', $tagValue;
+
+   if ( $spells[0] =~ / \A \d+ \z /xms ) {
+
+      # We drop the number at the beginning
+      shift @spells;
+
+   } else {
+
+      # The PREtag doesn't begin by a number
+      warn_deprecate("$tag:$tagValue", $file, $line, $enclosingTag);
+   }
+
+   registerXCheck('SPELL', "$tag:@@", $file, $line, @spells);
+}
+
+=head2 processPREVAR
+
+=cut
+
+sub processPREVAR {
+
+   my ($tag, $tagValue, $enclosingTag, $file, $line) = @_;
+
+   my ( $var_name, @formulas ) = split ',', $tagValue;
+
+   registerXCheck('DEFINE Variable', qq(@@" in "$tag:$tagValue), $file, $line, $var_name,);
+
+   for my $formula (@formulas) {
+      registerXCheck('DEFINE Variable', qq(@@" in "$tag:$tagValue), $file, $line, parse_jep( $formula, "$tag:$tagValue", $file, $line),);
+   }
+}
+
+
+
+=head2 validatePreTag
+
+   Validate the PRExxx tags. This function is reentrant and can be called
+   recursivly.
+
+   $tag,             # Name of the tag (before the :)
+   $tagValue,        # Value of the tag (after the :)
+   $enclosingTag,    # When the PRExxx tag is used in another tag
+   $lineType,        # Type for the current file
+   $file,            # Name of the current file
+   $line             # Number of the current line
+
+   preforms checks that pre tags are valid. 
+
+=cut
+
+sub validatePreTag {
+   my ( $tag, $tagValue, $enclosingTag, $lineType, $file, $line) = @_;
+
+   # get the logger
+   my $logging = getLogger();
+
+   if ( !length($tagValue) && $tag ne "PRE:.CLEAR" ) {
+      missingValue();
+      return;
+   }
+
+   $logging->debug( 
+      qq{validatePreTag: $tag; $tagValue; $enclosingTag; $lineType;},
+      $file,
+      $line
+   );
+
+   my $is_neg = 1 if $tag =~ s/^!(.*)/$1/;
+   my $comp_op;
+
+   # Special treatment for tags ending in MULT because of PREMULT and
+   # PRESKILLMULT
+   if ($tag !~ /MULT$/) {
+      ($comp_op) = ( $tag =~ s/(.*)(EQ|GT|GTEQ|LT|LTEQ|NEQ)$/$1/ )[1];
+   }
+
+   if ( $tag eq 'PRECLASS' || $tag eq 'PRECLASSLEVELMAX' ) {
+
+      processPRECLASS($tag, $tagValue, $enclosingTag, $file, $line);
+
+   } elsif ( $tag eq 'PRECHECK' || $tag eq 'PRECHECKBASE') {
+
+      processPRECHECK ( $tag, $tagValue, $enclosingTag, $file, $line);
+
+   } elsif ( $tag eq 'PRECSKILL' ) {
+
+      processPRECSKILL($tag, $tagValue, $enclosingTag, $file, $line);
+
+   } elsif ( $tag eq 'PREDEITY' ) {
+
+      processPREDIETY($tag, $tagValue, $file, $line);
+
+   } elsif ( $tag eq 'PREDEITYDOMAIN' || $tag eq 'PREDOMAIN' ) {
+
+      processPREDOMAIN($tag, $tagValue, $enclosingTag, $file, $line);
+
+   } elsif ( $tag eq 'PREFEAT' ) {
+
+      processPREFEAT($tag, $tagValue, $enclosingTag, $file, $line);
+
+   } elsif ( $tag eq 'PREABILITY' ) {
+
+      processPREABILITY($tag, $tagValue, $enclosingTag, $file, $line);
+
+   } elsif ( $tag eq 'PREITEM' ) {
+
+      processPREITEM($tag, $tagValue, $enclosingTag, $file, $line);
+
+   } elsif ( $tag eq 'PRELANG' ) {
+      
+      processPRELANG($tag, $tagValue, $enclosingTag, $file, $line);
+
+   } elsif ( $tag eq 'PREMOVE' ) {
+
+      processPREMOVE($tag, $tagValue, $enclosingTag, $file, $line);
+
+   } elsif ( $tag eq 'PREMULT' ) {
+
+      # This tag is the reason why validatePreTag exists
+      # PREMULT:x,[PRExxx 1],[PRExxx 2]
+      # We need for find all the [] and call validatePreTag with the content
+   
+      processPREMULT($tag, $tagValue, $enclosingTag, $lineType, $file, $line);
+
+   } elsif ( $tag eq 'PRERACE' ) {
+
+      processPRERACE($tag, $tagValue, $enclosingTag, $file, $line);
+
+   }
+   elsif ( $tag eq 'PRESKILL' ) {
+
+      processPRESKILL($tag, $tagValue, $enclosingTag, $file, $line);
+
+   } elsif ( $tag eq 'PRESPELL' ) {
+
+      processPRESPELL($tag, $tagValue, $enclosingTag, $file, $line);
+
+   } elsif ( $tag eq 'PREVAR' ) {
+
+      processPREVAR($tag, $tagValue, $enclosingTag, $file, $line);
+
+   }
+
+   # No Check for Variable File #
+
+   # Check for PRExxx that do not exist. We only check the
+   # tags that are embeded since parse_tag already took care
+   # of the PRExxx tags on the entry lines.
+   elsif ( $enclosingTag && !exists $PRE_Tags{$tag} ) {
+      
+      my $logging = getLogger();
+      
+      $logging->notice(
+         qq{Unknown PRExxx tag "$tag" found in "$enclosingTag"},
+         $file,
+         $line
+      );
+   }
+}
+
 
 1;
