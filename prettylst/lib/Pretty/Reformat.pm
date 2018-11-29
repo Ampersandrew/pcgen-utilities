@@ -3876,129 +3876,28 @@ sub checkEquipment {
 my $class_name = "";
 
 sub additionnal_line_parsing {
-   my ($lineTokens, $filetype, $file_for_error, $line_for_error, $line_info) = @_;
+   my ($lineTokens, $filetype, $file, $line, $line_info) = @_;
 
    if ($filetype eq 'EQUIPMENT') {
-      checkEquipment($lineTokens, $file_for_error, $line_for_error);
+      checkEquipment($lineTokens, $file, $line);
    }
 
    # check if the line contains ADD:SA, convert if necessary
-   Pretty::Conversions::convertAddSA($lineTokens, $file_for_error, $line_for_error);
+   Pretty::Conversions::convertAddSA($lineTokens, $file, $line);
 
    # Remove the PREDEFAULTMONSTER tags if that conversion is switched on 
-   Pretty::Conversions::removePREDefaultMonster($lineTokens, $filetype, $file_for_error, $line_for_error);
+   Pretty::Conversions::removePREDefaultMonster($lineTokens, $filetype, $file, $line);
 
    # Convert ALTCRITICAL to ALTCRITMULT if that conversion is switched on
-   Pretty::Conversions::removeALTCRITICAL($lineTokens, $filetype, $file_for_error, $line_for_error);
+   Pretty::Conversions::removeALTCRITICAL($lineTokens, $filetype, $file, $line);
+  
+   Pretty::Conversions::removeMonsterTags($lineTokens, $filetype, $file, $line,);
    
-   my ($lineTokens, $filetype, $file_for_error, $line_for_error, $line_info) = @_;
+   # Convert Flollower align if that conversion is switched on 
+   Pretty::Conversions::removeFollowAlign($lineTokens, $filetype, $file, $line);
 
+    my ($lineTokens, $filetype, $file, $line, $line_info) = @_;
 
-        ##################################################################
-        # [ 1514765 ] Conversion to remove old defaultmonster tags
-        #
-        # In RACE files, remove all MFEAT and HITDICE tags, but only if
-        # there is a MONSTERCLASS present.
-
-        # We remove MFEAT or warn of missing MONSTERCLASS tag.
-        if (   $conversion_enable{'RACE:Remove MFEAT and HITDICE'}
-                && $filetype eq "RACE"
-                && exists $lineTokens->{'MFEAT'}
-                ) { if ( exists $lineTokens->{'MONSTERCLASS'}
-                        ) { for my $tag ( @{ $lineTokens->{'MFEAT'} } ) {
-                                $logger->warning(
-                                qq{Removing "$tag".},
-                                $file_for_error,
-                                $line_for_error
-                                );
-                        }
-                        delete $lineTokens->{'MFEAT'};
-                        }
-                else {warning(
-                        qq{MONSTERCLASS missing on same line as MFEAT, need to look at by hand.},
-                                $file_for_error,
-                                $line_for_error
-                                );
-                        }
-        }
-
-        # We remove HITDICE or warn of missing MONSTERCLASS tag.
-        if (   $conversion_enable{'RACE:Remove MFEAT and HITDICE'}
-                && $filetype eq "RACE"
-                && exists $lineTokens->{'HITDICE'}
-                ) { if ( exists $lineTokens->{'MONSTERCLASS'}
-                        ) { for my $tag ( @{ $lineTokens->{'HITDICE'} } ) {
-                                $logger->warning(
-                                qq{Removing "$tag".},
-                                $file_for_error,
-                                $line_for_error
-                                );
-                        }
-                        delete $lineTokens->{'HITDICE'};
-                        }
-                else {warning(
-                        qq{MONSTERCLASS missing on same line as HITDICE, need to look at by hand.},
-                                $file_for_error,
-                                $line_for_error
-                                );
-                        }
-                }
-
-        #######################################################
-        ## [ 1689538 ] Conversion: Deprecation of FOLLOWERALIGN
-        ## Gawaine42
-        ## Note: Makes simplifying assumption that FOLLOWERALIGN
-        ## will occur only once in a given line, although DOMAINS may
-        ## occur multiple times.
-        if (($conversion_enable{'DEITY:Followeralign conversion'})
-                && $filetype eq "DEITY"
-                && (exists $lineTokens->{'FOLLOWERALIGN'}))
-        {
-                my $followeralign = $lineTokens->{'FOLLOWERALIGN'}[0];
-                $followeralign =~ s/^FOLLOWERALIGN://;
-                my $newprealign = "";
-                my $aligncount = 0;
-
-                for my $align (split //, $followeralign) {
-                        # Is it a number?
-                        my $number;
-                        if ( (($number) = ($align =~ / \A (\d+) \z /xms))
-                        && $number >= 0
-                        && $number < scalar @valid_system_alignments)
-                {
-                                my $newalign = $valid_system_alignments[$number];
-                        if ($aligncount > 0) {
-                        $newprealign .= ',';
-                        }
-                        $aligncount++;
-                        $newprealign .= "$newalign";
-                        }
-                else {
-                                $logger->notice(
-                                qq{Invalid value "$align" for tag "$lineTokens->{'FOLLOWERALIGN'}[0]"},
-                                $file_for_error,
-                                $line_for_error
-                                );
-
-                }
-                }
-                my $dom_count=0;
-
-                if (exists $lineTokens->{'DOMAINS'}) {
-                for my $line ($lineTokens->{'DOMAINS'})
-                {
-                        $lineTokens->{'DOMAINS'}[$dom_count] .= "|PREALIGN:$newprealign";
-                        $dom_count++;
-                }
-                $logger->notice(
-                                qq{Adding PREALIGN to domain information and removing "$lineTokens->{'FOLLOWERALIGN'}[0]"},
-                                $file_for_error,
-                                $line_for_error
-                                );
-
-                delete $lineTokens->{'FOLLOWERALIGN'};
-                }
-        }
 
                 ##################################################################
                 # [ 1353255 ] TYPE to RACETYPE conversion
@@ -4017,21 +3916,21 @@ sub additionnal_line_parsing {
                 if ($race_name =~ /\.(FORGET|MOD|COPY=.+)$/) {
                 } else { $logger->warning(
                         qq{Race entry missing both TYPE and RACETYPE.},
-                        $file_for_error,
-                        $line_for_error
+                        $file,
+                        $line
                         );
                 }
                 };
 
-                if (   $conversion_enable{'RACE:TYPE to RACETYPE'}
+                if (   Pretty::Options::isConversionActive('RACE:TYPE to RACETYPE')
                 && ( $filetype eq "RACE"
                         || $filetype eq "TEMPLATE" )
                 && not (exists $lineTokens->{'RACETYPE'})
                 && exists $lineTokens->{'TYPE'}
                 ) { $logger->warning(
                         qq{Changing TYPE for RACETYPE in "$lineTokens->{'TYPE'}[0]".},
-                        $file_for_error,
-                        $line_for_error
+                        $file,
+                        $line
                         );
                         $lineTokens->{'RACETYPE'} = [ "RACE" . $lineTokens->{'TYPE'}[0] ];
                         delete $lineTokens->{'TYPE'};
@@ -4047,7 +3946,7 @@ sub additionnal_line_parsing {
                 # The SOURCELONG tags found on any linetype but the SOURCE line type must
                 # be converted to use tab if | are found.
 
-                if (   $conversion_enable{'ALL:New SOURCExxx tag format'}
+                if (   Pretty::Options::isConversionActive('ALL:New SOURCExxx tag format')
                 && exists $lineTokens->{'SOURCELONG'} ) {
                 my @new_tags;
 
@@ -4056,8 +3955,8 @@ sub additionnal_line_parsing {
                                 push @new_tags, split '\|', $tag;
                                 $logger->warning(
                                 qq{Spliting "$tag"},
-                                $file_for_error,
-                                $line_for_error
+                                $file,
+                                $line
                                 );
                         }
                 }
@@ -4080,7 +3979,7 @@ sub additionnal_line_parsing {
                 # Old SPELL:<spellname>|<nb per day>|<spellbook>|...|PRExxx|PRExxx|...
                 # New SPELLS:<spellbook>|TIMES=<nb per day>|<spellname>|<spellname>|PRExxx...
 
-                if ( $conversion_enable{'ALL:Convert SPELL to SPELLS'}
+                if ( Pretty::Options::isConversionActive('ALL:Convert SPELL to SPELLS')
                 && exists $lineTokens->{'SPELL'} )
                 {
                 my %spellbooks;
@@ -4102,8 +4001,8 @@ sub additionnal_line_parsing {
                                 if ( +@elements < 3 ) {
                                 $logger->warning(
                                         qq(Wrong number of elements for "$tag_name:$tag_value"),
-                                        $file_for_error,
-                                        $line_for_error
+                                        $file,
+                                        $line
                                 );
                                 }
 
@@ -4118,8 +4017,8 @@ sub additionnal_line_parsing {
 
                         $logger->warning(
                                 qq{Removing "$tag_name:$tag_value"},
-                                $file_for_error,
-                                $line_for_error
+                                $file,
+                                $line
                         );
                 }
 
@@ -4138,7 +4037,7 @@ sub additionnal_line_parsing {
 
                                 $spells .= "|$pretags" unless $pretags eq "NONE";
 
-                                $logger->warning( qq{Adding   "$spells"}, $file_for_error, $line_for_error );
+                                $logger->warning( qq{Adding   "$spells"}, $file, $line );
 
                                 push @{ $lineTokens->{'SPELLS'} }, $spells;
                                 }
@@ -4151,14 +4050,14 @@ sub additionnal_line_parsing {
                 #
                 # This is needed by my good CMP friends.
 
-                if ( $conversion_enable{'ALL:CMP remove PREALIGN'} ) {
+                if ( Pretty::Options::isConversionActive('ALL:CMP remove PREALIGN') ) {
                 if ( exists $lineTokens->{'PREALIGN'} ) {
                         my $number = +@{ $lineTokens->{'PREALIGN'} };
                         delete $lineTokens->{'PREALIGN'};
                         $logger->warning(
                                 qq{Removing $number PREALIGN tags},
-                                $file_for_error,
-                                $line_for_error
+                                $file,
+                                $line
                         );
                 }
 
@@ -4167,8 +4066,8 @@ sub additionnal_line_parsing {
                         delete $lineTokens->{'!PREALIGN'};
                         $logger->warning(
                                 qq{Removing $number !PREALIGN tags},
-                                $file_for_error,
-                                $line_for_error
+                                $file,
+                                $line
                         );
                 }
                 }
@@ -4179,7 +4078,7 @@ sub additionnal_line_parsing {
                 # We add it if there is only one Melee attack and the
                 # bonus is not already present.
 
-                if ( $conversion_enable{'ALL:CMP NatAttack fix'}
+                if ( Pretty::Options::isConversionActive('ALL:CMP NatAttack fix')
                 && exists $lineTokens->{'NATURALATTACKS'} )
                 {
 
@@ -4223,8 +4122,8 @@ sub additionnal_line_parsing {
                                                 $logger->warning(
                                                         qq{Added "$lineTokens->{'BONUS:WEAPONPROF'}[0]"}
                                                                 . qq{ to go with "$lineTokens->{'NATURALATTACKS'}[0]"},
-                                                        $file_for_error,
-                                                        $line_for_error
+                                                        $file,
+                                                        $line
                                                 );
                                                 }
                                         }
@@ -4234,8 +4133,8 @@ sub additionnal_line_parsing {
                                                 $logger->warning(
                                                 qq{Added "$lineTokens->{'BONUS:WEAPONPROF'}[0]"}
                                                         . qq{to go with "$lineTokens->{'NATURALATTACKS'}[0]"},
-                                                $file_for_error,
-                                                $line_for_error
+                                                $file,
+                                                $line
                                                 );
                                         }
                                 }
@@ -4243,8 +4142,8 @@ sub additionnal_line_parsing {
                                         $logger->warning(
                                                 qq{This natural attack is both Melee and Ranged}
                                                 . qq{"$lineTokens->{'NATURALATTACKS'}[0]"},
-                                                $file_for_error,
-                                                $line_for_error
+                                                $file,
+                                                $line
                                         );
                                 }
                                 }
@@ -4257,19 +4156,19 @@ sub additionnal_line_parsing {
                 # No conversion needed. We just have to remove the MOVE tags that
                 # are doing nothing anyway.
 
-                if (   $conversion_enable{'EQUIP:no more MOVE'}
+                if (   Pretty::Options::isConversionActive('EQUIP:no more MOVE')
                 && $filetype eq "EQUIPMENT"
                 && exists $lineTokens->{'MOVE'} )
                 {
-                $logger->warning( qq{Removed MOVE tags}, $file_for_error, $line_for_error );
+                $logger->warning( qq{Removed MOVE tags}, $file, $line );
                 delete $lineTokens->{'MOVE'};
                 }
 
-                if (   $conversion_enable{'CLASS:no more HASSPELLFORMULA'}
+                if (   Pretty::Options::isConversionActive('CLASS:no more HASSPELLFORMULA')
                 && $filetype eq "CLASS"
                 && exists $lineTokens->{'HASSPELLFORMULA'} )
                 {
-                $logger->warning( qq{Removed deprecated HASSPELLFORMULA tags}, $file_for_error, $line_for_error );
+                $logger->warning( qq{Removed deprecated HASSPELLFORMULA tags}, $file, $line );
                 delete $lineTokens->{'HASSPELLFORMULA'};
                 }
 
@@ -4280,7 +4179,7 @@ sub additionnal_line_parsing {
                 # BONUS:SKILLRANK|Swim|8|PREDEFAULTMONSTER:Y present, it must be
                 # removed or lowered by 8.
 
-                if (   $conversion_enable{'RACE:BONUS SKILL Climb and Swim'}
+                if (   Pretty::Options::isConversionActive('RACE:BONUS SKILL Climb and Swim')
                 && $filetype eq "RACE"
                 && exists $lineTokens->{'MOVE'} )
                 {
@@ -4307,8 +4206,8 @@ sub additionnal_line_parsing {
                                                 $skill = "BONUS:SKILL|$skill_list|8|TYPE=Racial";
                                                 $logger->warning(
                                                 qq{Added Swim to "$skill"},
-                                                $file_for_error,
-                                                $line_for_error
+                                                $file,
+                                                $line
                                                 );
                                         }
 
@@ -4318,16 +4217,16 @@ sub additionnal_line_parsing {
                                                 $skill = "BONUS:SKILL|$skill_list|8|TYPE=Racial";
                                                 $logger->warning(
                                                 qq{Added Climb to "$skill"},
-                                                $file_for_error,
-                                                $line_for_error
+                                                $file,
+                                                $line
                                                 );
                                         }
 
                                         if ( ( $need_climb || $need_swim ) && $skill_rank != 8 ) {
                                                 $logger->info(
                                                 qq{You\'ll have to deal with this one yourself "$skill"},
-                                                $file_for_error,
-                                                $line_for_error
+                                                $file,
+                                                $line
                                                 );
                                         }
                                 }
@@ -4355,15 +4254,15 @@ sub additionnal_line_parsing {
                                                                 = "BONUS:SKILLRANK|Climb|$skill_rank|PREDEFAULTMONSTER:Y";
                                                         $logger->warning(
                                                                 qq{Lowering skill rank in "$skillrank"},
-                                                                $file_for_error,
-                                                                $line_for_error
+                                                                $file,
+                                                                $line
                                                         );
                                                 }
                                                 else {
                                                         $logger->warning(
                                                                 qq{Removing "$skillrank"},
-                                                                $file_for_error,
-                                                                $line_for_error
+                                                                $file,
+                                                                $line
                                                         );
                                                         delete $lineTokens->{'BONUS:SKILLRANK'}[$index];
                                                         $index--;
@@ -4372,8 +4271,8 @@ sub additionnal_line_parsing {
                                                 else {
                                                 $logger->info(
                                                         qq{You\'ll have to deal with this one yourself "$skillrank"},
-                                                        $file_for_error,
-                                                        $line_for_error
+                                                        $file,
+                                                        $line
                                                 );;
                                                 }
                                         }
@@ -4386,15 +4285,15 @@ sub additionnal_line_parsing {
                                                                 = "BONUS:SKILLRANK|Swim|$skill_rank|PREDEFAULTMONSTER:Y";
                                                         $logger->warning(
                                                                 qq{Lowering skill rank in "$skillrank"},
-                                                                $file_for_error,
-                                                                $line_for_error
+                                                                $file,
+                                                                $line
                                                         );
                                                 }
                                                 else {
                                                         $logger->warning(
                                                                 qq{Removing "$skillrank"},
-                                                                $file_for_error,
-                                                                $line_for_error
+                                                                $file,
+                                                                $line
                                                         );
                                                         delete $lineTokens->{'BONUS:SKILLRANK'}[$index];
                                                         $index--;
@@ -4403,8 +4302,8 @@ sub additionnal_line_parsing {
                                                 else {
                                                 $logger->info(
                                                         qq{You\'ll have to deal with this one yourself "$skillrank"},
-                                                        $file_for_error,
-                                                        $line_for_error
+                                                        $file,
+                                                        $line
                                                 );
                                                 }
                                         }
@@ -4424,14 +4323,14 @@ sub additionnal_line_parsing {
                 # The SIZE tag must be removed from all WEAPONPROF files since it
                 # cause loading problems with the latest versio of PCGEN.
 
-                if (   $conversion_enable{'WEAPONPROF:No more SIZE'}
+                if (   Pretty::Options::isConversionActive('WEAPONPROF:No more SIZE')
                 && $filetype eq "WEAPONPROF"
                 && exists $lineTokens->{'SIZE'} )
                 {
                 $logger->warning(
                         qq{Removing the SIZE tag in line "$lineTokens->{$master_order{'WEAPONPROF'}[0]}[0]"},
-                        $file_for_error,
-                        $line_for_error
+                        $file,
+                        $line
                 );
                 delete $lineTokens->{'SIZE'};
                 }
@@ -4442,7 +4341,7 @@ sub additionnal_line_parsing {
                 # NoProfReq must be added to AUTO:WEAPONPROF if the race has
                 # at least one hand and if NoProfReq is not already there.
 
-                if (   $conversion_enable{'RACE:NoProfReq'}
+                if (   Pretty::Options::isConversionActive('RACE:NoProfReq')
                 && $filetype eq "RACE" )
                 {
                 my $needNoProfReq = 1;
@@ -4462,8 +4361,8 @@ sub additionnal_line_parsing {
                         else {
                                 $logger->info(
                                         qq(Invalid value in tag "$lineTokens->{'HANDS'}[0]"),
-                                        $file_for_error,
-                                        $line_for_error
+                                        $file,
+                                        $line
                                 );
                                 $needNoProfReq = 0;
                         }
@@ -4473,8 +4372,8 @@ sub additionnal_line_parsing {
                         if ( exists $lineTokens->{'AUTO:WEAPONPROF'} ) {
                                 $logger->warning(
                                 qq{Adding "TYPE=NoProfReq" to tag "$lineTokens->{'AUTO:WEAPONPROF'}[0]"},
-                                $file_for_error,
-                                $line_for_error
+                                $file,
+                                $line
                                 );
                                 $lineTokens->{'AUTO:WEAPONPROF'}[0] .= "|TYPE=NoProfReq";
                         }
@@ -4482,8 +4381,8 @@ sub additionnal_line_parsing {
                                 $lineTokens->{'AUTO:WEAPONPROF'} = ["AUTO:WEAPONPROF|TYPE=NoProfReq"];
                                 $logger->warning(
                                 qq{Creating new tag "AUTO:WEAPONPROF|TYPE=NoProfReq"},
-                                $file_for_error,
-                                $line_for_error
+                                $file,
+                                $line
                                 );
                         }
                 }
@@ -4496,7 +4395,7 @@ sub additionnal_line_parsing {
                 # but only if MONSTERCLASS is present and there is not already a
                 # MONCSKILL present.
 
-                if (   $conversion_enable{'RACE:CSKILL to MONCSKILL'}
+                if (   Pretty::Options::isConversionActive('RACE:CSKILL to MONCSKILL')
                 && $filetype eq "RACE"
                 && exists $lineTokens->{'CSKILL'}
                 && exists $lineTokens->{'MONSTERCLASS'}
@@ -4504,8 +4403,8 @@ sub additionnal_line_parsing {
                 {
                 $logger->warning(
                         qq{Change CSKILL for MONSKILL in "$lineTokens->{'CSKILL'}[0]"},
-                        $file_for_error,
-                        $line_for_error
+                        $file,
+                        $line
                 );
 
                 $lineTokens->{'MONCSKILL'} = [ "MON" . $lineTokens->{'CSKILL'}[0] ];
@@ -4521,14 +4420,14 @@ sub additionnal_line_parsing {
                 #   VISION:1,Darkvision (60')
                 #   VISION:.ADD,See Invisibility (120'),See Etheral (120'),Darkvision (120')
 
-                if (   $conversion_enable{'ALL: , to | in VISION'}
+                if (   Pretty::Options::isConversionActive('ALL: , to | in VISION')
                 && exists $lineTokens->{'VISION'}
                 && $lineTokens->{'VISION'}[0] =~ /(\.ADD,|1,)(.*)/i )
                 {
                 $logger->warning(
                         qq{Removing "$lineTokens->{'VISION'}[0]"},
-                        $file_for_error,
-                        $line_for_error
+                        $file,
+                        $line
                 );
 
                 my $newvision = "VISION:";
@@ -4540,8 +4439,8 @@ sub additionnal_line_parsing {
                                 push @{ $lineTokens->{'BONUS:VISION'} }, "BONUS:VISION|$type|$bonus";
                                 $logger->warning(
                                 qq{Adding "BONUS:VISION|$type|$bonus"},
-                                $file_for_error,
-                                $line_for_error
+                                $file,
+                                $line
                                 );
                                 $newvision .= "$coma$type (0')";
                                 $coma = ',';
@@ -4549,13 +4448,13 @@ sub additionnal_line_parsing {
                         else {
                                 $logger->error(
                                 qq(Do not know how to convert "VISION:.ADD,$vision_bonus"),
-                                $file_for_error,
-                                $line_for_error
+                                $file,
+                                $line
                                 );
                         }
                 }
 
-                $logger->warning( qq{Adding "$newvision"}, $file_for_error, $line_for_error );
+                $logger->warning( qq{Adding "$newvision"}, $file, $line );
 
                 $lineTokens->{'VISION'} = [$newvision];
                 }
@@ -4566,7 +4465,7 @@ sub additionnal_line_parsing {
                 # For items with TYPE:Boot, Glove, Bracer, we must check for plural
                 # form and add a SLOTS:2 tag is the item is plural.
 
-                if (   $conversion_enable{'EQUIPMENT: SLOTS:2 for plurals'}
+                if (   Pretty::Options::isConversionActive('EQUIPMENT: SLOTS:2 for plurals')
                 && $filetype            eq 'EQUIPMENT'
                 && $line_info->[0] eq 'EQUIPMENT'
                 && !exists $lineTokens->{'SLOTS'} )
@@ -4583,20 +4482,20 @@ sub additionnal_line_parsing {
                                 $lineTokens->{'SLOTS'} = ['SLOTS:2'];
                                 $logger->warning(
                                         qq{"SLOTS:2" added to "$equipment_name"},
-                                        $file_for_error,
-                                        $line_for_error
+                                        $file,
+                                        $line
                                 );
                                 }
                                 else {
-                                $logger->error(qq{"$equipment_name" is a $1}, $file_for_error, $line_for_error );
+                                $logger->error(qq{"$equipment_name" is a $1}, $file, $line );
                                 }
                         }
                 }
                 else {
                         $logger->warning(
                                 qq{$equipment_name has no TYPE.},
-                                $file_for_error,
-                                $line_for_error
+                                $file,
+                                $line
                         ) unless $equipment_name =~ /.MOD$/i;
                 }
                 }
@@ -4612,7 +4511,7 @@ sub additionnal_line_parsing {
                 # The $spell_level will also be extracted from the CLASSES tag.
                 # The $caster_level will be $spell_level * 2 -1
 
-                if ( $conversion_enable{'EQUIPMENT: generate EQMOD'} ) {
+                if ( Pretty::Options::isConversionActive('EQUIPMENT: generate EQMOD') ) {
                 if (   $filetype eq 'SPELL'
                         && $line_info->[0] eq 'SPELL'
                         && ( exists $lineTokens->{'CLASSES'} ) )
@@ -4654,15 +4553,15 @@ sub additionnal_line_parsing {
                                 delete $lineTokens->{'COST'} if exists $lineTokens->{'COST'};
                                 $logger->warning(
                                         qq{$equip_name: removing "COST" and adding "$eqmod_tag"},
-                                        $file_for_error,
-                                        $line_for_error
+                                        $file,
+                                        $line
                                 );
                                 }
                                 else {
                                 $logger->warning(
                                         qq($equip_name: not enough information to add charges),
-                                        $file_for_error,
-                                        $line_for_error
+                                        $file,
+                                        $line
                                 );
                                 }
                         }
@@ -4678,23 +4577,23 @@ sub additionnal_line_parsing {
                                 delete $lineTokens->{'COST'} if exists $lineTokens->{'COST'};
                                 $logger->warning(
                                         qq{$equip_name: removing "COST" and adding "$eqmod_tag"},
-                                        $file_for_error,
-                                        $line_for_error
+                                        $file,
+                                        $line
                                 );
                                 }
                                 else {
                                 $logger->warning(
                                         qq{$equip_name: not enough information to add charges},
-                                        $file_for_error,
-                                        $line_for_error
+                                        $file,
+                                        $line
                                 );
                                 }
                         }
                         elsif ( $equip_name =~ /^Wand/ ) {
                                 $logger->warning(
                                 qq{$equip_name: not enough information to add charges},
-                                $file_for_error,
-                                $line_for_error
+                                $file,
+                                $line
                                 );
                         }
                 }
@@ -4707,7 +4606,7 @@ sub additionnal_line_parsing {
                 # we must call record_bioset_tags to record the AGE, HEIGHT and
                 # WEIGHT tags.
 
-                if (   $conversion_enable{'BIOSET:generate the new files'}
+                if (   Pretty::Options::isConversionActive('BIOSET:generate the new files')
                 && $filetype            eq 'RACE'
                 && $line_info->[0] eq 'RACE'
                 && (   exists $lineTokens->{'AGE'}
@@ -4716,33 +4615,33 @@ sub additionnal_line_parsing {
                 ) {
                 my ( $dir, $race, $age, $height, $weight );
 
-                $dir  = File::Basename::dirname($file_for_error);
+                $dir  = File::Basename::dirname($file);
                 $race = $lineTokens->{ $master_order{'RACE'}[0] }[0];
                 if ( $lineTokens->{'AGE'} ) {
                         $age = $lineTokens->{'AGE'}[0];
-                        $logger->warning( qq{Removing "$lineTokens->{'AGE'}[0]"}, $file_for_error, $line_for_error );
+                        $logger->warning( qq{Removing "$lineTokens->{'AGE'}[0]"}, $file, $line );
                         delete $lineTokens->{'AGE'};
                 }
                 if ( $lineTokens->{'HEIGHT'} ) {
                         $height = $lineTokens->{'HEIGHT'}[0];
-                        $logger->warning( qq{Removing "$lineTokens->{'HEIGHT'}[0]"}, $file_for_error, $line_for_error );
+                        $logger->warning( qq{Removing "$lineTokens->{'HEIGHT'}[0]"}, $file, $line );
                         delete $lineTokens->{'HEIGHT'};
                 }
                 if ( $lineTokens->{'WEIGHT'} ) {
                         $weight = $lineTokens->{'WEIGHT'}[0];
-                        $logger->warning( qq{Removing "$lineTokens->{'WEIGHT'}[0]"}, $file_for_error, $line_for_error );
+                        $logger->warning( qq{Removing "$lineTokens->{'WEIGHT'}[0]"}, $file, $line );
                         delete $lineTokens->{'WEIGHT'};
                 }
 
-                record_bioset_tags( $dir, $race, $age, $height, $weight, $file_for_error,
-                        $line_for_error );
+                record_bioset_tags( $dir, $race, $age, $height, $weight, $file,
+                        $line );
                 }
 
                 ##################################################################
                 # [ 653596 ] Add a TYPE tag for all SPELLs
                 # .
 
-                if (   $conversion_enable{'SPELL:Add TYPE tags'}
+                if (   Pretty::Options::isConversionActive('SPELL:Add TYPE tags')
                 && exists $lineTokens->{'SPELLTYPE'}
                 && $filetype            eq 'CLASS'
                 && $line_info->[0] eq 'CLASS'
@@ -4763,7 +4662,7 @@ sub additionnal_line_parsing {
                 }
                 }
 
-                if (   $conversion_enable{'SPELL:Add TYPE tags'}
+                if (   Pretty::Options::isConversionActive('SPELL:Add TYPE tags')
                 && $filetype                    eq 'SPELL'
                 && $line_info->{Linetype} eq 'SPELL' )
                 {
@@ -4781,32 +4680,32 @@ sub additionnal_line_parsing {
                 #
                 # Only the first SOURCE line found is replaced.
 
-                if (   $conversion_enable{'SOURCE line replacement'}
+                if (   Pretty::Options::isConversionActive('SOURCE line replacement')
                 && defined $line_info
                 && $line_info->[0] eq 'SOURCE'
-                && $source_curent_file ne $file_for_error )
+                && $source_curent_file ne $file )
                 {
 
                 # Only the first SOURCE tag is replace.
-                if ( exists $source_tags{ File::Basename::dirname($file_for_error) } ) {
+                if ( exists $source_tags{ File::Basename::dirname($file) } ) {
 
                         # We replace the line with a concatanation of SOURCE tags found in
                         # the directory .PCC
                         my %line_tokens;
                         while ( my ( $tag, $value )
-                                = each %{ $source_tags{ File::Basename::dirname($file_for_error) } } )
+                                = each %{ $source_tags{ File::Basename::dirname($file) } } )
                         {
                                 $line_tokens{$tag} = [$value];
-                                $source_curent_file = $file_for_error;
+                                $source_curent_file = $file;
                         }
 
                         $line_info->[1] = \%line_tokens;
                 }
-                elsif ( $file_for_error =~ / \A $cl_options{input_path} /xmsi ) {
+                elsif ( $file =~ / \A $cl_options{input_path} /xmsi ) {
                         # We give this notice only if the curent file is under getOption('inputpath').
                         # If -basepath is used, there could be files loaded outside of the -inputpath
                         # without their PCC.
-                        $logger->notice( "No PCC source information found", $file_for_error, $line_for_error );
+                        $logger->notice( "No PCC source information found", $file, $line );
                 }
                 }
 
@@ -4815,8 +4714,8 @@ sub additionnal_line_parsing {
                 # Export each file name and log them with the filename and the
                 # line number
 
-                if ( $conversion_enable{'Export lists'} ) {
-                my $filename = $file_for_error;
+                if ( Pretty::Options::isConversionActive('Export lists') ) {
+                my $filename = $file;
                 $filename =~ tr{/}{\\};
 
                 if ( $filetype eq 'SPELL' ) {
@@ -4828,22 +4727,22 @@ sub additionnal_line_parsing {
 
                         # Write to file
                         print { $filehandle_for{SPELL} }
-                                qq{"$spellname","$sourcepage","$line_for_error","$filename"\n};
+                                qq{"$spellname","$sourcepage","$line","$filename"\n};
                 }
                 if ( $filetype eq 'CLASS' ) {
                         my $class = ( $lineTokens->{'000ClassName'}[0] =~ /^CLASS:(.*)/ )[0];
-                        print { $filehandle_for{CLASS} } qq{"$class","$line_for_error","$filename"\n} if $class_name ne $class;
+                        print { $filehandle_for{CLASS} } qq{"$class","$line","$filename"\n} if $class_name ne $class;
                         $class_name = $class;
                 }
 
                 if ( $filetype eq 'DEITY' ) {
                         print { $filehandle_for{DEITY} }
-                                qq{"$lineTokens->{'000DeityName'}[0]","$line_for_error","$filename"\n};
+                                qq{"$lineTokens->{'000DeityName'}[0]","$line","$filename"\n};
                 }
 
                 if ( $filetype eq 'DOMAIN' ) {
                         print { $filehandle_for{DOMAIN} }
-                                qq{"$lineTokens->{'000DomainName'}[0]","$line_for_error","$filename"\n};
+                                qq{"$lineTokens->{'000DomainName'}[0]","$line","$filename"\n};
                 }
 
                 if ( $filetype eq 'EQUIPMENT' ) {
@@ -4857,7 +4756,7 @@ sub additionnal_line_parsing {
                         }
                         $outputname =~ s/\[NAME\]/$replacementname/;
                         print { $filehandle_for{EQUIPMENT} }
-                                qq{"$equipname","$outputname","$line_for_error","$filename"\n};
+                                qq{"$equipname","$outputname","$line","$filename"\n};
                 }
 
                 if ( $filetype eq 'EQUIPMOD' ) {
@@ -4866,29 +4765,29 @@ sub additionnal_line_parsing {
                         $key  = substr( $lineTokens->{'KEY'}[0],  4 ) if exists $lineTokens->{'KEY'};
                         $type = substr( $lineTokens->{'TYPE'}[0], 5 ) if exists $lineTokens->{'TYPE'};
                         print { $filehandle_for{EQUIPMOD} }
-                                qq{"$equipmodname","$key","$type","$line_for_error","$filename"\n};
+                                qq{"$equipmodname","$key","$type","$line","$filename"\n};
                 }
 
                 if ( $filetype eq 'FEAT' ) {
                         my $featname = $lineTokens->{ $master_order{$filetype}[0] }[0];
-                        print { $filehandle_for{FEAT} } qq{"$featname","$line_for_error","$filename"\n};
+                        print { $filehandle_for{FEAT} } qq{"$featname","$line","$filename"\n};
                 }
 
                 if ( $filetype eq 'KIT STARTPACK' ) {
                         my ($kitname)
                                 = ( $lineTokens->{ $master_order{$filetype}[0] }[0] =~ /\A STARTPACK: (.*) \z/xms );
-                        print { $filehandle_for{KIT} } qq{"$kitname","$line_for_error","$filename"\n};
+                        print { $filehandle_for{KIT} } qq{"$kitname","$line","$filename"\n};
                 }
 
                 if ( $filetype eq 'KIT TABLE' ) {
                         my ($tablename)
                                 = ( $lineTokens->{ $master_order{$filetype}[0] }[0] =~ /\A TABLE: (.*) \z/xms );
-                        print { $filehandle_for{TABLE} } qq{"$tablename","$line_for_error","$filename"\n};
+                        print { $filehandle_for{TABLE} } qq{"$tablename","$line","$filename"\n};
                 }
 
                 if ( $filetype eq 'LANGUAGE' ) {
                         my $languagename = $lineTokens->{ $master_order{$filetype}[0] }[0];
-                        print { $filehandle_for{LANGUAGE} } qq{"$languagename","$line_for_error","$filename"\n};
+                        print { $filehandle_for{LANGUAGE} } qq{"$languagename","$line","$filename"\n};
                 }
 
                 if ( $filetype eq 'RACE' ) {
@@ -4903,17 +4802,17 @@ sub additionnal_line_parsing {
                         $race_sub_type =~ s{ \A RACESUBTYPE: }{}xms;
 
                         print { $filehandle_for{RACE} }
-                                qq{"$racename","$race_type","$race_sub_type","$line_for_error","$filename"\n};
+                                qq{"$racename","$race_type","$race_sub_type","$line","$filename"\n};
                 }
 
                 if ( $filetype eq 'SKILL' ) {
                         my $skillname = $lineTokens->{ $master_order{$filetype}[0] }[0];
-                        print { $filehandle_for{SKILL} } qq{"$skillname","$line_for_error","$filename"\n};
+                        print { $filehandle_for{SKILL} } qq{"$skillname","$line","$filename"\n};
                 }
 
                 if ( $filetype eq 'TEMPLATE' ) {
                         my $template_name = $lineTokens->{ $master_order{$filetype}[0] }[0];
-                        print { $filehandle_for{TEMPLATE} } qq{"$template_name","$line_for_error","$filename"\n};
+                        print { $filehandle_for{TEMPLATE} } qq{"$template_name","$line","$filename"\n};
                 }
                 }
 
@@ -4921,7 +4820,7 @@ sub additionnal_line_parsing {
                 ######################## Conversion ########################
                 # We manipulate the tags for the line here
 
-                if ( $conversion_enable{'Generate BONUS and PRExxx report'} ) {
+                if ( Pretty::Options::isConversionActive('Generate BONUS and PRExxx report') ) {
                 for my $tag_type ( sort keys %$lineTokens ) {
                         if ( $tag_type =~ /^BONUS|^!?PRE/ ) {
                                 $bonus_prexxx_tag_report{$filetype}{$_} = 1 for ( @{ $lineTokens->{$tag_type} } );
