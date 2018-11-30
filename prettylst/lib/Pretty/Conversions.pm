@@ -1689,7 +1689,7 @@ if (getOption('inputpath')) {
         # Cross-checking must be activated for the CLASSSPELL
         # conversion to work
         if ( Pretty::Options::isConversionActive('CLASSSPELL conversion to SPELL') ) {
-           putOption(xcheck, 1);
+           setOption('xcheck', 1);
         }
 
         ##########################################################
@@ -2331,7 +2331,7 @@ if ( getOption('outputpath') && scalar(@modified_files) ) {
    # change the output path to have windows path separators
    if ($^O eq "MSWin32") {
       $outputPath =~ tr{/}{\\};
-      putOption('output_path', $outputPath);
+      setOption('output_path', $outputPath);
    }
 
    $logging->set_header(constructLoggingHeader('Created'), $outputPath);
@@ -2355,7 +2355,7 @@ if ( Pretty::Options::isConversionActive('Generate BONUS and PRExxx report') ) {
    if ($^O eq "MSWin32") {
       my $outputPath = getOption('output_path');
       $outputPath =~ tr{/}{\\};
-      putOption('output_path', $outputPath);
+      setOption('output_path', $outputPath);
    }
 
    print STDERR "\n================================================================\n";
@@ -9232,6 +9232,122 @@ sub removeALTCRITICAL {
          $ttag =~ s/ALTCRITICAL/ALTCRITMULT/;
          $lineTokens->{'ALTCRITMULT'}[0] = $ttag;
          delete $lineTokens->{'ALTCRITICAL'};
+      }
+   }
+}
+
+=head2 removeMonsterTags
+
+   [ 1514765 ] Conversion to remove old defaultmonster tags
+   
+   In RACE files, remove all MFEAT and HITDICE tags, but only if
+   there is a MONSTERCLASS present.
+
+=cut
+
+sub removeMonsterTags {
+
+   my ($lineTokens, $filetype, $file, $line,) = @_;
+
+   if (Pretty::Options::isConversionActive('RACE:Remove MFEAT and HITDICE') && $filetype eq "RACE") {
+
+      # We remove MFEAT or warn of missing MONSTERCLASS tag.
+      if (exists $lineTokens->{'MFEAT'}) { 
+         if ( exists $lineTokens->{'MONSTERCLASS'}) { 
+            for my $tag ( @{ $lineTokens->{'MFEAT'} } ) {
+               $logger->warning(
+                  qq{Removing "$tag".},
+                  $file,
+                  $line
+               );
+            }
+            delete $lineTokens->{'MFEAT'};
+         } else {
+            warning(
+               qq{MONSTERCLASS missing on same line as MFEAT, need to look at by hand.},
+               $file,
+               $line
+            )
+         }
+      }
+
+      # We remove HITDICE or warn of missing MONSTERCLASS tag.
+      if (exists $lineTokens->{'HITDICE'}) { 
+         if ( exists $lineTokens->{'MONSTERCLASS'}) { 
+            for my $tag ( @{ $lineTokens->{'HITDICE'} } ) {
+               $logger->warning(
+                  qq{Removing "$tag".},
+                  $file,
+                  $line
+               );
+            }
+            delete $lineTokens->{'HITDICE'};
+         } else {
+            warning(
+               qq{MONSTERCLASS missing on same line as HITDICE, need to look at by hand.},
+               $file,
+               $line
+            )
+         }
+      }
+   }
+}
+
+
+
+=head2 removeFollowAlign
+
+   [ 1689538 ] Conversion: Deprecation of FOLLOWERALIGN
+
+   Note: Makes simplifying assumption that FOLLOWERALIGN
+   will occur only once in a given line, although DOMAINS may
+   occur multiple times.
+
+=cut
+
+sub removeFollowAlign {
+   my ($lineTokens, $filetype, $file, $line) = @_;
+
+   if ((Pretty::Options::isConversionActive('DEITY:Followeralign conversion'))
+      && $filetype eq "DEITY"
+      && (exists $lineTokens->{'FOLLOWERALIGN'}))
+   {
+      my $followeralign = $lineTokens->{'FOLLOWERALIGN'}[0];
+      $followeralign =~ s/^FOLLOWERALIGN://;
+      my $newprealign = "";
+
+      for my $align (split //, $followeralign) {
+         # Is it a number?
+         my $number;
+         if ( (($number) = ($align =~ / \A (\d+) \z /xms)) && $number >= 0 && $number < scalar @valid_system_alignments) {
+
+            my $newalign = $valid_system_alignments[$number];
+            $newprealign .= ($newprealign ne qq{}) ? ", $newalign" : "$newalign";
+
+         } else {
+            $logger->notice(
+               qq{Invalid value "$align" for tag "$lineTokens->{'FOLLOWERALIGN'}[0]"},
+               $file,
+               $line
+            );
+         }
+      }
+
+      my $dom_count=0;
+
+      if (exists $lineTokens->{'DOMAINS'}) {
+         for my $line ($lineTokens->{'DOMAINS'})
+         {
+            $lineTokens->{'DOMAINS'}[$dom_count] .= "|PREALIGN:$newprealign";
+            $dom_count++;
+         }
+         $logger->notice(
+            qq{Adding PREALIGN to domain information and removing "$lineTokens->{'FOLLOWERALIGN'}[0]"},
+            $file,
+            $line
+         );
+
+         delete $lineTokens->{'FOLLOWERALIGN'};
       }
    }
 }
