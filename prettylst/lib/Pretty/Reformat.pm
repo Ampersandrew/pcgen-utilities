@@ -55,8 +55,6 @@ our %valid_entities;    # Will hold the entries that may be refered
                         # We initialise the hash with global system values
                         # that are valid but never defined in the .lst files.
 
-our %validTags;         # Will hold the valid tags for each type of file.
-
 our @xcheck_to_process; # Will hold the information for the entries that must
                         # be added in %referer or %referer_types. The array
                         # is needed because all the files must have been
@@ -2777,32 +2775,6 @@ sub getLogger {
 
 
 
-
-=head2 constructValidTags
-
-   Populate %validTags for all file types from masterOrder
-
-=cut
-
-sub constructValidTags {
-
-   for my $lineType ( keys %masterOrder ) {
-      for my $tag ( @{ $masterOrder{$lineType} } ) {
-         if ( $tag =~ / ( .* ) [:][*] \z /xms ) {
-            # Tag that end by :* in @masterOrder are allowed
-            # to be present more then once on the same line
-            $tag = $1;
-            $masterMult{$lineType}{$tag} = 1;
-         }
-
-         if ( exists $validTags{$lineType}{$tag} ) {
-            die "Tag $tag found more then once for $lineType";
-         } else { 
-            $validTags{$lineType}{$tag} = 1;
-         }
-      }
-   }
-}
 
 =head2 _getLineType
 

@@ -554,7 +554,7 @@ my @QUALIFY_Tags = ();
 my @Global_BONUS_Tags = ();
 
 # Working variables
-my %column_with_no_tag = (
+my %columnWithNoTag = (
 
         'ABILITY' => [
                 '000AbilityName',
@@ -879,8 +879,6 @@ my %token_CHOOSE_tag = map { $_ => 1 } (
         'FEATLIST',                             # Deprecated 5.15 - Remove 6.00
         'FEATSELECT',                   # Deprecated 5.15 - Remove 6.00
 );
-
-my %master_mult;                # Will hold the tags that can be there more then once
 
 my %valid_tags;         # Will hold the valid tags for each type of file.
 
@@ -1614,7 +1612,7 @@ if (getOption('inputpath')) {
 
    
 
-   if ( $conversion_enable{'Export lists'} ) {
+   if ( Pretty::Options::isConversionActive('Export lists') ) {
       # The files should be opened in alpha order since they will
       # be closed in reverse alpha order.
 
@@ -1681,7 +1679,7 @@ if (getOption('inputpath')) {
       }
 
       # We need to list the tags that use Willpower
-      if ( $conversion_enable{'ALL:Find Willpower'} ) {
+      if ( Pretty::Options::isConversionActive('ALL:Find Willpower') ) {
          open $filehandle_for{Willpower}, '>', 'willpower.csv';
          print { $filehandle_for{Willpower} } qq{"Tag","Line","Filename"\n};
       }
@@ -1690,8 +1688,8 @@ if (getOption('inputpath')) {
         ##########################################################
         # Cross-checking must be activated for the CLASSSPELL
         # conversion to work
-        if ( $conversion_enable{'CLASSSPELL conversion to SPELL'} ) {
-                $cl_options{xcheck} = 1;
+        if ( Pretty::Options::isConversionActive('CLASSSPELL conversion to SPELL') ) {
+           putOption(xcheck, 1);
         }
 
         ##########################################################
@@ -1815,7 +1813,7 @@ if (getOption('inputpath')) {
                                         $filelist_missing{$lstfile} = [ $pcc_file_name, $INPUT_LINE_NUMBER ];
                                         delete $files_to_parse{$lstfile};
                                 }
-                                elsif ($conversion_enable{'SPELL:Add TYPE tags'}
+                                elsif (Pretty::Options::isConversionActive('SPELL:Add TYPE tags')
                                 && $tag eq 'CLASS' )
                                 {
 
@@ -1824,8 +1822,8 @@ if (getOption('inputpath')) {
                                         # The CLASS files must be read before any other
                                         $class_files{$lstfile} = 1;
                                 }
-                                elsif ( $tag eq 'SPELL' && ( $conversion_enable{'EQUIPMENT: generate EQMOD'}
-                                        || $conversion_enable{'CLASS: SPELLLIST from Spell.MOD'} ) )
+                                elsif ( $tag eq 'SPELL' && ( Pretty::Options::isConversionActive('EQUIPMENT: generate EQMOD')
+                                        || Pretty::Options::isConversionActive('CLASS: SPELLLIST from Spell.MOD') ) )
                                 {
 
                                         #[ 677962 ] The DMG wands have no charge.
@@ -1836,7 +1834,7 @@ if (getOption('inputpath')) {
 
                                         $Spell_Files{$lstfile} = 1;
                                 }
-                                elsif ( $conversion_enable{'CLASSSPELL conversion to SPELL'}
+                                elsif ( Pretty::Options::isConversionActive('CLASSSPELL conversion to SPELL')
                                 && ( $tag eq 'CLASSSPELL' || $tag eq 'CLASS' || $tag eq 'DOMAIN' ) )
                                 {
 
@@ -1857,7 +1855,7 @@ if (getOption('inputpath')) {
                                                 );
                                         }
                                 }
-                                elsif ($conversion_enable{'CLASSSKILL conversion to CLASS'}
+                                elsif (Pretty::Options::isConversionActive('CLASSSKILL conversion to CLASS')
                                 && $tag eq 'CLASSSKILL' )
                                 {
 
@@ -1886,7 +1884,7 @@ if (getOption('inputpath')) {
                                 # All the tags that do not have file should be cought here
 
                                 # Get the SOURCExxx tags for future ref.
-                                if ($conversion_enable{'SOURCE line replacement'}
+                                if (Pretty::Options::isConversionActive('SOURCE line replacement')
                                 && ( $tag eq 'SOURCELONG'
                                         || $tag eq 'SOURCESHORT'
                                         || $tag eq 'SOURCEWEB'
@@ -1920,11 +1918,11 @@ if (getOption('inputpath')) {
                                         # and match the filer.
                                         $GAMEMODE_found = $value;       # The GAMEMODE tag we found
                                         my @modes = split /[|]/, $value;
-                                        my $gamemode_regex =
-                                                $cl_options{gamemode}
-                                                ? qr{ \A (?: $cl_options{gamemode} ) \z }xmsi
-                                                : qr{ . }xms;
-                                        my $valid_game_mode = $cl_options{gamemode} ? 0 : 1;
+
+                                        my $optionGamemode = getOption(gamemode);
+
+                                        my $gamemode_regex = $optionGamemode ? qr{ \A (?: $optionGamemode ) \z }xmsi : qr{ . }xms;
+                                        my $valid_game_mode = $optionGamemode ? 0 : 1;
 
                                         # First the filter is applied
                                         for my $mode (@modes) {
@@ -1962,7 +1960,7 @@ if (getOption('inputpath')) {
                                         #               $pcc_file_name, $INPUT_LINE_NUMBER ) if 2 != tr!.!.!;
                                         $BOOKTYPE_found = YES;
                                 }
-                                elsif ( $tag eq 'GAME' && $conversion_enable{'PCC:GAME to GAMEMODE'} ) {
+                                elsif ( $tag eq 'GAME' && Pretty::Options::isConversionActive('PCC:GAME to GAMEMODE') ) {
 
                                         # [ 707325 ] PCC: GAME is now GAMEMODE
                                         $pcc_lines[-1] = "GAMEMODE:$value";
@@ -1988,7 +1986,7 @@ if (getOption('inputpath')) {
 
                 close $pcc_fh;
 
-                if ( $conversion_enable{'CLASSSPELL conversion to SPELL'}
+                if ( Pretty::Options::isConversionActive('CLASSSPELL conversion to SPELL')
                         && $found_filetype{'CLASSSPELL'}
                         && !$found_filetype{'SPELL'} )
                 {
@@ -1998,7 +1996,7 @@ if (getOption('inputpath')) {
                         );
                 }
 
-                if ( $conversion_enable{'CLASSSKILL conversion to CLASS'}
+                if ( Pretty::Options::isConversionActive('CLASSSKILL conversion to CLASS')
                         && $found_filetype{'CLASSSKILL'}
                         && !$found_filetype{'CLASS'} )
                 {
@@ -2023,42 +2021,46 @@ if (getOption('inputpath')) {
 
                 # Do we copy the .PCC???
                 if ( getOption('outputpath') && ( $must_write ) && $writefiletype{"PCC"} ) {
-                        my $new_pcc_file = $pcc_file_name;
-                        $new_pcc_file =~ s/$cl_options{input_path}/$cl_options{output_path}/i;
+                        my $newPCCFile = $pcc_file_name;
+                        my ($inputPath, $outputPath) = (getOption('input_path'), getOption('output_path'));
+
+                        $newPCCFile =~ s/${inputPath}/${outputPath}/i;
 
                         # Create the subdirectory if needed
-                        create_dir( File::Basename::dirname($new_pcc_file), getOption('outputpath') );
+                        create_dir( File::Basename::dirname($newPCCFile), $outputPath);
 
-                        open my $new_pcc_fh, '>', $new_pcc_file;
+                        open my $newPCCFh, '>', $newPCCFile;
 
                         # We keep track of the files we modify
                         push @modified_files, $pcc_file_name;
 
                         for my $line (@pcc_lines) {
-                                print {$new_pcc_fh} "$line\n";
+                           print {$newPCCFh} "$line\n";
                         }
 
-                        close $new_pcc_fh;
+                        close $newPCCFh;
                 }
         }
 
         # Is there anything to parse?
         if ( !keys %files_to_parse ) {
-                $logging->error(
-                        qq{Could not find any .lst file to parse.},
-                        getOption('inputpath')
-                );
-                $logging->error(
-                        qq{Is your -inputpath parameter valid? ($cl_options{input_path})},
-                        getOption('inputpath')
-                );
-                if ( getOption('gamemode') ) {
-                $logging->error(
-                        qq{Is your -gamemode parameter valid? ($cl_options{gamemode})},
-                        getOption('inputpath')
-                );
-                exit;
-                }
+           my $inputPath = getOption('inputpath');
+           my $gameMode  = getOption('gamemode') ;
+           $logging->error(
+              qq{Could not find any .lst file to parse.},
+              $inputPath
+           );
+           $logging->error(
+              qq{Is your -inputpath parameter valid? ($inputPath)},
+              $inputPath
+           );
+           if ( $gameMode ) {
+              $logging->error(
+                 qq{Is your -gamemode parameter valid? ($gameMode)},
+                 $inputPath
+              );
+              exit;
+           }
         }
 
         # Missing .lst files must be printed
@@ -2075,14 +2077,15 @@ if (getOption('inputpath')) {
         }
 
         # If the gamemode filter is active, we do not report files not refered to.
-        if ( keys %filelistnotpcc && !getOption('gamemode') ) {
-                $logging->set_header(constructLoggingHeader('Unreferenced'));
+        if ( keys %filelist_notpcc && !getOption('gamemode') ) {
+           $logging->set_header(constructLoggingHeader('Unreferenced'));
 
-                for my $file ( sort keys %filelist_notpcc ) {
-                        $file =~ s/$cl_options{basepath}//i;
-                        $file =~ tr{/}{\\} if $^O eq "MSWin32";
-                        $logging->notice(  "$file\n", "" );
-                }
+           my $basePath =  getOption('basepath');
+           for my $file ( sort keys %filelist_notpcc ) {
+              $file =~ s/$basePath//i;
+              $file =~ tr{/}{\\} if $^O eq "MSWin32";
+              $logging->notice(  "$file\n", "" );
+           }
         }
 }
 else {
@@ -2094,7 +2097,7 @@ $logging->set_header(constructLoggingHeader('LST'));
 my @files_to_parse_sorted = ();
 my %temp_files_to_parse   = %files_to_parse;
 
-if ( $conversion_enable{'SPELL:Add TYPE tags'} ) {
+if ( Pretty::Options::isConversionActive('SPELL:Add TYPE tags') ) {
 
         # The CLASS files must be put at the start of the
         # files_to_parse_sorted array in order for them
@@ -2106,7 +2109,7 @@ if ( $conversion_enable{'SPELL:Add TYPE tags'} ) {
         }
 }
 
-if ( $conversion_enable{'CLASSSPELL conversion to SPELL'} ) {
+if ( Pretty::Options::isConversionActive('CLASSSPELL conversion to SPELL') ) {
 
         # The CLASS and DOMAIN files must be put at the start of the
         # files_to_parse_sorted array in order for them
@@ -2134,7 +2137,7 @@ if ( keys %Spell_Files ) {
         }
 }
 
-if ( $conversion_enable{'CLASSSKILL conversion to CLASS'} ) {
+if ( Pretty::Options::isConversionActive('CLASSSKILL conversion to CLASS') ) {
 
         # The CLASSSKILL files must be put at the start of the
         # files_to_parse_sorted array in order for them
@@ -2273,20 +2276,22 @@ for my $file (@files_to_parse_sorted) {
                 my $write_fh;
 
                 if (getOption('outputpath')) {
-                        my $newfile = $file;
-                        $newfile =~ s/$cl_options{input_path}/$cl_options{output_path}/i;
+                   my $newfile = $file;
 
-                        # Create the subdirectory if needed
-                        create_dir( File::Basename::dirname($newfile), getOption('outputpath') );
+                   my ($inputPath, $outputPath) = (getOption('input_path'), getOption('output_path'));
+                   $newfile =~ s/$inputPath/$outputPath/i;
 
-                        open $write_fh, '>', $newfile;
+                   # Create the subdirectory if needed
+                   create_dir( File::Basename::dirname($newfile), getOption('outputpath') );
 
-                        # We keep track of the files we modify
-                        push @modified_files, $file;
+                   open $write_fh, '>', $newfile;
+
+                   # We keep track of the files we modify
+                   push @modified_files, $file;
                 }
                 else {
-                        # Output to standard output
-                        $write_fh = *STDOUT;
+                   # Output to standard output
+                   $write_fh = *STDOUT;
                 }
 
                 # The first line of the new file will be a comment line.
@@ -2309,7 +2314,7 @@ for my $file (@files_to_parse_sorted) {
 ###########################################
 # Generate the new BIOSET files
 
-if ( $conversion_enable{'BIOSET:generate the new files'} ) {
+if ( Pretty::Options::isConversionActive('BIOSET:generate the new files') ) {
         print STDERR "\n================================================================\n";
         print STDERR "List of new BIOSET files generated\n";
         print STDERR "----------------------------------------------------------------\n";
@@ -2320,42 +2325,55 @@ if ( $conversion_enable{'BIOSET:generate the new files'} ) {
 ###########################################
 # Print a report with the modified files
 if ( getOption('outputpath') && scalar(@modified_files) ) {
-   $cl_options{output_path} =~ tr{/}{\\} if $^O eq "MSWin32";
 
-   my $path = getOption('output_path');
+   my $outputPath = getOption('output_path');
 
-   $logging->set_header(constructLoggingHeader('Created'), $path);
+   # change the output path to have windows path separators
+   if ($^O eq "MSWin32") {
+      $outputPath =~ tr{/}{\\};
+      putOption('output_path', $outputPath);
+   }
 
-        for my $file (@modified_files) {
-                $file =~ s{ $cl_options{input_path} }{}xmsi;
-                $file =~ tr{/}{\\} if $^O eq "MSWin32";
-                $logging->notice( "$file\n", "" );
-        }
+   $logging->set_header(constructLoggingHeader('Created'), $outputPath);
+      
+   my $path = getOption('input_path');
 
-        print STDERR "================================================================\n";
+   for my $file (@modified_files) {
+      $file =~ s{ $path }{}xmsi;
+      $file =~ tr{/}{\\} if $^O eq "MSWin32";
+      $logging->notice( "$file\n", "" );
+   }
+
+   print STDERR "================================================================\n";
 }
 
 ###########################################
 # Print a report for the BONUS and PRExxx usage
-if ( $conversion_enable{'Generate BONUS and PRExxx report'} ) {
-        $cl_options{output_path} =~ tr{/}{\\} if $^O eq "MSWin32";
+if ( Pretty::Options::isConversionActive('Generate BONUS and PRExxx report') ) {
 
-        print STDERR "\n================================================================\n";
-        print STDERR "List of BONUS and PRExxx tags by linetype\n";
-        print STDERR "----------------------------------------------------------------\n";
+   # change the output path to have windows path separators
+   if ($^O eq "MSWin32") {
+      my $outputPath = getOption('output_path');
+      $outputPath =~ tr{/}{\\};
+      putOption('output_path', $outputPath);
+   }
 
-        my $first = 1;
-        for my $line_type ( sort keys %bonus_prexxx_tag_report ) {
-                print STDERR "\n" unless $first;
-                $first = 0;
-                print STDERR "Line Type: $line_type\n";
+   print STDERR "\n================================================================\n";
+   print STDERR "List of BONUS and PRExxx tags by linetype\n";
+   print STDERR "----------------------------------------------------------------\n";
 
-                for my $tag ( sort keys %{ $bonus_prexxx_tag_report{$line_type} } ) {
-                print STDERR "  $tag\n";
-                }
-        }
+   my $first = 1;
+   for my $line_type ( sort keys %bonus_prexxx_tag_report ) {
+      print STDERR "\n" unless $first;
+      $first = 0;
+      print STDERR "Line Type: $line_type\n";
 
-        print STDERR "================================================================\n";
+      for my $tag ( sort keys %{ $bonus_prexxx_tag_report{$line_type} } ) {
+         print STDERR "  $tag\n";
+      }
+   }
+
+   print STDERR "================================================================\n";
 }
 
 if ( getOption('report') ) {
@@ -2636,7 +2654,7 @@ if ( getOption('xcheck') ) {
 # Close the files that were opened for
 # special conversion
 
-if ( $conversion_enable{'Export lists'} ) {
+if ( Pretty::Options::isConversionActive('Export lists') ) {
         # Close all the files in reverse order that they were opened
         for my $line_type ( reverse sort keys %filehandle_for ) {
                 close $filehandle_for{$line_type};
@@ -2799,7 +2817,7 @@ sub parse_tag {
 
         # [ 1678570 ] Correct PRESPELLTYPE syntax
         # PRESPELLTYPE conversion
-        if ($conversion_enable{'ALL:PRESPELLTYPE Syntax'} &&
+        if (Pretty::Options::isConversionActive('ALL:PRESPELLTYPE Syntax') &&
                 $tag eq 'PRESPELLTYPE' &&
                 $tag_text =~ /^PRESPELLTYPE:([^\d]+),(\d+),(\d+)/)
         {
@@ -2823,7 +2841,7 @@ sub parse_tag {
         # that are on the end of other tags or in PREMULTS.
         # I'll leave out the pipe-delimited error here, since it's more likely
         # to end up with confusion when the tag isn't standalone.
-        elsif ($conversion_enable{'ALL:PRESPELLTYPE Syntax'}
+        elsif (Pretty::Options::isConversionActive('ALL:PRESPELLTYPE Syntax')
                 && $tag_text =~ /PRESPELLTYPE:([^\d]+),(\d+),(\d+)/)
         {
                 $value =~ s/PRESPELLTYPE:([^\d,]+),(\d+),(\d+)/PRESPELLTYPE:$2,$1=$3/g;
@@ -2850,7 +2868,7 @@ sub parse_tag {
                         $tag   = $addtag;
                         $value = "($therest)$add_count";
                 }
-                        if ((($type == 1) || ($type == 2)) && ($conversion_enable{'ALL:ADD Syntax Fix'}))
+                        if ((($type == 1) || ($type == 2)) && (Pretty::Options::isConversionActive('ALL:ADD Syntax Fix')))
                         {
                                 $tag = "ADD:";
                                 $addtag =~ s/ADD://;
@@ -4788,7 +4806,7 @@ BEGIN {
 
                                         #####################################################
                                         # Export a list of variable names if requested
-                                        if ( $conversion_enable{'Export lists'} ) {
+                                        if ( Pretty::Options::isConversionActive('Export lists') ) {
                                                 my $file = $file_for_error;
                                                 $file =~ tr{/}{\\};
                                                 print { $filehandle_for{VARIABLE} }
@@ -6186,7 +6204,7 @@ sub additionnal_tag_parsing {
         # Bonuses associated with a PREDEFAULTMONSTER:Y need to be removed
         # Bonuses associated with a PREDEFAULTMONSTER:N are retained without
         #               the PREDEFAULTMONSTER:N
-        if ( $conversion_enable{'RACE:Fix PREDEFAULTMONSTER bonuses'}
+        if ( Pretty::Options::isConversionActive('RACE:Fix PREDEFAULTMONSTER bonuses')
                 && $tag_name =~ /BONUS/ ) {
         if ($tag_value =~ /PREDEFAULTMONSTER:N/ ) {
                 $_[1] =~ s/[|]PREDEFAULTMONSTER:N//;
@@ -6198,7 +6216,7 @@ sub additionnal_tag_parsing {
         }
         }
 
-        if ( $conversion_enable{'ALL:Weaponauto simple conversion'}
+        if ( Pretty::Options::isConversionActive('ALL:Weaponauto simple conversion')
                 && $tag_name =~ /WEAPONAUTO/)
                 {
                 $_[0] = 'AUTO';
@@ -6224,7 +6242,7 @@ sub additionnal_tag_parsing {
         # BONUS:CHECKS|<list of save types>|<other tag parameters>
         # PRECHECKBASE:<number>,<list of saves>
 
-        if ( $conversion_enable{'ALL:Willpower to Will'} ) {
+        if ( Pretty::Options::isConversionActive('ALL:Willpower to Will') ) {
                 if ( $tag_name eq 'BONUS:CHECKS' ) {
                 # We split the tag parameters
                 my @tag_params = split q{\|}, $tag_value;
@@ -6264,7 +6282,7 @@ sub additionnal_tag_parsing {
         ##################################################################
         # We find the tags that use the word Willpower
 
-        if ( $conversion_enable{'ALL:Find Willpower'} && getOption('exportlist') ) {
+        if ( Pretty::Options::isConversionActive('ALL:Find Willpower') && getOption('exportlist') ) {
                 if ( $tag_value
                         =~ m{ \b                # Word boundary
                                 Willpower       # We need to find the word Willpower
@@ -6284,7 +6302,7 @@ sub additionnal_tag_parsing {
         # PRERACE now only accepts the format PRERACE:<number>,<race list>
         # All the PRERACE tags must be reformated to use the default way.
 
-        if ( $conversion_enable{'ALL:PRERACE needs a ,'} ) {
+        if ( Pretty::Options::isConversionActive('ALL:PRERACE needs a ,') ) {
                 if ( $tag_name eq 'PRERACE' || $tag_name eq '!PRERACE' ) {
                 if ( $tag_value !~ / \A \d+ [,], /xms ) {
                         $_[1] = '1,' . $_[1];
@@ -6331,7 +6349,7 @@ sub additionnal_tag_parsing {
         # PREALIGN now accept letters instead of numbers to specify alignments
         # All the PREALIGN tags must be reformated to the letters.
 
-        if ( $conversion_enable{'ALL:PREALIGN conversion'} ) {
+        if ( Pretty::Options::isConversionActive('ALL:PREALIGN conversion') ) {
                 if ( $tag_name eq 'PREALIGN' || $tag_name eq '!PREALIGN' ) {
                 my $new_value = join ',', map { $PREALIGN_conversion_5715{$_} || $_ } split ',',
                         $tag_value;
@@ -6374,7 +6392,7 @@ sub additionnal_tag_parsing {
         #
         # HITDICESIZE:.* must become HITDIE:.* in the TEMPLATE line types.
 
-        if (   $conversion_enable{'TEMPLATE:HITDICESIZE to HITDIE'}
+        if (   Pretty::Options::isConversionActive('TEMPLATE:HITDICESIZE to HITDIE')
                 && $tag_name eq 'HITDICESIZE'
                 && $linetype eq 'TEMPLATE'
         ) {
@@ -6393,7 +6411,7 @@ sub additionnal_tag_parsing {
         #
         # This is needed by my CMP friends .
 
-        if ( $conversion_enable{'ALL:CMP remove PREALIGN'} ) {
+        if ( Pretty::Options::isConversionActive('ALL:CMP remove PREALIGN') ) {
                 if ( $tag_value =~ /PREALIGN/ ) {
                 my $ponc = $tag_name =~ /:/ ? "" : ":";
 
@@ -6428,7 +6446,7 @@ sub additionnal_tag_parsing {
         # All the MOVE:<number> tags must be converted to
         # MOVE:Walk,<number>
 
-        if (   $conversion_enable{'ALL:MOVE:nn to MOVE:Walk,nn'}
+        if (   Pretty::Options::isConversionActive('ALL:MOVE:nn to MOVE:Walk,nn')
                 && $tag_name eq "MOVE"
         ) {
                 if ( $tag_value =~ /^(\d+$)/ ) {
@@ -6447,7 +6465,7 @@ sub additionnal_tag_parsing {
         # All the EQMOD and PRETYPE:EQMOD tags must be scanned for
         # possible KEY replacement.
 
-        if($conversion_enable{'ALL:EQMOD has new keys'} &&
+        if(Pretty::Options::isConversionActive('ALL:EQMOD has new keys') &&
                 ($tag_name eq "EQMOD" || $tag_name eq "REPLACES" || ($tag_name eq "PRETYPE" && $tag_value =~ /^(\d+,)?EQMOD/)))
         {
                 for my $old_key (keys %Key_conversion_56)
@@ -6471,7 +6489,7 @@ sub additionnal_tag_parsing {
         # but only if MONSTERCLASS is present and there is not already a
         # MONCSKILL present.
 
-        if (   $conversion_enable{'RACE:CSKILL to MONCSKILL'}
+        if (   Pretty::Options::isConversionActive('RACE:CSKILL to MONCSKILL')
                 && $linetype eq "RACE"
                 && $tag_name eq "CSKILL"
         ) {
@@ -6485,7 +6503,7 @@ sub additionnal_tag_parsing {
         ##################################################################
         # GAMEMODE DnD is now 3e
 
-        if (   $conversion_enable{'PCC:GAMEMODE DnD to 3e'}
+        if (   Pretty::Options::isConversionActive('PCC:GAMEMODE DnD to 3e')
                 && $tag_name  eq "GAMEMODE"
                 && $tag_value eq "DnD"
         ) {
@@ -6500,7 +6518,7 @@ sub additionnal_tag_parsing {
         ##################################################################
         # Add 3e to GAMEMODE:DnD_v30e and 35e to GAMEMODE:DnD_v35e
 
-        if (   $conversion_enable{'PCC:GAMEMODE Add to the CMP DnD_'}
+        if (   Pretty::Options::isConversionActive('PCC:GAMEMODE Add to the CMP DnD_')
                 && $tag_name eq "GAMEMODE"
                 && $tag_value =~ /DnD_/
         ) {
@@ -6542,7 +6560,7 @@ sub additionnal_tag_parsing {
         # All the other BONUS:COMBAT|BAB should be reported since there
         # should not be any really.
 
-        if (   $conversion_enable{'ALL:Add TYPE=Base.REPLACE'}
+        if (   Pretty::Options::isConversionActive('ALL:Add TYPE=Base.REPLACE')
                 && $tag_name eq "BONUS:COMBAT"
                 && $tag_value =~ /^\|(BAB)\|/i
         ) {
@@ -6623,7 +6641,7 @@ sub additionnal_tag_parsing {
         # A ALL. must be added at the end of every COUNT[FEATTYPE=FooBar]
         # found in the DEFINE tags if not already there.
 
-        if (   $conversion_enable{'ALL:COUNT[FEATTYPE=...'}
+        if (   Pretty::Options::isConversionActive('ALL:COUNT[FEATTYPE=...')
                 && $tag_name eq "DEFINE"
         ) {
                 if ( $tag_value =~ /COUNT\[FEATTYPE=/i ) {
@@ -6661,7 +6679,7 @@ sub additionnal_tag_parsing {
         # PRECLASS now only accepts the format PRECLASS:1,<class>=<n>
         # All the PRECLASS tags must be reformated to use the default way.
 
-        if ( $conversion_enable{'ALL:PRECLASS needs a ,'} ) {
+        if ( Pretty::Options::isConversionActive('ALL:PRECLASS needs a ,') ) {
                 if ( $tag_name eq 'PRECLASS' || $tag_name eq '!PRECLASS' ) {
                 unless ( $tag_value =~ /^\d+,/ ) {
                         $_[1] = '1,' . $_[1];
@@ -6711,7 +6729,7 @@ sub additionnal_tag_parsing {
         # except EQUIPMENT and EQUIPMOD where it most be replaced by
         # BONUS:POSTMOVEADD
 
-        if (   $conversion_enable{'ALL:BONUS:MOVE conversion'} && $tag_name eq 'BONUS:MOVE' ){
+        if (   Pretty::Options::isConversionActive('ALL:BONUS:MOVE conversion') && $tag_name eq 'BONUS:MOVE' ){
                 if ( $linetype eq "EQUIPMENT" || $linetype eq "EQUIPMOD" ) {
                         $_[0] = "BONUS:POSTMOVEADD";
                 }
@@ -6734,7 +6752,7 @@ sub additionnal_tag_parsing {
         # [ 728038 ] BONUS:VISION must replace VISION:.ADD
         # Now doing the VISION:.ADD conversion
 
-        if (   $conversion_enable{'ALL: , to | in VISION'} && $tag_name eq 'VISION' ) {
+        if (   Pretty::Options::isConversionActive('ALL: , to | in VISION') && $tag_name eq 'VISION' ) {
                 unless ( $tag_value =~ /(\.ADD,|1,)/i ) {
                         if ( $_[1] =~ tr{,}{|} ) {
                                 $logging->warning(
@@ -6750,7 +6768,7 @@ sub additionnal_tag_parsing {
         # PRESTAT now only accepts the format PRESTAT:1,<stat>=<n>
         # All the PRESTAT tags must be reformated to use the default way.
 
-        if ( $conversion_enable{'ALL:PRESTAT needs a ,'} && $tag_name eq 'PRESTAT' ) {
+        if ( Pretty::Options::isConversionActive('ALL:PRESTAT needs a ,') && $tag_name eq 'PRESTAT' ) {
                 if ( index( $tag_value, ',' ) == -1 ) {
                         # There is no ',', we need to add one
                         $_[1] = '1,' . $_[1];
@@ -6766,7 +6784,7 @@ sub additionnal_tag_parsing {
         # [ 686169 ] remove ATTACKS: tag
         # ATTACKS:<attacks> must be replaced by BONUS:COMBAT|ATTACKS|<attacks>
 
-        if ( $conversion_enable{'EQUIPMENT: remove ATTACKS'}
+        if ( Pretty::Options::isConversionActive('EQUIPMENT: remove ATTACKS')
                 && $tag_name eq 'ATTACKS'
                 && $linetype eq 'EQUIPMENT' ) {
                 my $number_attacks = $tag_value;
@@ -6783,7 +6801,7 @@ sub additionnal_tag_parsing {
         ##################################################################
         # Name change for SRD compliance (PCGEN 4.3.3)
 
-        if ($conversion_enable{'ALL: 4.3.3 Weapon name change'}
+        if (Pretty::Options::isConversionActive('ALL: 4.3.3 Weapon name change')
                 && (   $tag_name eq 'WEAPONBONUS'
                 || $tag_name eq 'WEAPONAUTO'
                 || $tag_name eq 'PROF'
@@ -7113,7 +7131,7 @@ sub validate_line {
                 }
                 else {
                         # [ 1368562 ] .FORGET / .MOD don\'t need KEY entries
-                        my $report_tag = $line_ref->{$column_with_no_tag{'EQUIPMOD'}[0]}[0];
+                        my $report_tag = $line_ref->{$columnWithNoTag{'EQUIPMOD'}[0]}[0];
                         if ($report_tag =~ /.FORGET$|.MOD$/) {
                         }
                         else {
@@ -7198,7 +7216,7 @@ sub validate_line {
 
                 if ( exists $line_ref->{'SPELLTYPE'} && !exists $line_ref->{'BONUS:CASTERLEVEL'} ) {
                         $logging->info(
-                                qq{Missing BONUS:CASTERLEVEL for "$line_ref->{$column_with_no_tag{'CLASS'}[0]}[0]"},
+                                qq{Missing BONUS:CASTERLEVEL for "$line_ref->{$columnWithNoTag{'CLASS'}[0]}[0]"},
                                 $file_for_error,
                                 $line_for_error
                         );
@@ -7213,7 +7231,7 @@ sub validate_line {
 
                 if ( exists $line_ref->{'FACT:SPELLTYPE'} && !exists $line_ref->{'BONUS:CASTERLEVEL'} ) {
                         $logging->info(
-                                qq{Missing BONUS:CASTERLEVEL for "$line_ref->{$column_with_no_tag{'CLASS'}[0]}[0]"},
+                                qq{Missing BONUS:CASTERLEVEL for "$line_ref->{$columnWithNoTag{'CLASS'}[0]}[0]"},
                                 $file_for_error,
                                 $line_for_error
                         );
@@ -7275,7 +7293,7 @@ sub validate_line {
                 # [ 779341 ] Spell Name.MOD to CLASS's SPELLLEVEL
                 #
 
-#  if($conversion_enable{'CLASS: SPELLLIST from Spell.MOD'})
+#  if(Pretty::Options::isConversionActive('CLASS: SPELLLIST from Spell.MOD'))
 #  {
 #       if($filetype eq 'SPELL')
 #       {
@@ -7342,7 +7360,7 @@ sub validate_line {
                 # with multiple lines (for clarity) and then want them formatted
                 # properly for submission.
 
-                if ( $conversion_enable{'ALL:Multiple lines to one'} ) {
+                if ( Pretty::Options::isConversionActive('ALL:Multiple lines to one') ) {
                 my %valid_line_type = (
                         'RACE'  => 1,
                         'TEMPLATE' => 1,
@@ -7468,7 +7486,7 @@ sub validate_line {
                 #   '000ClassSpellLevel',
                 #   '001ClassSpells'
 
-                if ( $conversion_enable{'CLASSSPELL conversion to SPELL'} ) {
+                if ( Pretty::Options::isConversionActive('CLASSSPELL conversion to SPELL') ) {
                 if ( $filetype eq 'CLASSSPELL' ) {
 
                         # Here we will put aside all the CLASSSPELL that
@@ -7695,7 +7713,7 @@ sub validate_line {
                 #
                 # 2003.07.11: a fourth line was added for the SPELL related tags
 
-                if (   $conversion_enable{'CLASS:Four lines'}
+                if (   Pretty::Options::isConversionActive('CLASS:Four lines')
                 && $filetype eq 'CLASS' )
                 {
                 my $last_main_line = -1;
@@ -7865,7 +7883,7 @@ sub validate_line {
                                 # that have a SPELLTYPE tag except if there is also an
                                 # ITEMCREATE tag present.
 
-                                if (   $conversion_enable{'CLASS:CASTERLEVEL for all casters'}
+                                if (   Pretty::Options::isConversionActive('CLASS:CASTERLEVEL for all casters')
                                         && exists $new_spell_line{'SPELLTYPE'}
                                         && !exists $new_spell_line{'BONUS:CASTERLEVEL'} )
                                 {
@@ -7945,7 +7963,7 @@ sub validate_line {
                 # directory, entries with class name.MOD must be generated
                 # at the end of the first CLASS file in the same directory.
 
-                if ( $conversion_enable{'CLASSSKILL conversion to CLASS'} ) {
+                if ( Pretty::Options::isConversionActive('CLASSSKILL conversion to CLASS') ) {
                 if ( $filetype eq 'CLASSSKILL' ) {
 
                         # Here we will put aside all the CLASSSKILL that
@@ -9037,78 +9055,78 @@ sub convertEntities {
 =cut
 
 sub modifyMasterOrderForConversions {
-   my ($master_order) = @_;
+   my ($masterTagOrder) = @_;
 
 #################################################################
 ######################## Conversion #############################
 # Tags that must be seen as valid to allow conversion.
 
    if (Pretty::Options::isConversionActive('ALL:Convert ADD:SA to ADD:SAB')) {
-      push @{ $master_order->{'CLASS'} },         'ADD:SA';
-      push @{ $master_order->{'CLASS Level'} },   'ADD:SA';
-      push @{ $master_order->{'COMPANIONMOD'} },  'ADD:SA';
-      push @{ $master_order->{'DEITY'} },         'ADD:SA';
-      push @{ $master_order->{'DOMAIN'} },        'ADD:SA';
-      push @{ $master_order->{'EQUIPMENT'} },     'ADD:SA';
-      push @{ $master_order->{'EQUIPMOD'} },      'ADD:SA';
-      push @{ $master_order->{'FEAT'} },          'ADD:SA';
-      push @{ $master_order->{'RACE'} },          'ADD:SA';
-      push @{ $master_order->{'SKILL'} },         'ADD:SA';
-      push @{ $master_order->{'SUBCLASSLEVEL'} }, 'ADD:SA';
-      push @{ $master_order->{'TEMPLATE'} },      'ADD:SA';
-      push @{ $master_order->{'WEAPONPROF'} },    'ADD:SA';
+      push @{ $masterTagOrder->{'CLASS'} },         'ADD:SA';
+      push @{ $masterTagOrder->{'CLASS Level'} },   'ADD:SA';
+      push @{ $masterTagOrder->{'COMPANIONMOD'} },  'ADD:SA';
+      push @{ $masterTagOrder->{'DEITY'} },         'ADD:SA';
+      push @{ $masterTagOrder->{'DOMAIN'} },        'ADD:SA';
+      push @{ $masterTagOrder->{'EQUIPMENT'} },     'ADD:SA';
+      push @{ $masterTagOrder->{'EQUIPMOD'} },      'ADD:SA';
+      push @{ $masterTagOrder->{'FEAT'} },          'ADD:SA';
+      push @{ $masterTagOrder->{'RACE'} },          'ADD:SA';
+      push @{ $masterTagOrder->{'SKILL'} },         'ADD:SA';
+      push @{ $masterTagOrder->{'SUBCLASSLEVEL'} }, 'ADD:SA';
+      push @{ $masterTagOrder->{'TEMPLATE'} },      'ADD:SA';
+      push @{ $masterTagOrder->{'WEAPONPROF'} },    'ADD:SA';
    }
    if (Pretty::Options::isConversionActive('EQUIP: ALTCRITICAL to ALTCRITMULT')) {
-      push @{ $master_order->{'EQUIPMENT'} }, 'ALTCRITICAL';
+      push @{ $masterTagOrder->{'EQUIPMENT'} }, 'ALTCRITICAL';
    }
 
    if (Pretty::Options::isConversionActive('BIOSET:generate the new files')) {
-      push @{ $master_order->{'RACE'} }, 'AGE', 'HEIGHT', 'WEIGHT';
+      push @{ $masterTagOrder->{'RACE'} }, 'AGE', 'HEIGHT', 'WEIGHT';
    }
 
    if (Pretty::Options::isConversionActive('EQUIPMENT: remove ATTACKS')) {
-      push @{ $master_order->{'EQUIPMENT'} }, 'ATTACKS';
+      push @{ $masterTagOrder->{'EQUIPMENT'} }, 'ATTACKS';
    }
 
    if (Pretty::Options::isConversionActive('PCC:GAME to GAMEMODE')) {
-      push @{ $master_order->{'PCC'} }, 'GAME';
+      push @{ $masterTagOrder->{'PCC'} }, 'GAME';
    }
 
    if (Pretty::Options::isConversionActive('ALL:BONUS:MOVE conversion')) {
-      push @{ $master_order->{'CLASS'} },         'BONUS:MOVE:*';
-      push @{ $master_order->{'CLASS Level'} },   'BONUS:MOVE:*';
-      push @{ $master_order->{'COMPANIONMOD'} },  'BONUS:MOVE:*';
-      push @{ $master_order->{'DEITY'} },         'BONUS:MOVE:*';
-      push @{ $master_order->{'DOMAIN'} },        'BONUS:MOVE:*';
-      push @{ $master_order->{'EQUIPMENT'} },     'BONUS:MOVE:*';
-      push @{ $master_order->{'EQUIPMOD'} },      'BONUS:MOVE:*';
-      push @{ $master_order->{'FEAT'} },          'BONUS:MOVE:*';
-      push @{ $master_order->{'RACE'} },          'BONUS:MOVE:*';
-      push @{ $master_order->{'SKILL'} },         'BONUS:MOVE:*';
-      push @{ $master_order->{'SUBCLASSLEVEL'} }, 'BONUS:MOVE:*';
-      push @{ $master_order->{'TEMPLATE'} },      'BONUS:MOVE:*';
-      push @{ $master_order->{'WEAPONPROF'} },    'BONUS:MOVE:*';
+      push @{ $masterTagOrder->{'CLASS'} },         'BONUS:MOVE:*';
+      push @{ $masterTagOrder->{'CLASS Level'} },   'BONUS:MOVE:*';
+      push @{ $masterTagOrder->{'COMPANIONMOD'} },  'BONUS:MOVE:*';
+      push @{ $masterTagOrder->{'DEITY'} },         'BONUS:MOVE:*';
+      push @{ $masterTagOrder->{'DOMAIN'} },        'BONUS:MOVE:*';
+      push @{ $masterTagOrder->{'EQUIPMENT'} },     'BONUS:MOVE:*';
+      push @{ $masterTagOrder->{'EQUIPMOD'} },      'BONUS:MOVE:*';
+      push @{ $masterTagOrder->{'FEAT'} },          'BONUS:MOVE:*';
+      push @{ $masterTagOrder->{'RACE'} },          'BONUS:MOVE:*';
+      push @{ $masterTagOrder->{'SKILL'} },         'BONUS:MOVE:*';
+      push @{ $masterTagOrder->{'SUBCLASSLEVEL'} }, 'BONUS:MOVE:*';
+      push @{ $masterTagOrder->{'TEMPLATE'} },      'BONUS:MOVE:*';
+      push @{ $masterTagOrder->{'WEAPONPROF'} },    'BONUS:MOVE:*';
    }
 
    if (Pretty::Options::isConversionActive('WEAPONPROF:No more SIZE')) {
-      push @{ $master_order->{'WEAPONPROF'} }, 'SIZE';
+      push @{ $masterTagOrder->{'WEAPONPROF'} }, 'SIZE';
    }
 
    if (Pretty::Options::isConversionActive('EQUIP:no more MOVE')) {
-      push @{ $master_order->{'EQUIPMENT'} }, 'MOVE';
+      push @{ $masterTagOrder->{'EQUIPMENT'} }, 'MOVE';
    }
 
 #   vvvvvv This one is disactivated
    if (0 && Pretty::Options::isConversionActive('ALL:Convert SPELL to SPELLS')) {
-      push @{ $master_order->{'CLASS Level'} },    'SPELL:*';
-      push @{ $master_order->{'DOMAIN'} },         'SPELL:*';
-      push @{ $master_order->{'EQUIPMOD'} },       'SPELL:*';
-      push @{ $master_order->{'SUBCLASSLEVEL'} },  'SPELL:*';
+      push @{ $masterTagOrder->{'CLASS Level'} },    'SPELL:*';
+      push @{ $masterTagOrder->{'DOMAIN'} },         'SPELL:*';
+      push @{ $masterTagOrder->{'EQUIPMOD'} },       'SPELL:*';
+      push @{ $masterTagOrder->{'SUBCLASSLEVEL'} },  'SPELL:*';
    }
 
 #   vvvvvv This one is disactivated
    if (0 && Pretty::Options::isConversionActive('TEMPLATE:HITDICESIZE to HITDIE')) {
-      push @{ $master_order->{'TEMPLATE'} }, 'HITDICESIZE';
+      push @{ $masterTagOrder->{'TEMPLATE'} }, 'HITDICESIZE';
    }
 
 }
@@ -9119,7 +9137,7 @@ sub convertAddSA {
    # [ 1864711 ] Convert ADD:SA to ADD:SAB
    # In most files, take ADD:SA and replace with ADD:SAB
 
-   if ($conversion_enable{'ALL:Convert ADD:SA to ADD:SAB'} && exists $lineTokens->{'ADD:SA'})) {
+   if (Pretty::Options::isConversionActive('ALL:Convert ADD:SA to ADD:SAB') && exists $lineTokens->{'ADD:SA'})) {
 
       my $logger = Pretty::Reformat::getLogger();
 
@@ -9148,7 +9166,7 @@ sub removePREDefaultMonster {
    # This should remove the whole tag.
    my ($lineTokens, $filetype, $file_for_error, $line_for_error) = @_;
 
-   if ($conversion_enable{'RACE:Fix PREDEFAULTMONSTER bonuses'} && $filetype eq "RACE") {
+   if (Pretty::Options::isConversionActive('RACE:Fix PREDEFAULTMONSTER bonuses') && $filetype eq "RACE") {
       for my $key ( keys %$lineTokens ) {
          my $ary = $lineTokens->{$key};
          my $iCount = 0;
@@ -9183,7 +9201,7 @@ sub removeALTCRITICAL {
    my ($lineTokens, $filetype, $file_for_error, $line_for_error) = @_;
 
    if (
-      $conversion_enable{'EQUIP: ALTCRITICAL to ALTCRITMULT'}
+      Pretty::Options::isConversionActive('EQUIP: ALTCRITICAL to ALTCRITMULT')
       && $filetype eq "EQUIPMENT"
       && exists $lineTokens->{'ALTCRITICAL'}) {
 
