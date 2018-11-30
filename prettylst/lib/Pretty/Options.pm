@@ -289,6 +289,30 @@ sub isConversionActive {
    return $conversionEnabled{$opt};
 };
 
+=head2 disableConversion
+
+   Turn off a single conversion
+
+=cut
+
+sub disableConversion {
+   my ($conversion) = @_;
+
+   $conversionEnabled{$conversion} = 0;
+}
+
+=head2 enableConversion
+
+   Turn on a single conversion
+
+=cut
+
+sub enableConversion {
+   my ($conversion) = @_;
+
+   $conversionEnabled{$conversion} = 1;
+}
+
 =head2 enableConversions
 
    Turn on any conversions that have been requested via command line options
@@ -306,7 +330,7 @@ sub enableConversions {
 
    # Turn on each entry of the array
    for my $conversion ( @conv ) {
-      $conversionEnabled{$conversion} = 1;
+      enableConversion($conversion);
    }
 }
 
@@ -321,12 +345,12 @@ sub processOptions {
    # oldsourcetag option
    if ( getOption('oldsourcetag') ) {
       # We disable the conversion if the -oldsourcetag option is used
-      $conversion_enable{'ALL:New SOURCExxx tag format'} = 0;
+      disableConversion ('ALL:New SOURCExxx tag format');
    }
 
    # exportlist option
    if ( getOption('exportlist') ) {
-      $conversion_enable{'Export lists'} = 1;
+      enableConversion ('Export lists');
    }
 
    # noxcheck option

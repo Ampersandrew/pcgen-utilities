@@ -44,7 +44,7 @@ our %headings = (
 
 =head2 getLogHeader
 
-   This operation constructs a headeing for the logging program.
+   This operation constructs a heading for the logging program.
 
 =cut
 
@@ -316,552 +316,334 @@ my %PREALIGN_conversion_5715  = qw(
         10      Deity
 ) if Pretty::Options::isConversionActive('ALL:PREALIGN conversion');
 
-my %Key_conversion_56 = qw(
-        BIND            BLIND
-) if Pretty::Options::isConversionActive('ALL:EQMOD has new keys');
-#       ABENHABON       BNS_ENHC_AB
-#       ABILITYMINUS    BNS_ENHC_AB
-#       ABILITYPLUS     BNS_ENHC_AB
-#       ACDEFLBON       BNS_AC_DEFL
-#       ACENHABON       BNS_ENHC_AC
-#       ACINSIBON       BNS_AC_INSI
-#       ACLUCKBON       BNS_AC_LUCK
-#       ACOTHEBON       BNS_AC_OTHE
-#       ACPROFBON       BNS_AC_PROF
-#       ACSACRBON       BNS_AC_SCRD
-#       ADAARH          ADAM
-#       ADAARH          ADAM
-#       ADAARL          ADAM
-#       ADAARM          ADAM
-#       ADAWE           ADAM
-#       AMINAT          ANMATD
-#       AMMO+1          PLUS1W
-#       AMMO+2          PLUS2W
-#       AMMO+3          PLUS3W
-#       AMMO+4          PLUS4W
-#       AMMO+5          PLUS5W
-#       AMMODARK        DARK
-#       AMMOSLVR        SLVR
-#       ARFORH          FRT_HVY
-#       ARFORL          FRT_LGHT
-#       ARFORM          FRT_MOD
-#       ARMFOR          FRT_LGHT
-#       ARMFORH         FRT_HVY
-#       ARMFORM         FRT_MOD
-#       ARMORENHANCE    BNS_ENHC_AC
-#       ARMR+1          PLUS1A
-#       ARMR+2          PLUS2A
-#       ARMR+3          PLUS3A
-#       ARMR+4          PLUS4A
-#       ARMR+5          PLUS5A
-#       ARMRADMH        ADAM
-#       ARMRADML        ADAM
-#       ARMRADMM        ADAM
-#       ARMRMITH        MTHRL
-#       ARMRMITL        MTHRL
-#       ARMRMITM        MTHRL
-#       ARWCAT          ARW_CAT
-#       ARWDEF          ARW_DEF
-#       BANEA           BANE_A
-#       BANEM           BANE_M
-#       BANER           BANE_R
-#       BASHH           BASH_H
-#       BASHL           BASH_L
-#       BIND            BLIND
-#       BONSPELL        BNS_SPELL
-#       BONUSSPELL      BNS_SPELL
-#       BRIENAI         BRI_EN_A
-#       BRIENM          BRI_EN_M
-#       BRIENT          BRI_EN_T
-#       CHAOSA          CHAOS_A
-#       CHAOSM          CHAOS_M
-#       CHAOSR          CHAOS_R
-#       CLDIRNAI        CIRON
-#       CLDIRNW         CIRON
-#       DAGSLVR         SLVR
-#       DEFLECTBONUS    BNS_AC_DEFL
-#       DRGNAR          DRACO
-#       DRGNSH          DRACO
-#       DRKAMI          DARK
-#       DRKSH           DARK
-#       DRKWE           DARK
-#       ENBURM          EN_BUR_M
-#       ENBURR          EN_BUR_R
-#       ENERGM          ENERG_M
-#       ENERGR          ENERG_R
-#       FLAMA           FLM_A
-#       FLAMM           FLM_M
-#       FLAMR           FLM_R
-#       FLBURA          FLM_BR_A
-#       FLBURM          FLM_BR_M
-#       FLBURR          FLM_BR_R
-#       FROSA           FROST_A
-#       FROSM           FROST_M
-#       FROSR           FROST_R
-#       GHTOUA          GHOST_A
-#       GHTOUAM         GHOST_AM
-#       GHTOUM          GHOST_M
-#       GHTOUR          GHOST_R
-#       HCLDIRNW        CIRON/2
-#       HOLYA           HOLY_A
-#       HOLYM           HOLY_M
-#       HOLYR           HOLY_R
-#       ICBURA          ICE_BR_A
-#       ICBURM          ICE_BR_M
-#       ICBURR          ICE_BR_R
-#       LAWA            LAW_A
-#       LAWM            LAW_M
-#       LAWR            LAW_R
-#       LUCKBONUS       BNS_SAV_LUC
-#       LUCKBONUS2      BNS_SKL_LCK
-#       MERCA           MERC_A
-#       MERCM           MERC_M
-#       MERCR           MERC_R
-#       MICLE           MI_CLE
-#       MITHAMI         MTHRL
-#       MITHARH         MTHRL
-#       MITHARL         MTHRL
-#       MITHARM         MTHRL
-#       MITHGO          MTHRL
-#       MITHSH          MTHRL
-#       MITHWE          MTHRL
-#       NATENHA         BNS_ENHC_NAT
-#       NATURALARMOR    BNS_ENHC_NAT
-#       PLUS1AM         PLUS1W
-#       PLUS1AMI        PLUS1W
-#       PLUS1WI         PLUS1W
-#       PLUS2AM         PLUS2W
-#       PLUS2AMI        PLUS2W
-#       PLUS2WI         PLUS2W
-#       PLUS3AM         PLUS3W
-#       PLUS3AMI        PLUS3W
-#       PLUS3WI         PLUS3W
-#       PLUS4AM         PLUS4W
-#       PLUS4AMI        PLUS4W
-#       PLUS4WI         PLUS4W
-#       PLUS5AM         PLUS5W
-#       PLUS5AMI        PLUS5W
-#       PLUS5WI         PLUS5W
-#       RESIMP          RST_IMP
-#       RESIST          RST_IST
-#       RESISTBONUS     BNS_SAV_RES
-#       SAVINSBON       BNS_SAV_INS
-#       SAVLUCBON       BNS_SAV_LUC
-#       SAVOTHBON       BNS_SAV_OTH
-#       SAVPROBON       BNS_SAV_PRO
-#       SAVRESBON       BNS_SAV_RES
-#       SAVSACBON       BNS_SAV_SAC
-#       SE50CST         SPL_CHRG
-#       SECW            SPL_CMD
-#       SESUCAMA        A_1USEMI
-#       SESUCAME        A_1USEMI
-#       SESUCAMI        A_1USEMI
-#       SESUCDMA        D_1USEMI
-#       SESUCDME        D_1USEMI
-#       SESUCDMI        D_1USEMI
-#       SESUUA          SPL_1USE
-#       SEUA            SPL_ACT
-#       SE_1USEACT      SPL_1USE
-#       SE_50TRIGGER    SPL_CHRG
-#       SE_COMMANDWORD  SPL_CMD
-#       SE_USEACT       SPL_ACT
-#       SHBURA          SHK_BR_A
-#       SHBURM          SHK_BR_M
-#       SHBURR          SHK_BR_R
-#       SHDGRT          SHDW_GRT
-#       SHDIMP          SHDW_IMP
-#       SHDOW           SHDW
-#       SHFORH          FRT_HVY
-#       SHFORL          FRT_LGHT
-#       SHFORM          FRT_MOD
-#       SHLDADAM        ADAM
-#       SHLDDARK        DARK
-#       SHLDMITH        MTHRL
-#       SHOCA           SHOCK_A
-#       SHOCM           SHOCK_M
-#       SHOCR           SHOCK_R
-#       SKILLBONUS      BNS_SKL_CIR
-#       SKILLBONUS2     BNS_SKL_CMP
-#       SKLCOMBON       BNS_SKL_CMP
-#       SLICK           SLK
-#       SLKGRT          SLK_GRT
-#       SLKIMP          SLK_IMP
-#       SLMV            SLNT_MV
-#       SLMVGRT         SLNT_MV_GRT
-#       SLMVIM          SLNT_MV_IM
-#       SLVRAMI         ALCHM
-#       SLVRWE1         ALCHM
-#       SLVRWE2         ALCHM
-#       SLVRWEF         ALCHM
-#       SLVRWEH         ALCHM/2
-#       SLVRWEL         ALCHM
-#       SPELLRESI       BNS_SPL_RST
-#       SPELLRESIST     BNS_SPL_RST
-#       SPLRES          SPL_RST
-#       SPLSTR          SPL_STR
-#       THNDRA          THNDR_A
-#       THNDRM          THNDR_M
-#       THNDRR          THNDR_R
-#       UNHLYA          UNHLY_A
-#       UNHLYM          UNHLY_M
-#       UNHLYR          UNHLY_R
-#       WEAP+1          PLUS1W
-#       WEAP+2          PLUS2W
-#       WEAP+3          PLUS3W
-#       WEAP+4          PLUS4W
-#       WEAP+5          PLUS5W
-#       WEAPADAM        ADAM
-#       WEAPDARK        DARK
-#       WEAPMITH        MTHRL
-#       WILDA           WILD_A
-#       WILDS           WILD_S
-#) if Pretty::Options::isConversionActive('ALL:EQMOD has new keys');
-
-if (Pretty::Options::isConversionActive('ALL:EQMOD has new keys')) {
-   my ($old_key,$new_key);
-   while (($old_key,$new_key) = each %Key_conversion_56)
-   {
-      if($old_key eq $new_key) {
-         print "==> $old_key\n";
-         delete $Key_conversion_56{$old_key};
-      }
-   }
-}
-
-my %srd_weapon_name_conversion_433 = (
-   q{Sword (Great)}                 => q{Greatsword},
-   q{Sword (Long)}                  => q{Longsword},
-   q{Dagger (Venom)}                => q{Venom Dagger},
-   q{Dagger (Assassin's)}           => q{Assassin's Dagger},
-   q{Mace (Smiting)}                => q{Mace of Smiting},
-   q{Mace (Terror)}                 => q{Mace of Terror},
-   q{Greataxe (Life-Drinker)}       => q{Life Drinker},
-   q{Rapier (Puncturing)}           => q{Rapier of Puncturing},
-   q{Scimitar (Sylvan)}             => q{Sylvan Scimitar},
-   q{Sword (Flame Tongue)}          => q{Flame Tongue},
-   q{Sword (Planes)}                => q{Sword of the Planes},
-   q{Sword (Luck Blade)}            => q{Luck Blade},
-   q{Sword (Subtlety)}              => q{Sword of Subtlety},
-   q{Sword (Holy Avenger)}          => q{Holy Avenger},
-   q{Sword (Life Stealing)}         => q{Sword of Life Stealing},
-   q{Sword (Nine Lives Stealer)}    => q{Nine Lives Stealer},
-   q{Sword (Frost Brand)}           => q{Frost Brand},
-   q{Trident (Fish Command)}        => q{Trident of Fish Command},
-   q{Trident (Warning)}             => q{Trident of Warning},
-   q{Warhammer (Dwarven Thrower)}   => q{Dwarven Thrower},
-) if Pretty::Options::isConversionActive('ALL: 4.3.3 Weapon name change');
-
 
 # The PRExxx tags. They are used in many of the line types.
 # From now on, they are defined in only one place and every
 # line type will get the same sort order.
 my @PRE_Tags = (
-        'PRE:.CLEAR',
-        'PREABILITY:*',
-        '!PREABILITY',
-        'PREAGESET',
-        '!PREAGESET',
-        'PREALIGN:*',
-        '!PREALIGN:*',
-        'PREARMORPROF:*',
-        '!PREARMORPROF',
-        'PREARMORTYPE',
-        '!PREARMORTYPE',
-        'PREATT',
-        '!PREATT',
-        'PREBASESIZEEQ',
-        '!PREBASESIZEEQ',
-        'PREBASESIZEGT',
-        '!PREBASESIZEGT',
-        'PREBASESIZEGTEQ',
-        '!PREBASESIZEGTEQ',
-        'PREBASESIZELT',
-        '!PREBASESIZELT',
-        'PREBASESIZELTEQ',
-        '!PREBASESIZELTEQ',
-        'PREBASESIZENEQ',
-        'PREBIRTHPLACE',
-        '!PREBIRTHPLACE',
-        'PRECAMPAIGN',
-        '!PRECAMPAIGN',
-        'PRECHECK',
-        '!PRECHECK',
-        'PRECHECKBASE',
-        '!PRECHECKBASE',
-        'PRECITY',
-        '!PRECITY',
-        'PRECHARACTERTYPE',
-        '!PRECHARACTERTYPE',
-        'PRECLASS',
-        '!PRECLASS',
-        'PRECLASSLEVELMAX',
-        '!PRECLASSLEVELMAX',
-        'PRECSKILL',
-        '!PRECSKILL',
-        'PREDEITY',
-        '!PREDEITY',
-        'PREDEITYALIGN',
-        '!PREDEITYALIGN',
-        'PREDEITYDOMAIN',
-        '!PREDEITYDOMAIN',
-        'PREDOMAIN',
-        '!PREDOMAIN',
-        'PREDR',
-        '!PREDR',
-        'PREEQUIP',
-        '!PREEQUIP',
-        'PREEQUIPBOTH',
-        '!PREEQUIPBOTH',
-        'PREEQUIPPRIMARY',
-        '!PREEQUIPPRIMARY',
-        'PREEQUIPSECONDARY',
-        '!PREEQUIPSECONDARY',
-        'PREEQUIPTWOWEAPON',
-        '!PREEQUIPTWOWEAPON',
-        'PREFEAT:*',
-        '!PREFEAT',
-        'PREFACT:*',
-        '!PREFACT',
-        'PREGENDER',
-        '!PREGENDER',
-        'PREHANDSEQ',
-        '!PREHANDSEQ',
-        'PREHANDSGT',
-        '!PREHANDSGT',
-        'PREHANDSGTEQ',
-        '!PREHANDSGTEQ',
-        'PREHANDSLT',
-        '!PREHANDSLT',
-        'PREHANDSLTEQ',
-        '!PREHANDSLTEQ',
-        'PREHANDSNEQ',
-        'PREHD',
-        '!PREHD',
-        'PREHP',
-        '!PREHP',
-        'PREITEM',
-        '!PREITEM',
-        'PRELANG',
-        '!PRELANG',
-        'PRELEGSEQ',
-        '!PRELEGSEQ',
-        'PRELEGSGT',
-        '!PRELEGSGT',
-        'PRELEGSGTEQ',
-        '!PRELEGSGTEQ',
-        'PRELEGSLT',
-        '!PRELEGSLT',
-        'PRELEGSLTEQ',
-        '!PRELEGSLTEQ',
-        'PRELEGSNEQ',
-        'PRELEVEL',
-        '!PRELEVEL',
-        'PRELEVELMAX',
-        '!PRELEVELMAX',
-        'PREKIT',
-        '!PREKIT',
-        'PREMOVE',
-        '!PREMOVE',
-        'PREMULT:*',
-        '!PREMULT:*',
-        'PREPCLEVEL',
-        '!PREPCLEVEL',
-        'PREPROFWITHARMOR',
-        '!PREPROFWITHARMOR',
-        'PREPROFWITHSHIELD',
-        '!PREPROFWITHSHIELD',
-        'PRERACE:*',
-        '!PRERACE:*',
-        'PREREACH',
-        '!PREREACH',
-        'PREREACHEQ',
-        '!PREREACHEQ',
-        'PREREACHGT',
-        '!PREREACHGT',
-        'PREREACHGTEQ',
-        '!PREREACHGTEQ',
-        'PREREACHLT',
-        '!PREREACHLT',
-        'PREREACHLTEQ',
-        '!PREREACHLTEQ',
-        'PREREACHNEQ',
-        'PREREGION',
-        '!PREREGION',
-        'PRERULE',
-        '!PRERULE',
-        'PRESA',
-        '!PRESA',
-        'PRESITUATION',
-        '!PRESITUATION',
-        'PRESHIELDPROF',
-        '!PRESHIELDPROF',
-        'PRESIZEEQ',
-        '!PRESIZEEQ',
-        'PRESIZEGT',
-        '!PRESIZEGT',
-        'PRESIZEGTEQ',
-        '!PRESIZEGTEQ',
-        'PRESIZELT',
-        '!PRESIZELT',
-        'PRESIZELTEQ',
-        '!PRESIZELTEQ',
-        'PRESIZENEQ',
-        'PRESKILL:*',
-        '!PRESKILL',
-        'PRESKILLMULT',
-        '!PRESKILLMULT',
-        'PRESKILLTOT',
-        '!PRESKILLTOT',
-        'PRESPELL:*',
-        '!PRESPELL',
-        'PRESPELLBOOK',
-        '!PRESPELLBOOK',
-        'PRESPELLCAST:*',
-        '!PRESPELLCAST:*',
-        'PRESPELLDESCRIPTOR',
-        'PRESPELLSCHOOL:*',
-        '!PRESPELLSCHOOL',
-        'PRESPELLSCHOOLSUB',
-        '!PRESPELLSCHOOLSUB',
-        'PRESPELLTYPE:*',
-        '!PRESPELLTYPE',
-        'PRESREQ',
-        '!PRESREQ',
-        'PRESRGT',
-        '!PRESRGT',
-        'PRESRGTEQ',
-        '!PRESRGTEQ',
-        'PRESRLT',
-        '!PRESRLT',
-        'PRESRLTEQ',
-        '!PRESRLTEQ',
-        'PRESRNEQ',
-        'PRESTAT:*',
-        '!PRESTAT',
-        'PRESTATEQ',
-        '!PRESTATEQ',
-        'PRESTATGT',
-        '!PRESTATGT',
-        'PRESTATGTEQ',
-        '!PRESTATGTEQ',
-        'PRESTATLT',
-        '!PRESTATLT',
-        'PRESTATLTEQ',
-        '!PRESTATLTEQ',
-        'PRESTATNEQ',
-        'PRESUBCLASS',
-        '!PRESUBCLASS',
-        'PRETEMPLATE:*',
-        '!PRETEMPLATE:*',
-        'PRETEXT',
-        '!PRETEXT',
-        'PRETYPE:*',
-        '!PRETYPE:*',
-        'PRETOTALAB:*',
-        '!PRETOTALAB:*',
-        'PREUATT',
-        '!PREUATT',
-        'PREVAREQ:*',
-        '!PREVAREQ:*',
-        'PREVARGT:*',
-        '!PREVARGT:*',
-        'PREVARGTEQ:*',
-        '!PREVARGTEQ:*',
-        'PREVARLT:*',
-        '!PREVARLT:*',
-        'PREVARLTEQ:*',
-        '!PREVARLTEQ:*',
-        'PREVARNEQ:*',
-        'PREVISION',
-        '!PREVISION',
-        'PREWEAPONPROF:*',
-        '!PREWEAPONPROF:*',
-        'PREWIELD',
-        '!PREWIELD',
+   'PRE:.CLEAR',
+   'PREABILITY:*',
+   '!PREABILITY',
+   'PREAGESET',
+   '!PREAGESET',
+   'PREALIGN:*',
+   '!PREALIGN:*',
+   'PREARMORPROF:*',
+   '!PREARMORPROF',
+   'PREARMORTYPE',
+   '!PREARMORTYPE',
+   'PREATT',
+   '!PREATT',
+   'PREBASESIZEEQ',
+   '!PREBASESIZEEQ',
+   'PREBASESIZEGT',
+   '!PREBASESIZEGT',
+   'PREBASESIZEGTEQ',
+   '!PREBASESIZEGTEQ',
+   'PREBASESIZELT',
+   '!PREBASESIZELT',
+   'PREBASESIZELTEQ',
+   '!PREBASESIZELTEQ',
+   'PREBASESIZENEQ',
+   'PREBIRTHPLACE',
+   '!PREBIRTHPLACE',
+   'PRECAMPAIGN',
+   '!PRECAMPAIGN',
+   'PRECHECK',
+   '!PRECHECK',
+   'PRECHECKBASE',
+   '!PRECHECKBASE',
+   'PRECITY',
+   '!PRECITY',
+   'PRECHARACTERTYPE',
+   '!PRECHARACTERTYPE',
+   'PRECLASS',
+   '!PRECLASS',
+   'PRECLASSLEVELMAX',
+   '!PRECLASSLEVELMAX',
+   'PRECSKILL',
+   '!PRECSKILL',
+   'PREDEITY',
+   '!PREDEITY',
+   'PREDEITYALIGN',
+   '!PREDEITYALIGN',
+   'PREDEITYDOMAIN',
+   '!PREDEITYDOMAIN',
+   'PREDOMAIN',
+   '!PREDOMAIN',
+   'PREDR',
+   '!PREDR',
+   'PREEQUIP',
+   '!PREEQUIP',
+   'PREEQUIPBOTH',
+   '!PREEQUIPBOTH',
+   'PREEQUIPPRIMARY',
+   '!PREEQUIPPRIMARY',
+   'PREEQUIPSECONDARY',
+   '!PREEQUIPSECONDARY',
+   'PREEQUIPTWOWEAPON',
+   '!PREEQUIPTWOWEAPON',
+   'PREFEAT:*',
+   '!PREFEAT',
+   'PREFACT:*',
+   '!PREFACT',
+   'PREGENDER',
+   '!PREGENDER',
+   'PREHANDSEQ',
+   '!PREHANDSEQ',
+   'PREHANDSGT',
+   '!PREHANDSGT',
+   'PREHANDSGTEQ',
+   '!PREHANDSGTEQ',
+   'PREHANDSLT',
+   '!PREHANDSLT',
+   'PREHANDSLTEQ',
+   '!PREHANDSLTEQ',
+   'PREHANDSNEQ',
+   'PREHD',
+   '!PREHD',
+   'PREHP',
+   '!PREHP',
+   'PREITEM',
+   '!PREITEM',
+   'PRELANG',
+   '!PRELANG',
+   'PRELEGSEQ',
+   '!PRELEGSEQ',
+   'PRELEGSGT',
+   '!PRELEGSGT',
+   'PRELEGSGTEQ',
+   '!PRELEGSGTEQ',
+   'PRELEGSLT',
+   '!PRELEGSLT',
+   'PRELEGSLTEQ',
+   '!PRELEGSLTEQ',
+   'PRELEGSNEQ',
+   'PRELEVEL',
+   '!PRELEVEL',
+   'PRELEVELMAX',
+   '!PRELEVELMAX',
+   'PREKIT',
+   '!PREKIT',
+   'PREMOVE',
+   '!PREMOVE',
+   'PREMULT:*',
+   '!PREMULT:*',
+   'PREPCLEVEL',
+   '!PREPCLEVEL',
+   'PREPROFWITHARMOR',
+   '!PREPROFWITHARMOR',
+   'PREPROFWITHSHIELD',
+   '!PREPROFWITHSHIELD',
+   'PRERACE:*',
+   '!PRERACE:*',
+   'PREREACH',
+   '!PREREACH',
+   'PREREACHEQ',
+   '!PREREACHEQ',
+   'PREREACHGT',
+   '!PREREACHGT',
+   'PREREACHGTEQ',
+   '!PREREACHGTEQ',
+   'PREREACHLT',
+   '!PREREACHLT',
+   'PREREACHLTEQ',
+   '!PREREACHLTEQ',
+   'PREREACHNEQ',
+   'PREREGION',
+   '!PREREGION',
+   'PRERULE',
+   '!PRERULE',
+   'PRESA',
+   '!PRESA',
+   'PRESITUATION',
+   '!PRESITUATION',
+   'PRESHIELDPROF',
+   '!PRESHIELDPROF',
+   'PRESIZEEQ',
+   '!PRESIZEEQ',
+   'PRESIZEGT',
+   '!PRESIZEGT',
+   'PRESIZEGTEQ',
+   '!PRESIZEGTEQ',
+   'PRESIZELT',
+   '!PRESIZELT',
+   'PRESIZELTEQ',
+   '!PRESIZELTEQ',
+   'PRESIZENEQ',
+   'PRESKILL:*',
+   '!PRESKILL',
+   'PRESKILLMULT',
+   '!PRESKILLMULT',
+   'PRESKILLTOT',
+   '!PRESKILLTOT',
+   'PRESPELL:*',
+   '!PRESPELL',
+   'PRESPELLBOOK',
+   '!PRESPELLBOOK',
+   'PRESPELLCAST:*',
+   '!PRESPELLCAST:*',
+   'PRESPELLDESCRIPTOR',
+   'PRESPELLSCHOOL:*',
+   '!PRESPELLSCHOOL',
+   'PRESPELLSCHOOLSUB',
+   '!PRESPELLSCHOOLSUB',
+   'PRESPELLTYPE:*',
+   '!PRESPELLTYPE',
+   'PRESREQ',
+   '!PRESREQ',
+   'PRESRGT',
+   '!PRESRGT',
+   'PRESRGTEQ',
+   '!PRESRGTEQ',
+   'PRESRLT',
+   '!PRESRLT',
+   'PRESRLTEQ',
+   '!PRESRLTEQ',
+   'PRESRNEQ',
+   'PRESTAT:*',
+   '!PRESTAT',
+   'PRESTATEQ',
+   '!PRESTATEQ',
+   'PRESTATGT',
+   '!PRESTATGT',
+   'PRESTATGTEQ',
+   '!PRESTATGTEQ',
+   'PRESTATLT',
+   '!PRESTATLT',
+   'PRESTATLTEQ',
+   '!PRESTATLTEQ',
+   'PRESTATNEQ',
+   'PRESUBCLASS',
+   '!PRESUBCLASS',
+   'PRETEMPLATE:*',
+   '!PRETEMPLATE:*',
+   'PRETEXT',
+   '!PRETEXT',
+   'PRETYPE:*',
+   '!PRETYPE:*',
+   'PRETOTALAB:*',
+   '!PRETOTALAB:*',
+   'PREUATT',
+   '!PREUATT',
+   'PREVAREQ:*',
+   '!PREVAREQ:*',
+   'PREVARGT:*',
+   '!PREVARGT:*',
+   'PREVARGTEQ:*',
+   '!PREVARGTEQ:*',
+   'PREVARLT:*',
+   '!PREVARLT:*',
+   'PREVARLTEQ:*',
+   '!PREVARLTEQ:*',
+   'PREVARNEQ:*',
+   'PREVISION',
+   '!PREVISION',
+   'PREWEAPONPROF:*',
+   '!PREWEAPONPROF:*',
+   'PREWIELD',
+   '!PREWIELD',
 
-        # Removed tags
-        #       'PREVAR',
+   # Removed tags
+   #       'PREVAR',
 );
 
 # Hash used by validate_pre_tag to verify if a PRExxx tag exists
-my %PRE_Tags = (
-        'PREAPPLY'              => 1,   # Only valid when embeded - THIS IS DEPRECATED
+our %PRE_Tags = (
+   'PREAPPLY'              => 1,   # Only valid when embeded - THIS IS DEPRECATED
 # Uncommenting until conversion for monster kits is done to prevent error messages.
-        'PREDEFAULTMONSTER' => 1,       # Only valid when embeded
+   'PREDEFAULTMONSTER' => 1,       # Only valid when embeded
 );
 
 for my $pre_tag (@PRE_Tags) {
-        # We need a copy since we don't want to modify the original
-        my $pre_tag_name = $pre_tag;
+   # We need a copy since we don't want to modify the original
+   my $pre_tag_name = $pre_tag;
 
-        # We strip the :* at the end to get the real name for the lookup table
-        $pre_tag_name =~ s/ [:][*] \z//xms;
+   # We strip the :* at the end to get the real name for the lookup table
+   $pre_tag_name =~ s/ [:][*] \z//xms;
 
-        $PRE_Tags{$pre_tag_name} = 1;
+   $PRE_Tags{$pre_tag_name} = 1;
 }
 
-my %double_PCC_tags = (
-        'BONUS:ABILITYPOOL',            => 1,
-        'BONUS:CASTERLEVEL',            => 1,
-        'BONUS:CHECKS',                 => 1,
-        'BONUS:COMBAT',                 => 1,
-        'BONUS:DC',                             => 1,
-        'BONUS:DOMAIN',                 => 1,
-        'BONUS:DR',                             => 1,
-        'BONUS:FEAT',                   => 1,
-        'BONUS:FOLLOWERS',              => 1,
-        'BONUS:HP',                             => 1,
-        'BONUS:MISC',                   => 1,
-        'BONUS:MOVEADD',                        => 1,
-        'BONUS:MOVEMULT',                       => 1,
-        'BONUS:PCLEVEL',                        => 1,
-        'BONUS:POSTMOVEADD',            => 1,
-        'BONUS:POSTRANGEADD',           => 1,
-        'BONUS:RANGEADD',                       => 1,
-        'BONUS:RANGEMULT',              => 1,
-        'BONUS:SITUATION',              => 1,
-        'BONUS:SIZEMOD',                        => 1,
-        'BONUS:SKILL',                  => 1,
-        'BONUS:SKILLPOINTS',            => 1,
-        'BONUS:SKILLPOOL',              => 1,
-        'BONUS:SKILLRANK',              => 1,
-        'BONUS:SLOTS',                  => 1,
-        'BONUS:SPECIALTYSPELLKNOWN',    => 1,
-        'BONUS:SPELLCAST',              => 1,
-        'BONUS:SPELLCASTMULT',          => 1,
-        'BONUS:SPELLKNOWN',             => 1,
-        'BONUS:STAT',                   => 1,
-        'BONUS:UDAM',                   => 1,
-        'BONUS:VAR',                    => 1,
-        'BONUS:VISION',                 => 1,
-        'BONUS:WEAPONPROF',             => 1,
-        'BONUS:WIELDCATEGORY',          => 1,
- );
 
-
-my @SOURCE_Tags = (
-        'SOURCELONG',
-        'SOURCESHORT',
-        'SOURCEWEB',
-        'SOURCEPAGE:.CLEAR',
-        'SOURCEPAGE',
-        'SOURCELINK',
+# Global tags allowed in PCC files.
+our @doublePCCTags = (
+   'BONUS:ABILITYPOOL:*',
+   'BONUS:CASTERLEVEL:*',
+   'BONUS:CHECKS:*',
+   'BONUS:COMBAT:*',
+   'BONUS:CONCENTRATION:*',
+   'BONUS:DC:*',
+   'BONUS:DOMAIN:*',
+   'BONUS:DR:*',
+   'BONUS:FEAT:*',
+   'BONUS:FOLLOWERS',
+   'BONUS:HP:*',
+   'BONUS:MISC:*',
+   'BONUS:MOVEADD:*',
+   'BONUS:MOVEMULT:*',
+   'BONUS:PCLEVEL:*',
+   'BONUS:POSTMOVEADD:*',
+   'BONUS:POSTRANGEADD:*',
+   'BONUS:RANGEADD:*',
+   'BONUS:RANGEMULT:*',
+   'BONUS:SAVE:*',
+   'BONUS:SIZEMOD:*',
+   'BONUS:SKILL:*',
+   'BONUS:SKILLPOINTS:*',
+   'BONUS:SKILLPOOL:*',
+   'BONUS:SKILLRANK:*',
+   'BONUS:SLOTS:*',
+   'BONUS:SPECIALTYSPELLKNOWN:*',
+   'BONUS:SPELLCAST:*',
+   'BONUS:SPELLCASTMULT:*',
+   'BONUS:SPELLKNOWN:*',
+   'BONUS:STAT:*',
+   'BONUS:UDAM:*',
+   'BONUS:VAR:*',
+   'BONUS:VISION:*',
+   'BONUS:WEAPONPROF:*',
+   'BONUS:WIELDCATEGORY:*',
 );
 
-my @QUALIFY_Tags = (
-        'QUALIFY:ABILITY',
-        'QUALIFY:CLASS',
-        'QUALIFY:DEITY',
-        'QUALIFY:DOMAIN',
-        'QUALIFY:EQUIPMENT',
-        'QUALIFY:EQMOD',
-        'QUALIFY:FEAT',
-        'QUALIFY:RACE',
-        'QUALIFY:SPELL',
-        'QUALIFY:SKILL',
-        'QUALIFY:TEMPLATE',
-        'QUALIFY:WEAPONPROF',
+our %doublePCCTags = ();
+
+# Now use the array of valid double tags to populate the hash
+for my $doubleTag (@PRETags) {
+
+   # We need a copy since we don't want to modify the original
+   my $doubleTagName = $doubleTag;
+
+   # We strip the :* at the end to get the real name for the lookup table
+   $doubleTagName =~ s/ [:][*] \z//xms;
+
+   $doublePCCTags{$doubleTagName} = 1;
+}
+
+our @SOURCETags = (
+   'SOURCELONG',
+   'SOURCESHORT',
+   'SOURCEWEB',
+   'SOURCEPAGE:.CLEAR',
+   'SOURCEPAGE',
+   'SOURCELINK',
 );
+
+our @QUALIFYTags = (
+   'QUALIFY:ABILITY',
+   'QUALIFY:CLASS',
+   'QUALIFY:DEITY',
+   'QUALIFY:DOMAIN',
+   'QUALIFY:EQUIPMENT',
+   'QUALIFY:EQMOD',
+   'QUALIFY:FEAT',
+   'QUALIFY:RACE',
+   'QUALIFY:SPELL',
+   'QUALIFY:SKILL',
+   'QUALIFY:TEMPLATE',
+   'QUALIFY:WEAPONPROF',
+);
+
 
 # [ 1956340 ] Centralize global BONUS tags
 # The global BONUS:xxx tags. They are used in many of the line types.
@@ -869,44 +651,44 @@ my @QUALIFY_Tags = (
 # line type will get the same sort order.
 # BONUSes only valid for specific line types are listed on those line types
 my @Global_BONUS_Tags = (
-        'BONUS:ABILITYPOOL:*',                  # Global
-        'BONUS:CASTERLEVEL:*',                  # Global
-        'BONUS:CHECKS:*',                               # Global        DEPRECATED
-        'BONUS:COMBAT:*',                               # Global
-        'BONUS:CONCENTRATION:*',                # Global
-        'BONUS:DC:*',                           # Global
-        'BONUS:DOMAIN:*',                               # Global
-        'BONUS:DR:*',                           # Global
-        'BONUS:FEAT:*',                         # Global
-        'BONUS:FOLLOWERS',                      # Global
-        'BONUS:HP:*',                           # Global
-        'BONUS:MISC:*',                         # Global
-        'BONUS:MOVEADD:*',                      # Global
-        'BONUS:MOVEMULT:*',                     # Global
-        'BONUS:PCLEVEL:*',                      # Global
-        'BONUS:POSTMOVEADD:*',                  # Global
-        'BONUS:POSTRANGEADD:*',                 # Global
-        'BONUS:RANGEADD:*',                     # Global
-        'BONUS:RANGEMULT:*',                    # Global
-        'BONUS:SAVE:*',                         # Global        Replacement for CHECKS
-        'BONUS:SITUATION:*',                    # Global
-        'BONUS:SIZEMOD:*',                      # Global
-        'BONUS:SKILL:*',                                # Global
-        'BONUS:SKILLPOINTS:*',                  # Global
-        'BONUS:SKILLPOOL:*',                    # Global
-        'BONUS:SKILLRANK:*',                    # Global
-        'BONUS:SLOTS:*',                                # Global
-        'BONUS:SPECIALTYSPELLKNOWN:*',  # Global
-        'BONUS:SPELLCAST:*',                    # Global
-        'BONUS:SPELLCASTMULT:*',                # Global
+   'BONUS:ABILITYPOOL:*',                  # Global
+   'BONUS:CASTERLEVEL:*',                  # Global
+   'BONUS:CHECKS:*',                               # Global        DEPRECATED
+   'BONUS:COMBAT:*',                               # Global
+   'BONUS:CONCENTRATION:*',                # Global
+   'BONUS:DC:*',                           # Global
+   'BONUS:DOMAIN:*',                               # Global
+   'BONUS:DR:*',                           # Global
+   'BONUS:FEAT:*',                         # Global
+   'BONUS:FOLLOWERS',                      # Global
+   'BONUS:HP:*',                           # Global
+   'BONUS:MISC:*',                         # Global
+   'BONUS:MOVEADD:*',                      # Global
+   'BONUS:MOVEMULT:*',                     # Global
+   'BONUS:PCLEVEL:*',                      # Global
+   'BONUS:POSTMOVEADD:*',                  # Global
+   'BONUS:POSTRANGEADD:*',                 # Global
+   'BONUS:RANGEADD:*',                     # Global
+   'BONUS:RANGEMULT:*',                    # Global
+   'BONUS:SAVE:*',                         # Global        Replacement for CHECKS
+   'BONUS:SITUATION:*',                    # Global
+   'BONUS:SIZEMOD:*',                      # Global
+   'BONUS:SKILL:*',                                # Global
+   'BONUS:SKILLPOINTS:*',                  # Global
+   'BONUS:SKILLPOOL:*',                    # Global
+   'BONUS:SKILLRANK:*',                    # Global
+   'BONUS:SLOTS:*',                                # Global
+   'BONUS:SPECIALTYSPELLKNOWN:*',  # Global
+   'BONUS:SPELLCAST:*',                    # Global
+   'BONUS:SPELLCASTMULT:*',                # Global
 #       'BONUS:SPELLPOINTCOST:*',               # Global
-        'BONUS:SPELLKNOWN:*',                   # Global
-        'BONUS:STAT:*',                         # Global
-        'BONUS:UDAM:*',                         # Global
-        'BONUS:VAR:*',                          # Global
-        'BONUS:VISION:*',                               # Global
-        'BONUS:WEAPONPROF:*',                   # Global
-        'BONUS:WIELDCATEGORY:*',                # Global
+   'BONUS:SPELLKNOWN:*',                   # Global
+   'BONUS:STAT:*',                         # Global
+   'BONUS:UDAM:*',                         # Global
+   'BONUS:VAR:*',                          # Global
+   'BONUS:VISION:*',                               # Global
+   'BONUS:WEAPONPROF:*',                   # Global
+   'BONUS:WIELDCATEGORY:*',                # Global
 #       'BONUS:DAMAGE:*',                               # Deprecated
 #       'BONUS:DEFINE:*',                               # Not listed in the Docs
 #       'BONUS:EQM:*',                          # Equipment and EquipMod files only
@@ -2632,328 +2414,328 @@ our %masterOrder = (
 # Working variables
 my %column_with_no_tag = (
 
-        'ABILITY' => [
-                '000AbilityName',
-        ],
+   'ABILITY' => [
+      '000AbilityName',
+   ],
 
-        'ABILITYCATEGORY' => [
-                '000AbilityCategory',
-        ],
+   'ABILITYCATEGORY' => [
+      '000AbilityCategory',
+   ],
 
-        'ARMORPROF' => [
-                '000ArmorName',
-        ],
+   'ARMORPROF' => [
+      '000ArmorName',
+   ],
 
-        'CLASS' => [
-                '000ClassName',
-        ],
+   'CLASS' => [
+      '000ClassName',
+   ],
 
-        'CLASS Level' => [
-                '000Level',
-        ],
+   'CLASS Level' => [
+      '000Level',
+   ],
 
-        'COMPANIONMOD' => [
-                '000Follower',
-        ],
+   'COMPANIONMOD' => [
+      '000Follower',
+   ],
 
-        'DEITY' => [
-                '000DeityName',
-        ],
+   'DEITY' => [
+      '000DeityName',
+   ],
 
-        'DOMAIN' => [
-                '000DomainName',
-        ],
+   'DOMAIN' => [
+      '000DomainName',
+   ],
 
-        'EQUIPMENT' => [
-                '000EquipmentName',
-        ],
+   'EQUIPMENT' => [
+      '000EquipmentName',
+   ],
 
-        'EQUIPMOD' => [
-                '000ModifierName',
-        ],
+   'EQUIPMOD' => [
+      '000ModifierName',
+   ],
 
-        'FEAT' => [
-                '000FeatName',
-        ],
+   'FEAT' => [
+      '000FeatName',
+   ],
 
-        'LANGUAGE' => [
-                '000LanguageName',
-        ],
+   'LANGUAGE' => [
+      '000LanguageName',
+   ],
 
-        'MASTERBONUSRACE' => [
-                '000MasterBonusRace',
-        ],
+   'MASTERBONUSRACE' => [
+      '000MasterBonusRace',
+   ],
 
-        'RACE' => [
-                '000RaceName',
-        ],
+   'RACE' => [
+      '000RaceName',
+   ],
 
-        'SHIELDPROF' => [
-                '000ShieldName',
-        ],
+   'SHIELDPROF' => [
+      '000ShieldName',
+   ],
 
-        'SKILL' => [
-                '000SkillName',
-        ],
+   'SKILL' => [
+      '000SkillName',
+   ],
 
-        'SPELL' => [
-                '000SpellName',
-        ],
+   'SPELL' => [
+      '000SpellName',
+   ],
 
-        'SUBCLASS' => [
-                '000SubClassName',
-        ],
+   'SUBCLASS' => [
+      '000SubClassName',
+   ],
 
-        'SUBSTITUTIONCLASS' => [
-                '000SubstitutionClassName',
-        ],
+   'SUBSTITUTIONCLASS' => [
+      '000SubstitutionClassName',
+   ],
 
-        'TEMPLATE' => [
-                '000TemplateName',
-        ],
+   'TEMPLATE' => [
+      '000TemplateName',
+   ],
 
-        'WEAPONPROF' => [
-                '000WeaponName',
-        ],
+   'WEAPONPROF' => [
+      '000WeaponName',
+   ],
 
-        'VARIABLE' => [
-                '000VariableName',
-        ],
+   'VARIABLE' => [
+      '000VariableName',
+   ],
 
-        'DATACONTROL' => [
-                '000DatacontrolName',
-        ],
+   'DATACONTROL' => [
+      '000DatacontrolName',
+   ],
 
-        'GLOBALMOD' => [
-                '000GlobalmodName',
-        ],
+   'GLOBALMOD' => [
+      '000GlobalmodName',
+   ],
 
-        'ALIGNMENT' => [
-                '000AlignmentName',
-        ],
+   'ALIGNMENT' => [
+      '000AlignmentName',
+   ],
 
-        'SAVE' => [
-                '000SaveName',
-        ],
+   'SAVE' => [
+      '000SaveName',
+   ],
 
-        'STAT' => [
-                '000StatName',
-        ],
+   'STAT' => [
+      '000StatName',
+   ],
 
 );
 
 # Added FACT:BaseSize despite the fact that this appears to be unused arw - 20180830
 my %token_FACT_tag = map { $_ => 1 } (
-        'FACT:Abb',
-        'FACT:AppliedName',
-        'FACT:BaseSize',
-        'FACT:ClassType',
-        'FACT:SpellType',
-        'FACT:Symbol',
-        'FACT:Worshippers',
-        'FACT:Title',
-        'FACT:Appearance',
-        'FACT:RateOfFire',
+   'FACT:Abb',
+   'FACT:AppliedName',
+   'FACT:BaseSize',
+   'FACT:ClassType',
+   'FACT:SpellType',
+   'FACT:Symbol',
+   'FACT:Worshippers',
+   'FACT:Title',
+   'FACT:Appearance',
+   'FACT:RateOfFire',
 );
 
 my %token_FACTSET_tag = map { $_ => 1 } (
-        'FACTSET:Pantheon',
-        'FACTSET:Race',
+   'FACTSET:Pantheon',
+   'FACTSET:Race',
 );
 
 
 my %token_ADD_tag = map { $_ => 1 } (
-        'ADD:.CLEAR',
-        'ADD:CLASSSKILLS',
-        'ADD:DOMAIN',
-        'ADD:EQUIP',
-        'ADD:FAVOREDCLASS',
-        'ADD:FEAT',                     # Deprecated
-        'ADD:FORCEPOINT',               # Deprecated, never heard of this!
-        'ADD:INIT',                     # Deprecated
-        'ADD:LANGUAGE',
-        'ADD:SAB',
-        'ADD:SPECIAL',          # Deprecated - Remove 5.16 - Special abilities are now set using hidden feats or Abilities.
-        'ADD:SPELLCASTER',
-        'ADD:SKILL',
-        'ADD:TEMPLATE',
-        'ADD:WEAPONPROFS',
-        'ADD:VFEAT',            # Deprecated
+   'ADD:.CLEAR',
+   'ADD:CLASSSKILLS',
+   'ADD:DOMAIN',
+   'ADD:EQUIP',
+   'ADD:FAVOREDCLASS',
+   'ADD:FEAT',                      # Deprecated
+   'ADD:FORCEPOINT',                # Deprecated, never heard of this!
+   'ADD:INIT',                      # Deprecated
+   'ADD:LANGUAGE',
+   'ADD:SAB',
+   'ADD:SPECIAL',                   # Deprecated - Remove 5.16 - Special abilities are now set using hidden feats or Abilities.
+   'ADD:SPELLCASTER',
+   'ADD:SKILL',
+   'ADD:TEMPLATE',
+   'ADD:WEAPONPROFS',
+   'ADD:VFEAT',                     # Deprecated
 );
 
 my %token_BONUS_tag = map { $_ => 1 } (
-        'ABILITYPOOL',
-        'CASTERLEVEL',
-        'CHECKS',               # Deprecated
-        'COMBAT',
-        'CONCENTRATION',
-        'DAMAGE',               # Deprecated 4.3.8 - Remove 5.16.0 - Use BONUS:COMBAT|DAMAGE.x|y
-        'DC',
-        'DOMAIN',
-        'DR',
-        'EQM',
-        'EQMARMOR',
-        'EQMWEAPON',
-        'ESIZE',                # Not listed in the Docs
-        'FEAT',         # Deprecated
-        'FOLLOWERS',
-        'HD',
-        'HP',
-        'ITEMCOST',
-        'LANGUAGES',    # Not listed in the Docs
-        'MISC',
-        'MONSKILLPTS',
-        'MOVE',         # Deprecated 4.3.8 - Remove 5.16.0 - Use BONUS:MOVEADD or BONUS:POSTMOVEADD
-        'MOVEADD',
-        'MOVEMULT',
-        'POSTRANGEADD',
-        'POSTMOVEADD',
-        'PCLEVEL',
-        'RANGEADD',
-        'RANGEMULT',
-        'REPUTATION',   # Not listed in the Docs
-        'SIZEMOD',
-        'SAVE',
-        'SKILL',
-        'SITUATION',
-        'SKILLPOINTS',
-        'SKILLPOOL',
-        'SKILLRANK',
-        'SLOTS',
-        'SPELL',
-        'SPECIALTYSPELLKNOWN',
-        'SPELLCAST',
-        'SPELLCASTMULT',
-        'SPELLKNOWN',
-        'VISION',
-        'STAT',
-        'TOHIT',                # Deprecated 5.3.12 - Remove 5.16.0 - Use BONUS:COMBAT|TOHIT|x
-        'UDAM',
-        'VAR',
-        'WEAPON',
-        'WEAPONPROF',
-        'WIELDCATEGORY',
+   'ABILITYPOOL',
+   'CASTERLEVEL',
+   'CHECKS',               # Deprecated
+   'COMBAT',
+   'CONCENTRATION',
+   'DAMAGE',               # Deprecated 4.3.8 - Remove 5.16.0 - Use BONUS:COMBAT|DAMAGE.x|y
+   'DC',
+   'DOMAIN',
+   'DR',
+   'EQM',
+   'EQMARMOR',
+   'EQMWEAPON',
+   'ESIZE',                # Not listed in the Docs
+   'FEAT',         # Deprecated
+   'FOLLOWERS',
+   'HD',
+   'HP',
+   'ITEMCOST',
+   'LANGUAGES',    # Not listed in the Docs
+   'MISC',
+   'MONSKILLPTS',
+   'MOVE',         # Deprecated 4.3.8 - Remove 5.16.0 - Use BONUS:MOVEADD or BONUS:POSTMOVEADD
+   'MOVEADD',
+   'MOVEMULT',
+   'POSTRANGEADD',
+   'POSTMOVEADD',
+   'PCLEVEL',
+   'RANGEADD',
+   'RANGEMULT',
+   'REPUTATION',   # Not listed in the Docs
+   'SIZEMOD',
+   'SAVE',
+   'SKILL',
+   'SITUATION',
+   'SKILLPOINTS',
+   'SKILLPOOL',
+   'SKILLRANK',
+   'SLOTS',
+   'SPELL',
+   'SPECIALTYSPELLKNOWN',
+   'SPELLCAST',
+   'SPELLCASTMULT',
+   'SPELLKNOWN',
+   'VISION',
+   'STAT',
+   'TOHIT',                # Deprecated 5.3.12 - Remove 5.16.0 - Use BONUS:COMBAT|TOHIT|x
+   'UDAM',
+   'VAR',
+   'WEAPON',
+   'WEAPONPROF',
+   'WIELDCATEGORY',
 );
 
 my %token_PROFICIENCY_tag = map { $_ => 1 } (
-        'WEAPON',
-        'ARMOR',
-        'SHIELD',
+   'WEAPON',
+   'ARMOR',
+   'SHIELD',
 );
 
 my %token_QUALIFY_tag = map { $_ => 1 } (
-        'ABILITY',
-        'CLASS',
-        'DEITY',
-        'DOMAIN',
-        'EQUIPMENT',
-        'EQMOD',
-        'FEAT',         # Deprecated
-        'RACE',
-        'SPELL',
-        'SKILL',
-        'TEMPLATE',
-        'WEAPONPROF',
+   'ABILITY',
+   'CLASS',
+   'DEITY',
+   'DOMAIN',
+   'EQUIPMENT',
+   'EQMOD',
+   'FEAT',         # Deprecated
+   'RACE',
+   'SPELL',
+   'SKILL',
+   'TEMPLATE',
+   'WEAPONPROF',
 );
 
 my %token_BONUS_MONSKILLPTS_types = map { $_ => 1 } (
-        'LOCKNUMBER',
+   'LOCKNUMBER',
 );
 
 # List of types that are valid in BONUS:SLOTS
 # 
 my %token_BONUS_SLOTS_types = map { $_ => 1 } (
-        'AMULET',
-        'ARMOR',
-        'BELT',
-        'BOOT',
-        'BRACER',
-        'CAPE',
-        'CLOTHING',
-        'EYEGEAR',
-        'GLOVE',
-        'HANDS',
-        'HEADGEAR',
-        'LEGS',
-        'PSIONICTATTOO',
-        'RING',
-        'ROBE',
-        'SHIELD',
-        'SHIRT',
-        'SUIT',
-        'TATTOO',
-        'TRANSPORTATION',
-        'VEHICLE',
-        'WEAPON',
+   'AMULET',
+   'ARMOR',
+   'BELT',
+   'BOOT',
+   'BRACER',
+   'CAPE',
+   'CLOTHING',
+   'EYEGEAR',
+   'GLOVE',
+   'HANDS',
+   'HEADGEAR',
+   'LEGS',
+   'PSIONICTATTOO',
+   'RING',
+   'ROBE',
+   'SHIELD',
+   'SHIRT',
+   'SUIT',
+   'TATTOO',
+   'TRANSPORTATION',
+   'VEHICLE',
+   'WEAPON',
 
-        # Special value for the CHOOSE tag
-        'LIST',
+   # Special value for the CHOOSE tag
+   'LIST',
 );
 
 # [ 832171 ] AUTO:* needs to be separate tags
 my @token_AUTO_tag = (
-        'ARMORPROF',
-        'EQUIP',
-        'FEAT',         # Deprecated
-        'LANG',
-        'SHIELDPROF',
-        'WEAPONPROF',
+   'ARMORPROF',
+   'EQUIP',
+   'FEAT',         # Deprecated
+   'LANG',
+   'SHIELDPROF',
+   'WEAPONPROF',
 );
 
 # Add the CHOOSE type.
 # CHOOSE:xxx will not become separate tags but we need to be able to
 # validate the different CHOOSE types.
 my %token_CHOOSE_tag = map { $_ => 1 } (
-        'ABILITY',
-        'ABILITYSELECTION',
-        'ALIGNMENT',
-        'ARMORPROFICIENCY',
-        'CHECK',
-        'CLASS',
-        'DEITY',
-        'DOMAIN',
-        'EQBUILDER.SPELL',              # EQUIPMENT ONLY
-        'EQUIPMENT',
-        'FEAT',
-        'FEATSELECTION',
-        'LANG',
-        'LANGAUTO',                             # Deprecated
-        'NOCHOICE',
-        'NUMBER',
-        'NUMCHOICES',
-        'PCSTAT',
-        'RACE',
-        'SCHOOLS',
-        'SHIELDPROFICIENCY',
-        'SIZE',
-        'SKILL',
-        'SKILLBONUS',
-        'SPELLLEVEL',
-        'SPELLS',
-        'STATBONUS',                    # EQUIPMENT ONLY
-        'STRING',
-        'TEMPLATE',
-        'USERINPUT',
-        'WEAPONFOCUS',
-        'WEAPONPROFICIENCY',
-        'STAT',                         # Deprecated
-        'WEAPONPROF',                   # Deprecated
-        'WEAPONPROFS',                  # Deprecated
-        'SPELLLIST',                    # Deprecated
-        'SPELLCLASSES',                 # Deprecated
-        'PROFICIENCY',                  # Deprecated
-        'SHIELDPROF',                   # Deprecated
-        'EQUIPTYPE',                    # Deprecated
-        'CSKILLS',                              # Deprecated
-        'HP',                                   # Deprecated 6.00 - Remove 6.02
-        'CCSKILLLIST',                  # Deprecated 5.13.9 - Remove 5.16. Use CHOOSE:SKILLSNAMED instead.
-        'ARMORTYPE',                    # Deprecated 
-        'ARMORPROF',                    # Deprecated 5.15 - Remove 6.0
-        'SKILLSNAMED',                  # Deprecated
-        'SALIST',                               # Deprecated 6.00 - Remove 6.02
-        'FEATADD',                              # Deprecated 5.15 - Remove 6.00
-        'FEATLIST',                             # Deprecated 5.15 - Remove 6.00
-        'FEATSELECT',                   # Deprecated 5.15 - Remove 6.00
+   'ABILITY',
+   'ABILITYSELECTION',
+   'ALIGNMENT',
+   'ARMORPROFICIENCY',
+   'CHECK',
+   'CLASS',
+   'DEITY',
+   'DOMAIN',
+   'EQBUILDER.SPELL',                  # EQUIPMENT ONLY
+   'EQUIPMENT',
+   'FEAT',
+   'FEATSELECTION',
+   'LANG',
+   'LANGAUTO',                         # Deprecated
+   'NOCHOICE',
+   'NUMBER',
+   'NUMCHOICES',
+   'PCSTAT',
+   'RACE',
+   'SCHOOLS',
+   'SHIELDPROFICIENCY',
+   'SIZE',
+   'SKILL',
+   'SKILLBONUS',
+   'SPELLLEVEL',
+   'SPELLS',
+   'STATBONUS',                        # EQUIPMENT ONLY
+   'STRING',
+   'TEMPLATE',
+   'USERINPUT',
+   'WEAPONFOCUS',
+   'WEAPONPROFICIENCY',
+   'STAT',                             # Deprecated
+   'WEAPONPROF',                       # Deprecated
+   'WEAPONPROFS',                      # Deprecated
+   'SPELLLIST',                        # Deprecated
+   'SPELLCLASSES',                     # Deprecated
+   'PROFICIENCY',                      # Deprecated
+   'SHIELDPROF',                       # Deprecated
+   'EQUIPTYPE',                        # Deprecated
+   'CSKILLS',                          # Deprecated
+   'HP',                               # Deprecated 6.00 - Remove 6.02
+   'CCSKILLLIST',                      # Deprecated 5.13.9 - Remove 5.16. Use CHOOSE:SKILLSNAMED instead.
+   'ARMORTYPE',                        # Deprecated 
+   'ARMORPROF',                        # Deprecated 5.15 - Remove 6.0
+   'SKILLSNAMED',                      # Deprecated
+   'SALIST',                           # Deprecated 6.00 - Remove 6.02
+   'FEATADD',                          # Deprecated 5.15 - Remove 6.00
+   'FEATLIST',                         # Deprecated 5.15 - Remove 6.00
+   'FEATSELECT',                       # Deprecated 5.15 - Remove 6.00
 );
 
 
@@ -3013,12 +2795,12 @@ my @xcheck_to_process;  # Will hold the information for the entries that must
 
 # Add pre-defined valid entities
 for my $var_name (@valid_system_var_names) {
-        $valid_entities{'DEFINE Variable'}{$var_name}++;
+   $valid_entities{'DEFINE Variable'}{$var_name}++;
 }
 
 for my $stat (@valid_system_stats) {
-        $valid_entities{'DEFINE Variable'}{ $stat               }++;
-        $valid_entities{'DEFINE Variable'}{ $stat . 'SCORE' }++;
+   $valid_entities{'DEFINE Variable'}{ $stat           }++;
+   $valid_entities{'DEFINE Variable'}{ $stat . 'SCORE' }++;
 }
 # Add the magical values 'ATWILL' fot the SPELLS tag's TIMES= component.
 $valid_entities{'DEFINE Variable'}{ 'ATWILL' }++;
@@ -3680,10 +3462,8 @@ my %tagheader = (
 
 );
 
-my $tablength = 6;      # Tabulation each 6 characters
-
 my %files_to_parse;     # Will hold the file to parse (including path)
-my @lines;                      # Will hold all the lines of the file
+my @lines;              # Will hold all the lines of the file
 my @modified_files;     # Will hold the name of the modified files
 
 
@@ -3714,6 +3494,20 @@ sub constructValidTags {
    }
 }
 
+=head2 isPRETag
+
+   Is there an entry for tag in this line type.
+
+   C<isPRETag('linetype', 'tag')>
+
+=cut
+
+sub isPRETag {
+   my ($tag) = @_;
+   return exists $PRE_Tags{$pre_tag_name};
+}
+
+
 =head2 isValidTag
 
    Is there an entry for tag in this line type.
@@ -3725,6 +3519,20 @@ sub constructValidTags {
 sub isValidTag {
    my ($lineType, $tag) = @_;
    return exists $validTags{$lineType}{$tag};
+}
+
+=head2 isMultOk
+
+   Determine wheter it is ok for this line type to have multiple instances of tag
+
+   C<isMultOk(<lineType>, <tag>))>
+
+=cut
+
+sub isMultOk {
+   my ($lineType, $tag) = @_;
+           
+   return exists $masterMult{$lineType}{$tag};
 }
 
 
@@ -3740,130 +3548,129 @@ if (getOption('inputpath')) {
 
    constructValidTags();
 
+   ##########################################################
+   # Files that needs to be open for special conversions
 
-        ##########################################################
-        # Files that needs to be open for special conversions
+   if ( Pretty::Options::isConversionActive('Export lists') ) {
+      # The files should be opened in alpha order since they will
+      # be closed in reverse alpha order.
 
-        if ( $conversion_enable{'Export lists'} ) {
-                # The files should be opened in alpha order since they will
-                # be closed in reverse alpha order.
+      # Will hold the list of all classes found in CLASS filetypes
+      open $filehandle_for{CLASS}, '>', 'class.csv';
+      print { $filehandle_for{CLASS} } qq{"Class Name","Line","Filename"\n};
 
-                # Will hold the list of all classes found in CLASS filetypes
-                open $filehandle_for{CLASS}, '>', 'class.csv';
-                print { $filehandle_for{CLASS} } qq{"Class Name","Line","Filename"\n};
+      # Will hold the list of all deities found in DEITY filetypes
+      open $filehandle_for{DEITY}, '>', 'deity.csv';
+      print { $filehandle_for{DEITY} } qq{"Deity Name","Line","Filename"\n};
 
-                # Will hold the list of all deities found in DEITY filetypes
-                open $filehandle_for{DEITY}, '>', 'deity.csv';
-                print { $filehandle_for{DEITY} } qq{"Deity Name","Line","Filename"\n};
+      # Will hold the list of all domains found in DOMAIN filetypes
+      open $filehandle_for{DOMAIN}, '>', 'domain.csv';
+      print { $filehandle_for{DOMAIN} } qq{"Domain Name","Line","Filename"\n};
 
-                # Will hold the list of all domains found in DOMAIN filetypes
-                open $filehandle_for{DOMAIN}, '>', 'domain.csv';
-                print { $filehandle_for{DOMAIN} } qq{"Domain Name","Line","Filename"\n};
+      # Will hold the list of all equipements found in EQUIPMENT filetypes
+      open $filehandle_for{EQUIPMENT}, '>', 'equipment.csv';
+      print { $filehandle_for{EQUIPMENT} } qq{"Equipment Name","Output Name","Line","Filename"\n};
 
-                # Will hold the list of all equipements found in EQUIPMENT filetypes
-                open $filehandle_for{EQUIPMENT}, '>', 'equipment.csv';
-                print { $filehandle_for{EQUIPMENT} } qq{"Equipment Name","Output Name","Line","Filename"\n};
+      # Will hold the list of all equipmod entries found in EQUIPMOD filetypes
+      open $filehandle_for{EQUIPMOD}, '>', 'equipmod.csv';
+      print { $filehandle_for{EQUIPMOD} } qq{"Equipmod Name","Key","Type","Line","Filename"\n};
 
-                # Will hold the list of all equipmod entries found in EQUIPMOD filetypes
-                open $filehandle_for{EQUIPMOD}, '>', 'equipmod.csv';
-                print { $filehandle_for{EQUIPMOD} } qq{"Equipmod Name","Key","Type","Line","Filename"\n};
+      # Will hold the list of all feats found in FEAT filetypes
+      open $filehandle_for{FEAT}, '>', 'feat.csv';
+      print { $filehandle_for{FEAT} } qq{"Feat Name","Line","Filename"\n};
 
-                # Will hold the list of all feats found in FEAT filetypes
-                open $filehandle_for{FEAT}, '>', 'feat.csv';
-                print { $filehandle_for{FEAT} } qq{"Feat Name","Line","Filename"\n};
+      # Will hold the list of all kits found in KIT filetypes
+      open $filehandle_for{KIT}, '>', 'kit.csv';
+      print { $filehandle_for{KIT} } qq{"Kit Startpack Name","Line","Filename"\n};
 
-                # Will hold the list of all kits found in KIT filetypes
-                open $filehandle_for{KIT}, '>', 'kit.csv';
-                print { $filehandle_for{KIT} } qq{"Kit Startpack Name","Line","Filename"\n};
+      # Will hold the list of all kit Tables found in KIT filetypes
+      open $filehandle_for{TABLE}, '>', 'kit-table.csv';
+      print { $filehandle_for{TABLE} } qq{"Table Name","Line","Filename"\n};
 
-                # Will hold the list of all kit Tables found in KIT filetypes
-                open $filehandle_for{TABLE}, '>', 'kit-table.csv';
-                print { $filehandle_for{TABLE} } qq{"Table Name","Line","Filename"\n};
+      # Will hold the list of all language found in LANGUAGE linetypes
+      open $filehandle_for{LANGUAGE}, '>', 'language.csv';
+      print { $filehandle_for{LANGUAGE} } qq{"Language Name","Line","Filename"\n};
 
-                # Will hold the list of all language found in LANGUAGE linetypes
-                open $filehandle_for{LANGUAGE}, '>', 'language.csv';
-                print { $filehandle_for{LANGUAGE} } qq{"Language Name","Line","Filename"\n};
+      # Will hold the list of all PCC files found
+      open $filehandle_for{PCC}, '>', 'pcc.csv';
+      print { $filehandle_for{PCC} } qq{"SOURCELONG","SOURCESHORT","GAMEMODE","Full Path"\n};
 
-                # Will hold the list of all PCC files found
-                open $filehandle_for{PCC}, '>', 'pcc.csv';
-                print { $filehandle_for{PCC} } qq{"SOURCELONG","SOURCESHORT","GAMEMODE","Full Path"\n};
+      # Will hold the list of all races and race types found in RACE filetypes
+      open $filehandle_for{RACE}, '>', 'race.csv';
+      print { $filehandle_for{RACE} } qq{"Race Name","Race Type","Race Subtype","Line","Filename"\n};
 
-                # Will hold the list of all races and race types found in RACE filetypes
-                open $filehandle_for{RACE}, '>', 'race.csv';
-                print { $filehandle_for{RACE} } qq{"Race Name","Race Type","Race Subtype","Line","Filename"\n};
+      # Will hold the list of all skills found in SKILL filetypes
+      open $filehandle_for{SKILL}, '>', 'skill.csv';
+      print { $filehandle_for{SKILL} } qq{"Skill Name","Line","Filename"\n};
 
-                # Will hold the list of all skills found in SKILL filetypes
-                open $filehandle_for{SKILL}, '>', 'skill.csv';
-                print { $filehandle_for{SKILL} } qq{"Skill Name","Line","Filename"\n};
+      # Will hold the list of all spells found in SPELL filetypes
+      open $filehandle_for{SPELL}, '>', 'spell.csv';
+      print { $filehandle_for{SPELL} } qq{"Spell Name","Source Page","Line","Filename"\n};
 
-                # Will hold the list of all spells found in SPELL filetypes
-                open $filehandle_for{SPELL}, '>', 'spell.csv';
-                print { $filehandle_for{SPELL} } qq{"Spell Name","Source Page","Line","Filename"\n};
+      # Will hold the list of all templates found in TEMPLATE filetypes
+      open $filehandle_for{TEMPLATE}, '>', 'template.csv';
+      print { $filehandle_for{TEMPLATE} } qq{"Tempate Name","Line","Filename"\n};
 
-                # Will hold the list of all templates found in TEMPLATE filetypes
-                open $filehandle_for{TEMPLATE}, '>', 'template.csv';
-                print { $filehandle_for{TEMPLATE} } qq{"Tempate Name","Line","Filename"\n};
+      # Will hold the list of all variables found in DEFINE tags
+      if ( getOption('xcheck') ) {
+         open $filehandle_for{VARIABLE}, '>', 'variable.csv';
+         print { $filehandle_for{VARIABLE} } qq{"Var Name","Line","Filename"\n};
+      }
 
-                # Will hold the list of all variables found in DEFINE tags
-                if ( getOption('xcheck') ) {
-                open $filehandle_for{VARIABLE}, '>', 'variable.csv';
-                print { $filehandle_for{VARIABLE} } qq{"Var Name","Line","Filename"\n};
-                }
+      # We need to list the tags that use Willpower
+      if ( Pretty::Options::isConversionActive('ALL:Find Willpower') ) {
+         open $filehandle_for{Willpower}, '>', 'willpower.csv';
+         print { $filehandle_for{Willpower} } qq{"Tag","Line","Filename"\n};
+      }
+   }
 
-                # We need to list the tags that use Willpower
-                if ( $conversion_enable{'ALL:Find Willpower'} ) {
-                open $filehandle_for{Willpower}, '>', 'willpower.csv';
-                print { $filehandle_for{Willpower} } qq{"Tag","Line","Filename"\n};
-                }
-        }
+   ##########################################################
+   # Cross-checking must be activated for the CLASSSPELL
+   # conversion to work
+   if ( Pretty::Options::isConversionActive('CLASSSPELL conversion to SPELL') ) {
+      $cl_options{xcheck} = 1;
+   }
 
-        ##########################################################
-        # Cross-checking must be activated for the CLASSSPELL
-        # conversion to work
-        if ( $conversion_enable{'CLASSSPELL conversion to SPELL'} ) {
-                $cl_options{xcheck} = 1;
-        }
+   ##########################################################
+   # Parse all the .pcc file to find the other files to parse
 
-        ##########################################################
-        # Parse all the .pcc file to find the other file to parse
+   # First, we list the .pcc files in the directory
+   my @filelist;
+   my %filelist_notpcc;
+   my %filelist_missing;
 
-        # First, we list the .pcc files in the directory
-        my @filelist;
-        my %filelist_notpcc;
-        my %filelist_missing;
+   # Regular expressions for the files that must be skiped by mywanted.
+   my @filetoskip = (
+      qr(^\.\#),                      # Files begining with .# (CVS conflict and deleted files)
+      qr(^custom),            # Customxxx files generated by PCGEN
+      qr(placeholder\.txt$),  # The CMP directories are full of these
+      qr(\.zip$)i,            # Archives present in the directories
+      qr(\.rar$)i,
+      qr(\.jpg$),                     # JPEG image files present in the directories
+      qr(\.png$),                     # PNG image files present in the directories
+      qr(Thumbs\.db$),                # thumbnails image files used with Win32 OS
+      qr(readme\.txt$),               # Readme files
+      qr(notes\.txt$),                # Notes files
+      qr(\.bak$),                     # Backup files
+      qr(\.java$),            # Java code files
+      qr(\.htm$),                     # HTML files
+      qr(\.xml$),
+      qr(\.css$),
 
-        # Regular expressions for the files that must be skiped by mywanted.
-        my @filetoskip = (
-                qr(^\.\#),                      # Files begining with .# (CVS conflict and deleted files)
-                qr(^custom),            # Customxxx files generated by PCGEN
-                qr(placeholder\.txt$),  # The CMP directories are full of these
-                qr(\.zip$)i,            # Archives present in the directories
-                qr(\.rar$)i,
-                qr(\.jpg$),                     # JPEG image files present in the directories
-                qr(\.png$),                     # PNG image files present in the directories
-#               gr(Thumbs\.db$),                # thumbnails image files used with Win32 OS
-                qr(readme\.txt$),               # Readme files
-#               qr(notes\.txt$),                # Notes files
-                qr(\.bak$),                     # Backup files
-                qr(\.java$),            # Java code files
-                qr(\.htm$),                     # HTML files
-                qr(\.xml$),
-                qr(\.css$),
+      qr(\.DS_Store$),                # Used with Mac OS
+   );
 
-                qr(\.DS_Store$),                # Used with Mac OS
-        );
-
-        # Regular expressions for the directory that must be skiped by mywanted
-        my @dirtoskip = (
-                qr(cvs$)i,                      # /cvs directories
-                qr([.]svn[/])i,         # All .svn directories
-                qr([.]svn$)i,           # All .svn directories
-                qr([.]git[/])i,         # All .git directories
-                qr([.]git$)i,           # All .git directories
-                qr(customsources$)i,    # /customsources (for files generated by PCGEN)
-                qr(gamemodes)i,         # for the system gameModes directories
+   # Regular expressions for the directory that must be skiped by mywanted
+   my @dirtoskip = (
+      qr(cvs$)i,                      # /cvs directories
+      qr([.]svn[/])i,         # All .svn directories
+      qr([.]svn$)i,           # All .svn directories
+      qr([.]git[/])i,         # All .git directories
+      qr([.]git$)i,           # All .git directories
+      qr(customsources$)i,    # /customsources (for files generated by PCGEN)
+      qr(gamemodes)i,         # for the system gameModes directories
 #               qr(alpha)i
-        );
+   );
 
         sub mywanted {
 
@@ -3922,7 +3729,7 @@ if (getOption('inputpath')) {
 
                         # The parse_tag function modified the values.
                         $must_write = YES;
-                        if ( $double_PCC_tags{$tag} ) {
+                        if ( $doublePCCtags{$tag} ) {
                                 $pcc_lines[-1] = "$tag$value";
                         }
                         else { 
@@ -3945,7 +3752,7 @@ if (getOption('inputpath')) {
                                         $filelist_missing{$lstfile} = [ $pcc_file_name, $INPUT_LINE_NUMBER ];
                                         delete $files_to_parse{$lstfile};
                                 }
-                                elsif ($conversion_enable{'SPELL:Add TYPE tags'}
+                                elsif (Pretty::Options::isConversionActive('SPELL:Add TYPE tags')
                                 && $tag eq 'CLASS' )
                                 {
 
@@ -3954,8 +3761,8 @@ if (getOption('inputpath')) {
                                         # The CLASS files must be read before any other
                                         $class_files{$lstfile} = 1;
                                 }
-                                elsif ( $tag eq 'SPELL' && ( $conversion_enable{'EQUIPMENT: generate EQMOD'}
-                                        || $conversion_enable{'CLASS: SPELLLIST from Spell.MOD'} ) )
+                                elsif ( $tag eq 'SPELL' && ( Pretty::Options::isConversionActive('EQUIPMENT: generate EQMOD')
+                                        || Pretty::Options::isConversionActive('CLASS: SPELLLIST from Spell.MOD') ) )
                                 {
 
                                         #[ 677962 ] The DMG wands have no charge.
@@ -3966,7 +3773,7 @@ if (getOption('inputpath')) {
 
                                         $Spell_Files{$lstfile} = 1;
                                 }
-                                elsif ( $conversion_enable{'CLASSSPELL conversion to SPELL'}
+                                elsif ( Pretty::Options::isConversionActive('CLASSSPELL conversion to SPELL')
                                 && ( $tag eq 'CLASSSPELL' || $tag eq 'CLASS' || $tag eq 'DOMAIN' ) )
                                 {
 
@@ -3987,7 +3794,7 @@ if (getOption('inputpath')) {
                                                 );
                                         }
                                 }
-                                elsif ($conversion_enable{'CLASSSKILL conversion to CLASS'}
+                                elsif (Pretty::Options::isConversionActive('CLASSSKILL conversion to CLASS')
                                 && $tag eq 'CLASSSKILL' )
                                 {
 
@@ -4016,7 +3823,7 @@ if (getOption('inputpath')) {
                                 # All the tags that do not have file should be cought here
 
                                 # Get the SOURCExxx tags for future ref.
-                                if ($conversion_enable{'SOURCE line replacement'}
+                                if (Pretty::Options::isConversionActive('SOURCE line replacement')
                                 && ( $tag eq 'SOURCELONG'
                                         || $tag eq 'SOURCESHORT'
                                         || $tag eq 'SOURCEWEB'
@@ -4092,7 +3899,7 @@ if (getOption('inputpath')) {
                                         #               $pcc_file_name, $INPUT_LINE_NUMBER ) if 2 != tr!.!.!;
                                         $BOOKTYPE_found = YES;
                                 }
-                                elsif ( $tag eq 'GAME' && $conversion_enable{'PCC:GAME to GAMEMODE'} ) {
+                                elsif ( $tag eq 'GAME' && Pretty::Options::isConversionActive('PCC:GAME to GAMEMODE') ) {
 
                                         # [ 707325 ] PCC: GAME is now GAMEMODE
                                         $pcc_lines[-1] = "GAMEMODE:$value";
@@ -4118,7 +3925,7 @@ if (getOption('inputpath')) {
 
                 close $pcc_fh;
 
-                if ( $conversion_enable{'CLASSSPELL conversion to SPELL'}
+                if ( Pretty::Options::isConversionActive('CLASSSPELL conversion to SPELL')
                         && $found_filetype{'CLASSSPELL'}
                         && !$found_filetype{'SPELL'} )
                 {
@@ -4128,7 +3935,7 @@ if (getOption('inputpath')) {
                         );
                 }
 
-                if ( $conversion_enable{'CLASSSKILL conversion to CLASS'}
+                if ( Pretty::Options::isConversionActive('CLASSSKILL conversion to CLASS')
                         && $found_filetype{'CLASSSKILL'}
                         && !$found_filetype{'CLASS'} )
                 {
@@ -4224,7 +4031,7 @@ $logging->set_header(getLogHeader('LST'));
 my @files_to_parse_sorted = ();
 my %temp_files_to_parse   = %files_to_parse;
 
-if ( $conversion_enable{'SPELL:Add TYPE tags'} ) {
+if ( Pretty::Options::isConversionActive('SPELL:Add TYPE tags') ) {
 
         # The CLASS files must be put at the start of the
         # files_to_parse_sorted array in order for them
@@ -4236,7 +4043,7 @@ if ( $conversion_enable{'SPELL:Add TYPE tags'} ) {
         }
 }
 
-if ( $conversion_enable{'CLASSSPELL conversion to SPELL'} ) {
+if ( Pretty::Options::isConversionActive('CLASSSPELL conversion to SPELL') ) {
 
         # The CLASS and DOMAIN files must be put at the start of the
         # files_to_parse_sorted array in order for them
@@ -4264,7 +4071,7 @@ if ( keys %Spell_Files ) {
         }
 }
 
-if ( $conversion_enable{'CLASSSKILL conversion to CLASS'} ) {
+if ( Pretty::Options::isConversionActive('CLASSSKILL conversion to CLASS') ) {
 
         # The CLASSSKILL files must be put at the start of the
         # files_to_parse_sorted array in order for them
@@ -4439,7 +4246,7 @@ for my $file (@files_to_parse_sorted) {
 ###########################################
 # Generate the new BIOSET files
 
-if ( $conversion_enable{'BIOSET:generate the new files'} ) {
+if ( Pretty::Options::isConversionActive('BIOSET:generate the new files') ) {
         print STDERR "\n================================================================\n";
         print STDERR "List of new BIOSET files generated\n";
         print STDERR "----------------------------------------------------------------\n";
@@ -4467,7 +4274,7 @@ if ( getOption('outputpath') && scalar(@modified_files) ) {
 
 ###########################################
 # Print a report for the BONUS and PRExxx usage
-if ( $conversion_enable{'Generate BONUS and PRExxx report'} ) {
+if ( Pretty::Options::isConversionActive('Generate BONUS and PRExxx report') ) {
         $cl_options{output_path} =~ tr{/}{\\} if $^O eq "MSWin32";
 
         print STDERR "\n================================================================\n";
@@ -4507,7 +4314,7 @@ if ( getOption('report') ) {
 
                 for my $tag ( sort report_tag_sort keys %{ $count_tags{"Valid"}{$line_type} } ) {
                         my $tagdisplay = $tag;
-                        $tagdisplay .= "*" if $masterMult{$line_type}{$tag};
+                        $tagdisplay .= "*" if isMultOk($line_type, $tag);
                         my $line = "    $tagdisplay";
                         $line .= ( " " x ( 26 - length($tagdisplay) ) ) . $count_tags{"Valid"}{$line_type}{$tag};
                         print STDERR "$line\n";
@@ -4766,7 +4573,7 @@ if ( getOption('xcheck') ) {
 # Close the files that were opened for
 # special conversion
 
-if ( $conversion_enable{'Export lists'} ) {
+if ( Pretty::Options::isConversionActive('Export lists') ) {
         # Close all the files in reverse order that they were opened
         for my $line_type ( reverse sort keys %filehandle_for ) {
                 close $filehandle_for{$line_type};
