@@ -13,7 +13,7 @@ our (@ISA, @EXPORT_OK);
 @EXPORT_OK = qw(getOption setOption);
 
 # Default command line options
-our (%clOptions, %activate, %conversion_enable, %numeric_warning_level);
+our (%clOptions, %activate, %conversionEnabled, %numeric_warning_level);
 
 %activate = (
   'ADD:SAB'          => 'ALL:Convert ADD:SA to ADD:SAB',
@@ -48,7 +48,7 @@ our (%clOptions, %activate, %conversion_enable, %numeric_warning_level);
   );
 
 # The active conversions
-%conversion_enable =
+%conversionEnabled =
 (
    'Generate BONUS and PRExxx report'   => 0,
                                                  # After PCGEN 2.7.3
@@ -204,7 +204,7 @@ sub parseOptions {
          'xcheck'          =>  $xCheck);
 
       # Has a conversion been requested
-      turnOnConversions ($clOptions{convert}) if $clOptions{convert};
+      enableConversions ($clOptions{convert}) if $clOptions{convert};
 
       processOptions();
 
@@ -286,16 +286,16 @@ sub setOption {
 sub isConversionActive {
    my ($opt) = @_;
 
-   return $conversion_enable{$opt};
+   return $conversionEnabled{$opt};
 };
 
-=head2 turnOnConversions
+=head2 enableConversions
 
    Turn on any conversions that have been requested via command line options
 
 =cut
 
-sub turnOnConversions {
+sub enableConversions {
    my ($convert) = @_;
 
    my $entry   = $activate{ $convert };
@@ -306,7 +306,7 @@ sub turnOnConversions {
 
    # Turn on each entry of the array
    for my $conversion ( @conv ) {
-      $conversion_enable{$conversion} = 1;
+      $conversionEnabled{$conversion} = 1;
    }
 }
 

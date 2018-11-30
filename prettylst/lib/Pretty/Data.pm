@@ -3687,7 +3687,6 @@ my @lines;                      # Will hold all the lines of the file
 my @modified_files;     # Will hold the name of the modified files
 
 
-modifyMasterOrderForConversions(\%masterOrder);
 
 =head2 constructValidTags
 
@@ -3733,6 +3732,8 @@ sub isValidTag {
 # Verify if the inputpath was given
 
 if (getOption('inputpath')) {
+
+   Pretty::Conversion::modifyMasterOrderForConversions(\%masterOrder);
 
    #################################################
    # We populate %valid_tags for all file types.
@@ -4778,4 +4779,63 @@ if ( $conversion_enable{'Export lists'} ) {
 if (getOption('outputerror')) {
         close STDERR;
         print STDOUT "\cG";                     # An audible indication that PL has finished.
+}
+
+
+=head2 getHeader
+   
+   Return the correct header for a particular tag in a
+   particular file type.
+   
+   If no tag is define for the filetype, the default for the
+   tag is used. If not default, the tag name is returned.
+   
+   Parameters: $tagName, $lineType
+
+=cut
+
+sub getHeader {
+   my ( $tagName, $lineType ) = @_;
+
+   my $header = $tagheader{$lineType}{$tagName} || $tagheader{default}{$tagName} || $tagName;
+
+   if ( getOption('missingheader') && $tagName eq $header ) {
+      $missing_headers{$lineType}{$header}++;
+   }
+
+   $header;
+}
+
+=head2 getMasterOrderEntry {
+
+   Return an array that is one entry from the master order data.
+
+   The returned Array give the order of valid tags on the line.
+
+=cut
+
+sub getMasterOrderEntry {
+   my ($type) = @_;
+
+   if (defined $masterOrder->{$type}) {
+      return ( @{ $masterOrder->{$type} } );
+   } else {
+      return ( );
+   }
+}
+
+=head2 getFirstTagForType {
+
+   Return the first tag in the specified type of masterOrder.
+
+=cut
+
+sub getFirstTagForType {
+   my ($type) = @_;
+
+   if (defined $masterOrder->{$type}) {
+      return ( @{ $masterOrder->{$type} }[0] );
+   } else {
+      return undef;
+   }
 }
